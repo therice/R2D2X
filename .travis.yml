@@ -1,7 +1,8 @@
 language: minimal
+sudo: required
 
 env:
-  - LUA=lua5.1
+  - LUA="lua 5.1"
 
 addons:
   apt:
