@@ -2,7 +2,7 @@ local Class
 
 describe("LibClass", function()
     setup(function()
-        loadfile("Test/TestSetup.lua")(false, {})
+        loadfile("Test/TestSetup.lua")(false, 'LibClass')
         loadfile("Libs/LibClass-1.0/LibClass-1.0.lua")()
         Class = LibStub:GetLibrary('LibClass-1.0')
     end)
