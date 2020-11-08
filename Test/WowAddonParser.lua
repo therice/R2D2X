@@ -1,6 +1,4 @@
-local pl = require('pl.path')
 local xml2lua = require("xml2lua")
--- handler that converts the XML to a LUA table
 local handler = require("xmlhandler.dom")
 
 local function findlast(s, pattern, plain)
@@ -43,7 +41,7 @@ Addon.__index = Addon
 
 setmetatable(Addon, {
     __call = function (cls, ...)
-        return cls.new(...)
+        return cls:new(...)
     end,
 })
 
@@ -72,8 +70,8 @@ function Addon:ResolveFiles(from, files, resolutions)
     files = files or self.files
     resolutions = resolutions or {}
 
-    --local rootPath = from
-    -- print('Performing resolution from ' .. from)
+    -- local rootPath = from
+    --- print('Performing resolution from ' .. from)
 
     for _, file in pairs(files) do
         local resolvedFile =  filename(from, file)
@@ -100,7 +98,7 @@ function ParseXml(file)
     local wowXmlHandler = handler:new()
     local wowXmlParser = xml2lua.parser(wowXmlHandler)
     wowXmlParser:parse(xml2lua.loadFile(file))
-    -- xml2lua.printable(wowXmlHandler.root)
+    --xml2lua.printable(wowXmlHandler.root)
 
     local parsed = {}
     for _, child in pairs(wowXmlHandler.root._children) do
@@ -116,7 +114,7 @@ end
 function ParseTOC(toc)
     local file = assert(io.open(toc, "r"))
     local addon = Addon(toc)
-    -- print('Parsing Addon TOC @ ' .. toc)
+    -- print('Parsing Addon TOC @ ' .. addon.toc)
     while true do
         local line = file:read()
         if line == nil then break end
@@ -150,7 +148,7 @@ function TestSetup(toc, preload_functions, postload_functions)
     local load = addon:ResolveFiles()
     local addOnName  = addon:GetProperty("X-AddonName")
     local addOnNamespace = {}
-    -- print("Parsed Addon -> " .. addOnName)
+    -- print("Parsed Addon '" .. addOnName .."'")
 
     if #preload_functions > 0 then
         -- print('Invoking Preload Functions (' .. #preload_functions .. ')')

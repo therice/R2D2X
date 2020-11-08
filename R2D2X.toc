@@ -1,0 +1,11 @@
+## Interface: 11305
+## Title: |cfffe7b2cR2D2X|r
+## Notes: R2D2X - EPGP AddOn for World of Warcraft
+## Author: Gnomechomsky-Atiesh
+## Version: @project-version@
+## SavedVariables: R2D2X_DB
+## X-AddonName: R2D2X
+## X-InterfaceName: R2D2X Classic
+
+## Required Libraries
+Libs\Libs.xml

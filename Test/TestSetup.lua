@@ -14,7 +14,7 @@ function Before()
     local path = pl.dirname(caller)
     local name = pl.basename(caller):match("(.*).lua$")
     testNs = (params[2] or name) .. '_Testing'
-     print(testNs .. ' -> true')
+    -- print(testNs .. ' -> true')
     _G[testNs] = true
     logFile = io.open(pl.abspath(path) .. '/' .. name .. '.log', 'w')
     if loadAddon then
@@ -37,12 +37,12 @@ Before()
 
 local thisDir = pl.abspath(debug.getinfo(1).source:match("@(.*)/.*.lua$"))
 local wowApi = thisDir .. '/WowApi.lua'
-print('Loading File -> ' .. wowApi)
+-- print('Loading File @ ' .. wowApi)
 loadfile(wowApi)()
 
 if loadAddon then
     local toc = pl.abspath(thisDir .. '/../R2D2X.toc')
-    print('Loading -> ' .. toc)
+    -- print('Loading TOC @ ' .. toc)
     loadfile(thisDir .. '/WowAddonParser.lua')()
     TestSetup(toc, params[3] or {}, params[4] or {})
 else

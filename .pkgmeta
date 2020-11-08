@@ -1,0 +1,10 @@
+package-as: R2D2X
+
+ignore:
+  - Test
+  - */Test/*
+  - .gitignore
+  - .luacheckrc
+  - .pkgmeta
+  - .travis.yml
+  - .busted
