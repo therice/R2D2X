@@ -3,7 +3,8 @@ local Class
 describe("LibClass", function()
     setup(function()
         loadfile("Test/TestSetup.lua")(false, 'LibClass')
-        loadfile("Libs/LibClass-1.0/LibClass-1.0.lua")()
+        loadfile("Test/WowXmlParser.lua")()
+        ParseXmlAndLoad('Libs/LibClass-1.0/LibClass-1.0.xml')
         Class = LibStub:GetLibrary('LibClass-1.0')
     end)
 

@@ -1,5 +1,4 @@
-local xml2lua = require("xml2lua")
-local handler = require("xmlhandler.dom")
+loadfile('Test/WowXmlParser.lua')()
 
 local function findlast(s, pattern, plain)
     local curr = 0
@@ -14,15 +13,6 @@ end
 
 local function endswith(str, ending)
     return ending == "" or str:sub(-#ending) == ending
-end
-
-local function normalize(file)
-    return file:gsub('\\', '/')
-end
-
--- return absolute path to file
-local function filename(dir, file)
-    return normalize(dir .. '/' .. file)
 end
 
 -- returns absolute pathname of specified file
@@ -69,20 +59,19 @@ function Addon:ResolveFiles(from, files, resolutions)
     from = from or absolutepath(self.toc)
     files = files or self.files
     resolutions = resolutions or {}
-
-    -- local rootPath = from
-    --- print('Performing resolution from ' .. from)
+    
+    -- print('Performing resolution from ' .. from)
 
     for _, file in pairs(files) do
         local resolvedFile =  filename(from, file)
-        --print('Resolved ' .. file .. ' to ' .. resolvedFile)
+        -- print('Resolved ' .. file .. ' @ ' .. resolvedFile)
         -- LUA extension, straight include
         if endswith(resolvedFile, '.lua') then
             table.insert(resolutions, resolvedFile)
         -- XML extension, resole again
         elseif endswith(resolvedFile, '.xml') then
             local rootPath = absolutepath(resolvedFile)
-            --print('New root for resolution is ' .. rootPath)
+            -- print('New root for resolution is ' .. rootPath)
             -- print('Parsing ' .. resolvedFile)
             local parsed = ParseXml(resolvedFile)
             self:ResolveFiles(rootPath, parsed, resolutions)
@@ -92,22 +81,6 @@ function Addon:ResolveFiles(from, files, resolutions)
     end
 
     return resolutions
-end
-
-function ParseXml(file)
-    local wowXmlHandler = handler:new()
-    local wowXmlParser = xml2lua.parser(wowXmlHandler)
-    wowXmlParser:parse(xml2lua.loadFile(file))
-    --xml2lua.printable(wowXmlHandler.root)
-
-    local parsed = {}
-    for _, child in pairs(wowXmlHandler.root._children) do
-        -- doesn't handle comments, will error out
-        if type(child) == 'table' then
-            table.insert(parsed, child["_attr"].file)
-        end
-    end
-    return parsed
 end
 
 -- https://wow.gamepedia.com/TOC_format
@@ -141,7 +114,6 @@ end
 
 function TestSetup(toc, preload_functions, postload_functions)
     -- The loading of addon source may redefine print function, capture it before starting
-    local print = _G.print
     preload_functions = preload_functions or {}
     postload_functions = postload_functions or {}
     local addon = ParseTOC(toc)
@@ -154,11 +126,9 @@ function TestSetup(toc, preload_functions, postload_functions)
         -- print('Invoking Preload Functions (' .. #preload_functions .. ')')
         for _, f in pairs(preload_functions) do f() end
     end
-
-    for _, toload in pairs(load) do
-        -- print('Loading File -> ' .. toload)
-        loadfile(toload)(addOnName, addOnNamespace)
-    end
+    
+    -- from WowXmlParser.lua
+    Load(load, addOnName, addOnNamespace)
 
     if #postload_functions > 0 then
         -- print('Invoking Preload Functions (' .. #preload_functions .. ')')

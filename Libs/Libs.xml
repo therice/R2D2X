@@ -2,4 +2,6 @@
     <Script file="LibStub\LibStub.lua"/>
     <Include file="LibClass-1.0\LibClass-1.0.xml"/>
     <Include file="LibLogging-1.0\LibLogging-1.0.xml"/>
+    <Include file="LibUtil-1.1\LibUtil-1.1.xml"/>
+
 </Ui>

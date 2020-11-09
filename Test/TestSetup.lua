@@ -37,13 +37,12 @@ Before()
 
 local thisDir = pl.abspath(debug.getinfo(1).source:match("@(.*)/.*.lua$"))
 local wowApi = thisDir .. '/WowApi.lua'
--- print('Loading File @ ' .. wowApi)
 loadfile(wowApi)()
 
 if loadAddon then
     local toc = pl.abspath(thisDir .. '/../R2D2X.toc')
     -- print('Loading TOC @ ' .. toc)
-    loadfile(thisDir .. '/WowAddonParser.lua')()
+    loadfile('Test/WowAddonParser.lua')()
     TestSetup(toc, params[3] or {}, params[4] or {})
 else
     loadfile('Libs/LibStub/LibStub.lua')()
