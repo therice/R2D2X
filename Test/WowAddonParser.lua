@@ -136,5 +136,6 @@ function TestSetup(toc, preload_functions, postload_functions)
     end
     -- not generic, specific to this addon
     -- addOnNamespace.defaults.profile.logThreshold = addOnNamespace.Libs.Logging.Level.Trace
+    return addOnName, addOnNamespace
 end
 

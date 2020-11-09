@@ -42,6 +42,15 @@ _G.tremove = table.remove
 _G.floor = math.floor
 _G.mod = function(a,b) return a - math.floor(a/b) * b end
 
+local wow_api_locale = 'enUS'
+function GetLocale()
+    return wow_api_locale
+end
+
+function SetLocale(locale)
+    wow_api_locale = locale
+end
+
 C_CreatureInfo = {}
 C_CreatureInfo.ClassInfo = {
     [1] = {

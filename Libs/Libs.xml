@@ -3,5 +3,5 @@
     <Include file="LibClass-1.0\LibClass-1.0.xml"/>
     <Include file="LibLogging-1.0\LibLogging-1.0.xml"/>
     <Include file="LibUtil-1.1\LibUtil-1.1.xml"/>
-
+    <Include file="AceLocale-3.0\AceLocale-3.0.xml"/>
 </Ui>

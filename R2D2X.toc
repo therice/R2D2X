@@ -9,3 +9,9 @@
 
 ## Required Libraries
 Libs\Libs.xml
+## Localization
+Locales\Locales.xml
+## Core Pre-Loaded
+Core\PreLoad.xml
+## Components Pre-Loaded
+Components\PreLoad.xml
