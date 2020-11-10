@@ -46,4 +46,5 @@ if loadAddon then
     return TestSetup(toc, params[3] or {}, params[4] or {})
 else
     loadfile('Libs/LibStub/LibStub.lua')()
+    return "AddOnName", {}
 end

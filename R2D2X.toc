@@ -13,5 +13,3 @@ Libs\Libs.xml
 Locales\Locales.xml
 ## Core Pre-Loaded
 Core\PreLoad.xml
-## Components Pre-Loaded
-Components\PreLoad.xml

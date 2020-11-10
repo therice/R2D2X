@@ -1,5 +1,4 @@
 -- adapted from https://github.com/kikito/middleclass/blob/master/middleclass.lua
-
 local MAJOR_VERSION = "LibClass-1.0"
 local MINOR_VERSION = 11305
 
@@ -143,7 +142,7 @@ local DefaultMixin = {
         return _strip_class_metadata(self)
     end,
 
-    -- allows for manipulation of reconstitute instance before being returned
+    -- allows for manipulation of reconstituted instance before being returned
     afterReconstitute = function(self, instance)
         return instance
     end,
