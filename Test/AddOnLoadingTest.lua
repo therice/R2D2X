@@ -1,6 +1,8 @@
+local AddOnName, AddOn
+
 describe("AddOn", function()
     setup(function()
-        loadfile("Test/TestSetup.lua")(true)
+        AddOnName, AddOn = loadfile("Test/TestSetup.lua")(true)
     end)
     teardown(function()
         After()
@@ -8,7 +10,7 @@ describe("AddOn", function()
 
     describe("is", function()
         it("loaded", function()
-
+            assert(AddOn.Constants.name == AddOnName)
         end)
     end)
 end)

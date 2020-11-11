@@ -1,6 +1,6 @@
 local _, AddOn = ...
-
 AddOn.Libs, AddOn.LibsMinor = {}, {}
+
 function AddOn:AddLibrary(name, major, minor)
     if not name then error("Library name was not specified") end
     if not major then error("Library version was not specified") end
@@ -19,13 +19,12 @@ function AddOn:GetLibrary(name)
     if not self.Libs[name] then
         error(format("Library '%s' not found - was it loaded via AddLibrary?", name))
     end
-
     return self.Libs[name], self.LibsMinor[name]
 end
 
-
-if _G.Library_Testing then
+if _G.Library_Testing or _G.R2D2X_Testing then
     function AddOn:DiscardLibraries()
-       AddOn.Libs, AddOn.LibsMinor = {}, {}
+        wipe(AddOn.Libs)
+        wipe(AddOn.LibsMinor)
     end
 end

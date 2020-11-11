@@ -3,8 +3,9 @@ local Util
 describe("LibUtil", function()
     setup(function()
         loadfile("Test/TestSetup.lua")(false, 'LibUtil')
-        loadfile("Test/WowXmlParser.lua")()
-        ParseXmlAndLoad('Libs/LibUtil-1.1/LibUtil-1.1.xml')
+        loadfile("Libs/LibUtil-1.1/Test/BaseTest.lua")()
+        LoadDependencies()
+        ConfigureLogging()
         Util = LibStub:GetLibrary('LibUtil-1.1')
     end)
     

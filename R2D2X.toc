@@ -1,7 +1,7 @@
 ## Interface: 11305
 ## Title: |cfffe7b2cR2D2X|r
 ## Notes: R2D2X - EPGP AddOn for World of Warcraft
-## Author: Gnomechomsky-Atiesh
+## Author: Gnomechómsky-Atiesh
 ## Version: @project-version@
 ## SavedVariables: R2D2X_DB
 ## X-AddonName: R2D2X
@@ -13,3 +13,7 @@ Libs\Libs.xml
 Locales\Locales.xml
 ## Core Pre-Loaded
 Core\PreLoad.xml
+## Initialization Stub
+Init.lua
+## User Interface
+UI\UI.xml

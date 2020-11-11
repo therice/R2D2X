@@ -13,3 +13,15 @@ function Self.True() return true end
 function Self.False() return false end
 function Self.Zero() return 0 end
 function Self.Noop() end
+
+function Self.Call(fn, v, i, index, notVal, ...)
+    if index and notVal then
+        return fn(i, ...)
+    elseif index then
+        return fn(v, i, ...)
+    elseif notVal then
+        return fn(...)
+    else
+        return fn(v, ...)
+    end
+end

@@ -3,6 +3,7 @@
 -- Both package and class support based upon LibClass library
 local _, AddOn = ...
 local Class = LibStub("LibClass-1.0")
+
 local pkgs = {}
 
 local Package = Class('Package')
@@ -11,11 +12,11 @@ function Package:initialize(name)
     self.classes = {}
 end
 
-function Package:NewClass(name, super)
+function Package:Class(name, super)
     -- class names must always be string
     assert(name and type(name) == 'string', 'Class name was not provided')
-    -- if super class provided, must be a table
-    if super then assert(type(super) == 'table', 'Superclass was of incorrect type') end
+    -- if super class provided, must be a table (class)
+    if super then assert(type(super) == 'table', format("Superclass was of incorrect type '%s'", type(super))) end
     if self.classes[name] then error(format("Class '%s' already defined in Package '%s'", name, self.name)) end
     local class = Class(name, super)
     self.classes[name] = class
@@ -31,9 +32,11 @@ end
 
 function AddOn.Package(name)
     assert(type(name) == 'string')
-    if pkgs[name] then error(format("Package '%s' already exists", name)) end
-    local pkg = Package(name)
-    pkgs[name] = pkg
+    local pkg = pkgs[name]
+    if not pkg then
+        pkg = Package(name)
+        pkgs[name] = pkg
+    end
     return pkg
 end
 
@@ -44,15 +47,16 @@ function AddOn.ImportPackage(name)
     return pkg
 end
 
-if _G.Package_Testing then
+if _G.Package_Testing or _G.R2D2X_Testing then
     function Package:DiscardClasses()
-        self.classes = {}
+        wipe(self.classes)
     end
 
     function AddOn.DiscardPackages()
         for _, p in pairs(pkgs) do
             p:DiscardClasses()
         end
-        pkgs = {}
+        wipe(pkgs)
     end
+
 end

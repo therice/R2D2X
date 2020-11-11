@@ -64,7 +64,7 @@ function Addon:ResolveFiles(from, files, resolutions)
 
     for _, file in pairs(files) do
         local resolvedFile =  filename(from, file)
-        -- print('Resolved ' .. file .. ' @ ' .. resolvedFile)
+        print('Resolved ' .. file .. ' @ ' .. resolvedFile)
         -- LUA extension, straight include
         if endswith(resolvedFile, '.lua') then
             table.insert(resolutions, resolvedFile)
@@ -87,7 +87,7 @@ end
 function ParseTOC(toc)
     local file = assert(io.open(toc, "r"))
     local addon = Addon(toc)
-    -- print('Parsing Addon TOC @ ' .. addon.toc)
+    print('Parsing Addon TOC @ ' .. addon.toc)
     while true do
         local line = file:read()
         if line == nil then break end

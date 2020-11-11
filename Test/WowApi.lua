@@ -51,6 +51,50 @@ function SetLocale(locale)
     wow_api_locale = locale
 end
 
+_time = 0
+function GetTime()
+    return _time
+end
+
+
+C_Timer = {}
+function C_Timer.After(duration, callback)
+
+end
+
+function C_Timer.NewTimer(duration, callback)
+
+end
+
+function C_Timer.NewTicker(duration, callback, iterations)
+
+end
+
+if not wipe then
+    function wipe(tbl)
+        for k in pairs(tbl) do
+            tbl[k]=nil
+        end
+    end
+
+    if not table.wipe then
+        table.wipe = wipe
+    end
+end
+
+function hooksecurefunc(func_name, post_hook_func)
+    local orig_func = _G[func_name]
+    -- assert(type(orig_func)=="function")
+
+    _G[func_name] =
+    function (...)
+        local ret = { orig_func(...) }		-- yeahyeah wasteful, see if i care, it's a test framework
+        post_hook_func(...)
+        return unpack(ret)
+    end
+end
+
+
 C_CreatureInfo = {}
 C_CreatureInfo.ClassInfo = {
     [1] = {
@@ -84,3 +128,5 @@ C_CreatureInfo.ClassInfo = {
     },
     [12] = nil,
 }
+
+loadfile('Test/WowApiUI.lua')()

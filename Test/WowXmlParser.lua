@@ -12,13 +12,13 @@ end
 
 function Load(files, addOnName, addOnNamespace)
     for _, toload in pairs(files) do
-        -- print('Loading File @ ' .. toload)
+        print('Loading File @ ' .. toload)
         loadfile(toload)(addOnName or 'TestAddOn', addOnNamespace or {})
     end
 end
 
 function ParseXml(file)
-    -- print('Parsing File @ ' .. file)
+    print('Parsing File @ ' .. file)
     local wowXmlHandler = handler:new()
     local wowXmlParser = xml2lua.parser(wowXmlHandler)
     wowXmlParser:parse(xml2lua.loadFile(file))
