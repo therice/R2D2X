@@ -303,7 +303,10 @@ function CreateFrame(kind, name, parent)
 end
 
 UIParent = CreateFrame('Frame', 'UIParent', {})
+GameTooltip = CreateFrame('Frame', 'GameTooltip', UIParent)
+
 _G.UIParent = UIParent
+_G.GameTooltip = GameTooltip
 
 local textures, TextureClass = {}, {}
 

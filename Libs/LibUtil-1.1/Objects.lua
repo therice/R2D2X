@@ -50,6 +50,30 @@ function Self.Equals(a, b)
     return a == b
 end
 
+function Self.Check(cond, a, b)
+    if cond then return a else return b end
+end
+
+local Fn = function (t, i)
+    i = (i or 0) + 1
+    if i > #t then
+        Util.Tables.ReleaseTmp(t)
+    else
+        local v = t[i]
+        return i, Self.Check(v == Util.Tables.NIL, nil, v)
+    end
+end
+
+function Self.Each(...)
+    if ... and type(...) == "table" then
+        return next, ...
+    elseif select("#", ...) == 0 then
+        return Util.Functions.Noop
+    else
+        return Fn, Util.Tables.Tmp(...)
+    end
+end
+
 -- Get string representation of various object types
 function Self.ToString(val, depth)
     depth = depth or 3

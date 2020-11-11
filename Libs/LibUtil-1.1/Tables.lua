@@ -89,3 +89,33 @@ function Self.Release(...)
         end
     end
 end
+
+
+function Self.Temp(...)
+    return Self.Tmp(...)
+end
+
+function Self.Tmp(...)
+    local t = tremove(Self.tblPool) or {}
+    for i=1, select("#", ...) do
+        local v = select(i, ...)
+        t[i] = v == nil and Self.NIL or v
+    end
+    return setmetatable(t, Self.EMPTY)
+end
+
+function Self.IsTmp(t)
+    return getmetatable(t) == Self.EMPTY
+end
+
+function Self.ReleaseTemp(...)
+    Self.ReleaseTmp(...)
+end
+
+---@vararg table
+function Self.ReleaseTmp(...)
+    for i=1, select("#", ...) do
+        local t = select(i, ...)
+        if type(t) == "table" and Self.IsTmp(t) then Self.Release(t) end
+    end
+end

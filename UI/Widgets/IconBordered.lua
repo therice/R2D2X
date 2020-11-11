@@ -24,8 +24,7 @@ function IconBordered:Create()
         edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
         edgeSize = 18,
     })
-    -- todo : add hook for HideTooltip
-    -- b:SetScript("OnLeave", AddOn.components.UI.HideTooltip)
+    b:SetScript("OnLeave", function() AddOn.Require('UI.Util'):HideTooltip() end)
     b:EnableMouse(true)
     b:RegisterForClicks("AnyUp")
     b.SetBorderColor = function(self, color)

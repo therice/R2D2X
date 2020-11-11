@@ -37,3 +37,30 @@ function Self.Wrap(str, before, after)
     if Self.IsEmpty(str) then return "" end
     return (before or " ") .. str .. (after or before or " ")
 end
+
+function Self.Prefix(str, prefix)
+    return Self.Wrap(str, prefix, "")
+end
+
+function Self.Postfix(str, postfix)
+    return Self.Wrap(str, "", postfix)
+end
+
+-- Split string on delimiter
+function Self.Split(str, del)
+    local t = Util.Tables.New()
+    for v in (str .. del):gmatch("(.-)" .. del:gsub(".", "%%%1")) do
+        tinsert(t, v)
+    end
+    return t
+end
+
+function Self.Join(del, ...)
+    local s = ""
+    for _,v in Util.Each(...) do
+        if not Self.IsEmpty(v) then
+            s = s .. (s == "" and "" or del or " ") .. v
+        end
+    end
+    return s
+end

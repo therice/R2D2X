@@ -17,3 +17,5 @@ Core\PreLoad.xml
 Init.lua
 ## User Interface
 UI\UI.xml
+
+Core\Core.xml
