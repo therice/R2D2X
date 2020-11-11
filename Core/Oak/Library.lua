@@ -24,7 +24,6 @@ end
 
 if _G.Library_Testing or _G.R2D2X_Testing then
     function AddOn:DiscardLibraries()
-        wipe(AddOn.Libs)
-        wipe(AddOn.LibsMinor)
+        AddOn.Libs, AddOn.LibsMinor = {}, {}
     end
 end

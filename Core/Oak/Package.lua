@@ -49,14 +49,14 @@ end
 
 if _G.Package_Testing or _G.R2D2X_Testing then
     function Package:DiscardClasses()
-        wipe(self.classes)
+        self.classes = {}
     end
 
     function AddOn.DiscardPackages()
         for _, p in pairs(pkgs) do
             p:DiscardClasses()
         end
-        wipe(pkgs)
+        pkgs = {}
     end
 
 end

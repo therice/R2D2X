@@ -41,6 +41,6 @@ end
 
 if _G.Instance_Testing or _G.R2D2X_Testing then
     function AddOn.DiscardInstances()
-        wipe(instances)
+       instances = {}
     end
 end

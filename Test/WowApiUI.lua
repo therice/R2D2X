@@ -10,7 +10,7 @@ FrameClass.methods = {
     "GetFont", "SetWordWrap", "SetJustifyH", "SetMotionScriptsWhileDisabled", "SetDisabledTexture",
     "SetAttribute", "SetScale", "GetObjectType", "IsVisible", "EnableKeyboard", "SetJustifyV", "GetHeight",
     "GetObjectType", "SetMovable", "RegisterForDrag", "HookScript", "SetTextColor", "RegisterForClicks", "GetFontString",
-    "SetPushedTextOffset", "GetWidth"
+    "SetPushedTextOffset", "GetWidth", "SetFontObject", "SetTextInsets"
 }
 
 function FrameClass:New(name)
@@ -239,16 +239,146 @@ function FrameClass:GetObjectType()
     return frames[self].type
 end
 
+function FrameClass:CreateTexture(name, texture, texturePath)
+    return CreateTexture(name, texture, texturePath)
+end
+
+function FrameClass:SetNormalTexture(texture, texturePath)
+    local texture = CreateTexture("normal", texture, texturePath)
+    frames[self].textures['normal'] = texture
+end
+
+function FrameClass:GetNormalTexture()
+    return frames[self].textures['normal']
+end
+
+function FrameClass:SetPushedTexture(texture, texturePath)
+    local texture = CreateTexture("pushed", texture, texturePath)
+    frames[self].textures['pushed'] = texture
+end
+
+function FrameClass:GetPushedTexture()
+    return frames[self].textures['pushed']
+end
+
+function FrameClass:SetHighlightTexture(texture, texturePath)
+    local texture = CreateTexture("highlight", texture, texturePath)
+    frames[self].textures['highlight'] = texture
+end
+
+function FrameClass:GetHighlightTexture()
+    return frames[self].textures['highlight']
+end
+
+function FrameClass:EnableMouse(on)
+
+end
+
+function FrameClass:SetAllPoints()
+
+end
+
+function FrameClass:SetBackdropColor(r, g, b)
+
+end
+
+function FrameClass:SetBackdropBorderColor(r, g, b)
+
+end
+
+function FrameClass:SetFontObject(font) end
+
+function FrameClass:SetTextInsets(a, b, c, d) end
 
 function CreateFrame(kind, name, parent)
-    local frame,internal = FrameClass:New(name)
+    local frame, internal = FrameClass:New(name)
     internal.parent = parent
     internal.type = kind
     frame[0] = '(userdata)'
     frames[frame] = internal
     if name then
         _G[name] = frame
-        -- print('CreateFrame() _G[' .. name .. ' ] set')
     end
     return frame
+end
+
+UIParent = CreateFrame('Frame', 'UIParent', {})
+_G.UIParent = UIParent
+
+local textures, TextureClass = {}, {}
+
+TextureClass.methods = {
+    "SetTexCoord", "SetAllPoints", "Hide", "SetTexture", "SetBlendMode", "SetWidth", "SetHeight", "SetPoint",
+    "SetVertexColor", "SetColorTexture", "SetDrawLayer", "SetDesaturated"
+}
+
+function TextureClass:New(t)
+    local texture = {}
+    for _,method in ipairs(self.methods) do
+        texture[method] = self[method]
+    end
+
+    local textureProps = {
+        texture = t,
+        texturePath = nil,
+        coord = {}
+    }
+
+    return texture, textureProps
+end
+
+function TextureClass:SetTexCoord(left, right, top, bottom)
+
+end
+
+function TextureClass:SetColorTexture()
+
+end
+
+function TextureClass:SetAllPoints()
+
+end
+
+function TextureClass:Hide()
+
+end
+
+function TextureClass:SetTexture(texture)
+
+end
+
+function TextureClass:SetBlendMode(mode)
+
+end
+
+function TextureClass:SetWidth(width)
+
+end
+
+function TextureClass:SetHeight(width)
+
+end
+
+function TextureClass:SetPoint(point, relativeFrame, relativePoint, ofsx, ofsy)
+
+end
+
+function TextureClass:SetVertexColor(r, g, b)
+
+end
+
+function TextureClass:SetDrawLayer(layer) end
+
+function TextureClass:SetDesaturated(saturated) end
+
+function CreateTexture(name, texture, texturePath)
+    local tex, internal = TextureClass:New(name)
+    internal.texture = texture
+    internal.texturePath = texturePath
+    internal.coord = {}
+    textures[tex] = internal
+    if name then
+        _G[name] = tex
+    end
+    return tex
 end
