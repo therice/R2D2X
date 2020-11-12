@@ -385,3 +385,35 @@ function CreateTexture(name, texture, texturePath)
     end
     return tex
 end
+
+function WoWAPI_FireEvent(event,...)
+    for frame, props in pairs(frames) do
+        if props.events[event] then
+            if props.scripts["OnEvent"] then
+                for i=1,select('#',...) do
+                    _G["arg"..i] = select(i,...)
+                end
+                _G.event=event
+                props.scripts["OnEvent"](frame,event,...)
+            end
+        end
+    end
+end
+
+function WoWAPI_FireUpdate(forceNow)
+    if forceNow then
+        _time = forceNow
+    end
+    local now = GetTime()
+    for frame,props in pairs(frames) do
+        if props.isShow and props.scripts.OnUpdate then
+            if now == 0 then
+                props.timer = 0	-- reset back in case we reset the clock for more testing
+            end
+            _G.arg1=now-props.timer
+            props.scripts.OnUpdate(frame,now-props.timer)
+            props.timer = now
+        end
+    end
+end
+

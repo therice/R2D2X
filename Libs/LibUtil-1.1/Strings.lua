@@ -64,3 +64,47 @@ function Self.Join(del, ...)
     end
     return s
 end
+
+function Self.Lower(str)
+    return string.lower(str or "")
+end
+
+function Self.IsLower(s)
+    return (s == Self.Lower(s))
+end
+
+function Self.Upper(str)
+    return string.upper(str or "")
+end
+
+function Self.IsUpper(s)
+    return (s == Self.Upper(s))
+end
+
+function Self.IsNumber(str)
+    return type(str) == 'string' and tonumber(str) ~= nil
+end
+
+
+function Self.Abbr(str, length)
+    return str:len() <= length and str or str:sub(1, length) .. "..."
+end
+
+function Self.Color(r, g, b, a)
+    return ("%.2x%.2x%.2x%.2x"):format((a or 1) * 255, (r or 1) * 255, (g or 1) * 255, (b or 1) * 255)
+end
+
+function Self.Replace(str, from, len, sub)
+    from, len, sub = from or 1, len or str:len(), sub or ""
+    local to = from < 0 and str:len() + from + len + 1 or from + len
+    return str:sub(1, from - 1) .. sub .. str:sub(to)
+end
+
+function Self.ToString(val, depth)
+    return Util.Objects.ToString(val, depth)
+end
+
+function Self.Escape(s)
+    return (s:gsub('[%-%.%+%[%]%(%)%$%^%%%?%*]','%%%1'))
+end
+

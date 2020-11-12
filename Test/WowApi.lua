@@ -1,4 +1,37 @@
 _G.getfenv = function() return _G end
+_G.random = math.random
+-- need to set random seed and invoke once to avoid non-random behavior
+math.randomseed(os.time())
+math.random()
+
+-- utility function for "dumping" a number of arguments (return a string representation of them)
+function dump(...)
+    local t = {}
+    for i=1,select("#", ...) do
+        local v = select(i, ...)
+        if type(v)=="string" then
+            tinsert(t, string.format("%q", v))
+        elseif type(v)=="table" then
+            tinsert(t, tostring(v).." #"..#v)
+        else
+            tinsert(t, tostring(v))
+        end
+    end
+    return "<"..table.concat(t, "> <")..">"
+end
+
+
+require('bit')
+_G.bit = bit
+_G.tInvert = function(tbl)
+    local inverted = {};
+    for k, v in pairs(tbl) do
+        inverted[v] = k;
+    end
+    return inverted;
+end
+_G.getfenv = function() return _G end
+-- define required function pointers in global space which won't be available in testing
 _G.format = string.format
 -- https://wowwiki.fandom.com/wiki/API_debugstack
 -- debugstack([thread, ][start[, count1[, count2]]]])
@@ -31,6 +64,7 @@ _G.string.trim = function(s)
     -- from PiL2 20.4
     return (s:gsub("^%s*(.-)%s*$", "%1"))
 end
+
 _G.strfind = string.find
 _G.gsub = string.gsub
 _G.date = os.date
@@ -40,7 +74,40 @@ _G.unpack = table.unpack
 _G.tinsert = table.insert
 _G.tremove = table.remove
 _G.floor = math.floor
+_G.strlower = string.lower
+_G.strupper = string.upper
 _G.mod = function(a,b) return a - math.floor(a/b) * b end
+
+-- https://wowwiki.fandom.com/wiki/API_strsplit
+-- A list of strings. Not a table. If the delimiter is not found in the string, the whole subject string will be returned.
+_G.strsplit = function(delimiter, str, max)
+    local record = {}
+    if string.len(str) > 0 then
+        max = max or -1
+
+        local field, start = 1, 1
+        local first, last = string.find(str, delimiter, start, true)
+        while first and max ~= 0 do
+            record[field] = string.sub(str, start, first -1)
+            field = field +1
+            start = last +1
+            first, last = string.find(str, delimiter, start, true)
+            max = max -1
+        end
+        record[field] = string.sub(str, start)
+    end
+
+    return unpack(record)
+end
+string.split = _G.strsplit
+_G.strsub = string.sub
+_G.strbyte = string.byte
+_G.strchar = string.char
+_G.pack = table.pack
+_G.unpack = table.unpack
+_G.sort = table.sort
+-- this isn't functionally correct
+_G.debugprofilestop = function() return 0 end
 
 local wow_api_locale = 'enUS'
 function GetLocale()
@@ -58,17 +125,9 @@ end
 
 
 C_Timer = {}
-function C_Timer.After(duration, callback)
-
-end
-
-function C_Timer.NewTimer(duration, callback)
-
-end
-
-function C_Timer.NewTicker(duration, callback, iterations)
-
-end
+function C_Timer.After(duration, callback)  end
+function C_Timer.NewTimer(duration, callback)  end
+function C_Timer.NewTicker(duration, callback, iterations)  end
 
 if not wipe then
     function wipe(tbl)
@@ -84,15 +143,35 @@ end
 
 function hooksecurefunc(func_name, post_hook_func)
     local orig_func = _G[func_name]
-    -- assert(type(orig_func)=="function")
-
     _G[func_name] =
     function (...)
-        local ret = { orig_func(...) }		-- yeahyeah wasteful, see if i care, it's a test framework
+        local ret = { orig_func(...) }
         post_hook_func(...)
         return unpack(ret)
     end
 end
+
+function GetAddOnMetadata(name, attr)
+    if string.lower(attr) == 'version' then
+        return "2.0.0-beta"
+    else
+        return nil
+    end
+end
+
+function GetAddOnInfo()
+    return
+end
+
+local function _errorhandler(msg)
+    print(format("_errorhandler() : %s", dump(msg)))
+end
+
+function geterrorhandler()
+    return _errorhandler
+end
+
+function IsLoggedIn() return false end
 
 
 C_CreatureInfo = {}

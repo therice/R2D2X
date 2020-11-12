@@ -1,8 +1,7 @@
 local _, AddOn = ...
 local Logging = AddOn:GetLibrary('Logging')
 local Util = AddOn:GetLibrary('Util')
-local pkg = AddOn.Package('UI')
-local Private = pkg:Class('Utils')
+local Private = AddOn.Package('UI'):Class('Utils')
 
 function Private:initialize()
     self.tooltip = nil
@@ -15,7 +14,7 @@ function Private:GetTooltip(creator)
     return self.tooltip
 end
 
-local Util = AddOn.Instance(
+local U = AddOn.Instance(
         'UI.Util',
         function()
             return {
@@ -24,7 +23,7 @@ local Util = AddOn.Instance(
         end
 )
 
-function Util:CreateHypertip(link)
+function U:CreateHypertip(link)
     if Util.Strings.IsEmpty(link) then return end
     -- this is to support shift click comparison on all tooltips
     local function tip()
@@ -49,7 +48,7 @@ function Util:CreateHypertip(link)
 end
 
 
-function Util:HideTooltip()
+function U:HideTooltip()
     local tooltip = self.private:GetTooltip()
     if tooltip then
         tooltip.showing = false

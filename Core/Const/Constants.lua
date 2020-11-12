@@ -40,7 +40,10 @@ AddOn.Constants = {
     },
 
     Modes = {
-
+        Standard                =   0x01,
+        Test                    =   0x02,
+        Develop                 =   0x04,
+        Persistence             =   0x08,
     },
     
     Popups = {

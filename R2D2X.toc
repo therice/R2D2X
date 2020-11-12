@@ -15,7 +15,9 @@ Locales\Locales.xml
 Core\PreLoad.xml
 ## Initialization Stub
 Init.lua
+## Models
+Models\Models.xml
 ## User Interface
 UI\UI.xml
-
+## Core AddOn
 Core\Core.xml
