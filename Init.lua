@@ -14,6 +14,8 @@ if AddOn.version == '@project-version@' then
 end
 --@end-debug@
 
+print('R2D2X')
+
 do
     AddOn:AddLibrary('Class', 'LibClass-1.0')
     AddOn:AddLibrary('Logging', 'LibLogging-1.0')
@@ -27,10 +29,12 @@ do
     AddOn:AddLibrary('AceConsole', 'AceConsole-3.0')
     AddOn:AddLibrary('AceComm', 'AceComm-3.0')
     AddOn:AddLibrary('AceSerializer', 'AceSerializer-3.0')
+    AddOn:AddLibrary('AceGUI', 'AceGUI-3.0')
 end
 
-local Logging = AddOn:GetLibrary("Logging")
-local Tables = AddOn:GetLibrary("Util").Tables
+AddOn.Locale = AddOn:GetLibrary("AceLocale"):GetLocale(AddOn.Constants.name)
+
+local Logging, Tables = AddOn:GetLibrary("Logging"), AddOn:GetLibrary("Util").Tables
 
 local function GetDbValue(self, i)
     return Tables.Get(self.db.profile, tostring(i[#i]))
@@ -62,13 +66,21 @@ local ModulePrototype = {
     end,
     GetDbValue = GetDbValue,
     SetDbValue = SetDbValue,
+    -- specifies if module should be enabled on startup
     EnableOnStartup = function (self)
         local enable = (self.db and ((self.db.profile and self.db.profile.enabled) or self.db.enabled)) or false
         Logging:Debug("EnableOnStartup(%s) : %s", self:GetName(), tostring(enable))
         return enable
     end,
+    -- return a table which contains the module's configuration options
+    -- by default, no options are returned
+    BuildConfigOptions = function(self)
+
+    end,
+    -- implement to provide data import functionality for a module
     ImportData = function(self, data)
-    end
+
+    end,
 }
 
 AddOn:SetDefaultModulePrototype(ModulePrototype)

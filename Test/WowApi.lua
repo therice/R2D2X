@@ -208,4 +208,27 @@ C_CreatureInfo.ClassInfo = {
     [12] = nil,
 }
 
+local Color = {}
+function Color:New(r, g, b, a)
+    local c = {r=r, g=g, b=b, a=a}
+    c['GetRGB'] = function() return c.r, c.g, c.b end
+    return c
+end
+
+_G.CreateColor = function(r, g, b, a)
+    return Color:New(r, g, b, a)
+end
+
+_G.ITEM_QUALITY_COLORS = {
+    {color = Color:New(1, 0, 0, 0)},
+    {color = Color:New(2, 0, 0, 0)},
+    {color = Color:New(3, 0, 0, 0)},
+    {color = Color:New(4, 0, 0, 0)},
+    {color = Color:New(5, 0, 0, 0)},
+    {color = Color:New(6, 0, 0, 0)},
+    {color = Color:New(7, 0, 0, 0)},
+}
+
+
+
 loadfile('Test/WowApiUI.lua')()

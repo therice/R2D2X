@@ -7,6 +7,16 @@ if not lib or next(lib.Numbers) or (minor or 0) > MINOR_VERSION then return end
 local Util = lib
 local Self = Util.Numbers
 
+function Self.Round(num, p)
+    p = math.pow(10, p or 0)
+    return math.floor(num * p + .5) / p
+end
+
+function Self.Round2(num, p)
+    if type(num) ~= "number" then return nil end
+    return tonumber(string.format("%." .. (p or 0) .. "f", num))
+end
+
 function Self.Between(num, a, b)
     return num > a and num < b
 end

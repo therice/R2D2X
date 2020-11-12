@@ -19,5 +19,7 @@ Init.lua
 Models\Models.xml
 ## User Interface
 UI\UI.xml
+## Modules
+Modules\Modules.xml
 ## Core AddOn
 Core\Core.xml

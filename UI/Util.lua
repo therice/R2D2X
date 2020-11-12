@@ -1,7 +1,7 @@
 local _, AddOn = ...
-local Logging = AddOn:GetLibrary('Logging')
-local Util = AddOn:GetLibrary('Util')
-local Private = AddOn.Package('UI'):Class('Utils')
+local Logging, Util = AddOn:GetLibrary('Logging'), AddOn:GetLibrary('Util')
+local Pkg = AddOn.Package('UI')
+local Private = Pkg:Class('Utils')
 
 function Private:initialize()
     self.tooltip = nil
@@ -22,6 +22,28 @@ local U = AddOn.Instance(
             }
         end
 )
+
+local Decorator = Pkg:Class('Decorator')
+function Decorator:initialize() end
+function Decorator:decorate(...) return Util.Strings.Join('', ...) end
+
+local ColoredDecorator = Pkg:Class('ColoredDecorator', Decorator)
+function ColoredDecorator:initialize(r, g, b)
+    Decorator.initialize(self)
+    if Util.Objects.IsTable(r) then
+        if r.GetRGB then
+            self.r, self.g, self.b = r:GetRGB()
+        else
+            self.r, self.g, self.b = unpack(r)
+        end
+    else
+        self.r, self.g, self.b = r, g, b
+    end
+end
+
+function ColoredDecorator:decorate(...)
+    return U.RGBToHexPrefix(self.r, self.b, self.g) .. ColoredDecorator.super:decorate(...) .. "|r"
+end
 
 function U:CreateHypertip(link)
     if Util.Strings.IsEmpty(link) then return end
@@ -47,11 +69,20 @@ function U:CreateHypertip(link)
     GameTooltip:SetHyperlink(link)
 end
 
-
 function U:HideTooltip()
     local tooltip = self.private:GetTooltip()
-    if tooltip then
-        tooltip.showing = false
-    end
+    if tooltip then tooltip.showing = false end
     GameTooltip:Hide()
+end
+
+function U.RGBToHex(r,g,b)
+    return string.format("%02x%02x%02x", math.floor(255*r), math.floor(255*g), math.floor(255*b))
+end
+
+function U.RGBToHexPrefix(r, g, b)
+    return "|cff" .. U.RGBToHex(r, g, b)
+end
+
+function U.ColoredDecorator(...)
+    return ColoredDecorator(...)
 end

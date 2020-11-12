@@ -44,6 +44,11 @@ function Self.Push(t, v)
     return t
 end
 
+function Self.Call(t, fn, index, notVal, ...)
+    for i,v in pairs(t) do
+        Util.Functions.Call(Util.Functions.New(fn, v), v, i, index, notVal, ...)
+    end
+end
 
 -- Reusable Tables
 --

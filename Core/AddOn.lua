@@ -1,5 +1,5 @@
 local _, AddOn = ...
-local L, Logging = AddOn:Locale(), AddOn:GetLibrary("Logging")
+local Logging = AddOn:GetLibrary("Logging")
 
 function AddOn:OnInitialize()
     --@debug@

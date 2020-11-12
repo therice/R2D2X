@@ -94,6 +94,7 @@ local function xpcall_patch()
         local success, result = _G.pcall(func, ...)
         if not success then
             print('ERROR -> ' .. dump(result))
+            error(result)
         end
         return success, result
     end
@@ -105,13 +106,11 @@ local function xpcall_restore()
 end
 
 function AddOnLoaded(name, enable)
-    xpcall_patch()
     WoWAPI_FireEvent("ADDON_LOADED", name)
     if enable then
         _G.IsLoggedIn = function() return true end
         WoWAPI_FireEvent("PLAYER_LOGIN")
     end
-    xpcall_restore()
 end
 
 function After()
@@ -126,9 +125,8 @@ function After()
     ResetLogging()
 end
 
-
+xpcall_patch()
 Before()
-
 
 local thisDir = pl.abspath(debug.getinfo(1).source:match("@(.*)/.*.lua$"))
 local wowApi = thisDir .. '/WowApi.lua'
@@ -146,4 +144,5 @@ else
     name, addon = "AddOnName", {}
 end
 
+xpcall_restore()
 return name, addon

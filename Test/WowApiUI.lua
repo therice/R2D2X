@@ -10,7 +10,10 @@ FrameClass.methods = {
     "GetFont", "SetWordWrap", "SetJustifyH", "SetMotionScriptsWhileDisabled", "SetDisabledTexture",
     "SetAttribute", "SetScale", "GetObjectType", "IsVisible", "EnableKeyboard", "SetJustifyV", "GetHeight",
     "GetObjectType", "SetMovable", "RegisterForDrag", "HookScript", "SetTextColor", "RegisterForClicks", "GetFontString",
-    "SetPushedTextOffset", "GetWidth", "SetFontObject", "SetTextInsets"
+    "SetPushedTextOffset", "GetWidth", "SetFontObject", "SetTextInsets", "Enable", "Disable", "SetClampedToScreen",
+    "SetOrientation", "SetHitRectInsets", "SetThumbTexture", "SetScrollChild", "EnableMouseWheel", "SetMinMaxValues",
+    "SetValueStep", "SetValue", "GetChildren", "SetAutoFocus", "GetStringWidth", "SetMultiLine", "SetCountInvisibleLetters",
+    "SetMaxLetters", "SetCursorPosition", "SetFading", "SetMaxLines"
 }
 
 function FrameClass:New(name)
@@ -119,7 +122,7 @@ function FrameClass:GetParent()
 end
 
 function FrameClass:GetFontString()
-
+    return CreateFrame("FontString")
 end
 
 function FrameClass:SetPushedTextOffset()
@@ -290,12 +293,64 @@ function FrameClass:SetFontObject(font) end
 
 function FrameClass:SetTextInsets(a, b, c, d) end
 
-function CreateFrame(kind, name, parent)
+function FrameClass:Enable() end
+
+function FrameClass:Disable() end
+
+function FrameClass:SetClampedToScreen() end
+
+function FrameClass:SetOrientation() end
+
+function FrameClass:SetHitRectInsets() end
+
+function FrameClass:SetThumbTexture() end
+
+function FrameClass:SetScrollChild() end
+
+function FrameClass:EnableMouseWheel() end
+
+function FrameClass:SetMinMaxValues() end
+
+function FrameClass:SetValueStep() end
+
+function FrameClass:SetValue() end
+
+function FrameClass:GetChildren() end
+
+function FrameClass:SetAutoFocus() end
+
+function FrameClass:GetStringWidth() return 0 end
+
+function FrameClass:SetMultiLine() end
+
+function FrameClass:SetCountInvisibleLetters() end
+
+function FrameClass:SetMaxLetters()  end
+
+function FrameClass:SetCursorPosition() end
+
+function FrameClass:SetFading() end
+
+function FrameClass:SetMaxLines(l) end
+
+function CreateFrame(kind, name, parent, template)
     local frame, internal = FrameClass:New(name)
     internal.parent = parent
     internal.type = kind
     frame[0] = '(userdata)'
     frames[frame] = internal
+
+    if template then
+        if template == 'UIDropDownMenuTemplate' then
+            internal['left'] = CreateFrame("Frame", name .. "Left", frame)
+            internal['middle'] = CreateFrame("Frame", name .. "Middle", frame)
+            internal['right'] = CreateFrame("Frame", name .. "Right", frame)
+            internal['button'] = CreateFrame("Frame", name .. "Button", frame)
+            internal['text'] = CreateFrame("Frame", name .. "Text", frame)
+        elseif template == 'UIPanelScrollFrameTemplate' then
+            internal['scrollBar'] = CreateFrame("Frame", name .. "ScrollBar", frame)
+        end
+    end
     if name then
         _G[name] = frame
     end
@@ -312,7 +367,7 @@ local textures, TextureClass = {}, {}
 
 TextureClass.methods = {
     "SetTexCoord", "SetAllPoints", "Hide", "SetTexture", "SetBlendMode", "SetWidth", "SetHeight", "SetPoint",
-    "SetVertexColor", "SetColorTexture", "SetDrawLayer", "SetDesaturated"
+    "SetVertexColor", "SetColorTexture", "SetDrawLayer", "SetDesaturated", "SetGradientAlpha"
 }
 
 function TextureClass:New(t)
@@ -373,6 +428,8 @@ end
 function TextureClass:SetDrawLayer(layer) end
 
 function TextureClass:SetDesaturated(saturated) end
+
+function TextureClass:SetGradientAlpha() end
 
 function CreateTexture(name, texture, texturePath)
     local tex, internal = TextureClass:New(name)

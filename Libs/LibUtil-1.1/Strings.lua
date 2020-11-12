@@ -65,6 +65,15 @@ function Self.Join(del, ...)
     return s
 end
 
+function Self.UcFirst(str)
+    return str:sub(1, 1):upper() .. str:sub(2)
+end
+
+function Self.LcFirst(str)
+    return str:sub(1, 1):lower() .. str:sub(2)
+end
+
+
 function Self.Lower(str)
     return string.lower(str or "")
 end

@@ -4,4 +4,5 @@
     <Script file="IconBordered.lua"/>
     <Script file="Text.lua"/>
     <Script file="Frame.lua"/>
+    <Script file="ScrollingMessageFrame.lua"/>
 </Ui>

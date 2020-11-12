@@ -1,4 +1,5 @@
 local name, AddOn = ...
+print(tostring(name))
 
 AddOn.Constants = {
     name    =   name,

@@ -110,7 +110,7 @@ function Frame:CreateTitle(f)
     tf:SetBackdrop({
         bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
         edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
-        tile = true, tileSize = 8, edgeSize = 6,
+        tile = true, tileSize = 8, edgeSize = 2,
         insets = { left = 2, right = 2, top = 2, bottom = 2 },
     })
     tf:SetBackdropColor(0, 0, 0, 1)
@@ -120,12 +120,12 @@ function Frame:CreateTitle(f)
     tf:SetMovable(true)
     tf:SetWidth(f:GetWidth() * 0.75)
     tf:SetPoint("CENTER", f, "TOP", 0, -1)
-    tf:SetScript("OnMouseDown", function(self) self:GetParent():StartMoving() end)
+    -- tf:SetScript("OnMouseDown", function(self) self:GetParent():StartMoving() end)
     tf:SetScript("OnMouseUp", function(self)
         local frame = self:GetParent()
         frame:StopMovingOrSizing()
         if frame:GetScale() and frame:GetLeft() and frame:GetRight() and frame:GetTop() and frame:GetBottom() then
-            frame:SavePosition()
+            -- frame:SavePosition()
         end
         if self.lastClick and GetTime() - self.lastClick <= 0.5 then
             self.lastClick = nil
@@ -137,7 +137,6 @@ function Frame:CreateTitle(f)
 
     local text = tf:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     text:SetPoint("CENTER", tf, "CENTER")
-    text:SetTextColor(1,1,1,1)
     text:SetText(self.title)
     tf.text = text
     f.title = tf
@@ -149,7 +148,7 @@ function Frame:CreateContent(f)
     c:SetBackdrop({
         bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
         edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
-        tile = true, tileSize = 8, edgeSize = 4,
+        tile = true, tileSize = 8, edgeSize = 2,
         insets = { left = 2, right = 2, top = 2, bottom = 2 }
     })
     c:EnableMouse(true)
@@ -157,12 +156,13 @@ function Frame:CreateContent(f)
     c:SetHeight(self.height or 325)
     c:SetBackdropColor(0, 0, 0, 1)
     c:SetBackdropBorderColor(0, 0, 0, 1)
-    c:SetScript("OnMouseDown", function(self) self:GetParent():StartMoving() end)
+    c:SetPoint("TOPLEFT")
+    -- c:SetScript("OnMouseDown", function(self) self:GetParent():StartMoving() end)
     c:SetScript("OnMouseUp", function(self)
         local frame = self:GetParent()
         frame:StopMovingOrSizing()
         if frame:GetScale() and frame:GetLeft() and frame:GetRight() and frame:GetTop() and frame:GetBottom() then
-            frame:SavePosition()
+            -- frame:SavePosition()
         end
     end)
 

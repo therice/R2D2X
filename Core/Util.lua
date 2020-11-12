@@ -35,11 +35,6 @@ function Mode:__tostring()
     return Util.Numbers.BinaryRepr(self.bitfield)
 end
 
-
-function AddOn:Locale()
-    return AddOn:GetLibrary("AceLocale"):GetLocale(AddOn.Constants.name)
-end
-
 function AddOn:Qualify(...)
     return Util.Strings.Join('_', self.Constants.name, ...)
 end
