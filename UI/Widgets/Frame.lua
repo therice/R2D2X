@@ -1,9 +1,8 @@
 local _, AddOn = ...
-local Logging, Util = AddOn:GetLibrary('Logging'), AddOn:GetLibrary('Util')
+local Logging, Util, Window = AddOn:GetLibrary('Logging'), AddOn:GetLibrary('Util'), AddOn:GetLibrary('Window')
 local NativeUI = AddOn.Require('UI.Native')
 local BaseWidget = AddOn.ImportPackage('UI').NativeWidget
 local Frame = AddOn.Package('UI.Widgets'):Class('Frame', BaseWidget)
-
 
 --- Creates a standard frame with title, minimizing, positioning and scaling supported
 --		Adds Minimize(), Maximize() and IsMinimized() functions on the frame, and registers it for hide on combat
@@ -28,40 +27,41 @@ end
 
 function Frame:Create()
     local f = CreateFrame("Frame", AddOn:Qualify(self.name), self.parent)
-    -- todo
-    -- local storage = AddOn.db.profile.ui[module]
     local hookIt = Util.Objects.IsNil(self.hookConfig) and true or self.hookConfig
+    local storage = { }
+    if self.module and AddOn.db then
+        storage = Util.Tables.Get(AddOn.db, 'profile.ui.' .. self.module) or {}
+    end
+
 
     f:Hide()
     f:SetFrameStrata("DIALOG")
     f:SetToplevel(true)
     f:SetWidth(self.width or 450)
     f:SetHeight(self.height or 325)
-    -- todo
-    --[[
     f:SetScale(storage.scale or 1.1)
     Window:Embed(f)
     f:RegisterConfig(storage)
     f:RestorePosition()
     f:MakeDraggable()
     f:SetScript("OnMouseWheel", function(f,delta) if IsControlKeyDown() then Window.OnMouseWheel(f,delta) end end)
-    f:HookScript("OnShow",
-                 function()
-                     f.restoreConfig = hookIt and AddOn.HideConfig()
-                 end
-    )
-    f:HookScript("OnHide",
-                 function()
-                     if f.restoreConfig then
-                         AddOn.ShowConfig()
-                         f.restoreConfig = false
-                     end
-                 end
-    )
-    --]]
+    --f:HookScript("OnShow",
+    --             function()
+    --                 f.restoreConfig = hookIt and AddOn.HideConfig()
+    --             end
+    --)
+    --f:HookScript("OnHide",
+    --             function()
+    --                 if f.restoreConfig then
+    --                     AddOn.ShowConfig()
+    --                     f.restoreConfig = false
+    --                 end
+    --             end
+    --)
+
     f:SetScript("OnKeyDown",
             function(self, key)
-                Logging:Trace("OnKeyDown(%s) : %s", self:GetName(), key)
+                -- Logging:Trace("OnKeyDown(%s) : %s", self:GetName(), key)
                 if key == "ESCAPE" then
                     self:SetPropagateKeyboardInput(false)
 
@@ -120,12 +120,12 @@ function Frame:CreateTitle(f)
     tf:SetMovable(true)
     tf:SetWidth(f:GetWidth() * 0.75)
     tf:SetPoint("CENTER", f, "TOP", 0, -1)
-    -- tf:SetScript("OnMouseDown", function(self) self:GetParent():StartMoving() end)
+    tf:SetScript("OnMouseDown", function(self) self:GetParent():StartMoving() end)
     tf:SetScript("OnMouseUp", function(self)
         local frame = self:GetParent()
         frame:StopMovingOrSizing()
         if frame:GetScale() and frame:GetLeft() and frame:GetRight() and frame:GetTop() and frame:GetBottom() then
-            -- frame:SavePosition()
+            frame:SavePosition()
         end
         if self.lastClick and GetTime() - self.lastClick <= 0.5 then
             self.lastClick = nil
@@ -157,12 +157,12 @@ function Frame:CreateContent(f)
     c:SetBackdropColor(0, 0, 0, 1)
     c:SetBackdropBorderColor(0, 0, 0, 1)
     c:SetPoint("TOPLEFT")
-    -- c:SetScript("OnMouseDown", function(self) self:GetParent():StartMoving() end)
+    c:SetScript("OnMouseDown", function(self) self:GetParent():StartMoving() end)
     c:SetScript("OnMouseUp", function(self)
         local frame = self:GetParent()
         frame:StopMovingOrSizing()
         if frame:GetScale() and frame:GetLeft() and frame:GetRight() and frame:GetTop() and frame:GetBottom() then
-            -- frame:SavePosition()
+            frame:SavePosition()
         end
     end)
 

@@ -14,8 +14,6 @@ if AddOn.version == '@project-version@' then
 end
 --@end-debug@
 
-print('R2D2X')
-
 do
     AddOn:AddLibrary('Class', 'LibClass-1.0')
     AddOn:AddLibrary('Logging', 'LibLogging-1.0')
@@ -30,6 +28,15 @@ do
     AddOn:AddLibrary('AceComm', 'AceComm-3.0')
     AddOn:AddLibrary('AceSerializer', 'AceSerializer-3.0')
     AddOn:AddLibrary('AceGUI', 'AceGUI-3.0')
+    AddOn:AddLibrary('AceDB', 'AceDB-3.0')
+    AddOn:AddLibrary('AceBucket', 'AceBucket-3.0')
+    AddOn:AddLibrary('AceConfig', 'AceConfig-3.0')
+    AddOn:AddLibrary('AceConfigCmd', 'AceConfigCmd-3.0')
+    AddOn:AddLibrary('AceConfigDialog', 'AceConfigDialog-3.0')
+    AddOn:AddLibrary('AceConfigRegistry', 'AceConfigRegistry-3.0')
+    AddOn:AddLibrary('Window', 'LibWindow-1.1')
+    AddOn:AddLibrary('DataBroker', 'LibDataBroker-1.1')
+    AddOn:AddLibrary('DbIcon', 'LibDBIcon-1.0')
 end
 
 AddOn.Locale = AddOn:GetLibrary("AceLocale"):GetLocale(AddOn.Constants.name)

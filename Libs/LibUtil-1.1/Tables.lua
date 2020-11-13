@@ -7,6 +7,26 @@ if not lib or next(lib.Tables) or (minor or 0) > MINOR_VERSION then return end
 local Util = lib
 local Self = Util.Tables
 
+function Self.Get(t, ...)
+    local n, path = select("#", ...), ...
+
+    if n == 1 and type(path) == "string" and path:find("%.") then
+        path = Self.Tmp(("."):split((...)))
+    elseif type(path) ~= "table" then
+        path = Self.Tmp(...)
+    end
+
+    for _,k in Util.IEach(path) do
+        if k == nil then
+            break
+        elseif t ~= nil then
+            t = t[k]
+        end
+    end
+
+    return t
+end
+
 function Self.IsSet(t)
     return type(t) == "table" and next(t) and true or false
 end

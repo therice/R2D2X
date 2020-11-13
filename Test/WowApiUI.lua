@@ -1,37 +1,19 @@
 local frames, FrameClass = {}, {}
-
-FrameClass.methods = {
-    "SetScript", "RegisterEvent", "UnregisterEvent", "UnregisterAllEvents", "Show", "Hide", "IsShown",
-    "ClearAllPoints", "SetParent", "GetName", "SetOwner", "SetHyperlink", "NumLines", "SetPoint", "SetSize", "SetFrameStrata",
-    "SetBackdrop", "CreateFontString", "SetNormalFontObject", "SetHighlightFontObject", "SetNormalTexture", "GetNormalTexture",
-    "SetPushedTexture", "GetPushedTexture", "SetHighlightTexture", "GetHighlightTexture", "SetText", "GetScript",
-    "EnableMouse", "SetAllPoints", "SetBackdropColor", "SetBackdropBorderColor", "SetWidth", "SetHeight", "GetParent",
-    "GetFrameLevel", "SetFrameLevel", "CreateTexture", "SetFontString", "SetDisabledFontObject", "SetID", "SetToplevel",
-    "GetFont", "SetWordWrap", "SetJustifyH", "SetMotionScriptsWhileDisabled", "SetDisabledTexture",
-    "SetAttribute", "SetScale", "GetObjectType", "IsVisible", "EnableKeyboard", "SetJustifyV", "GetHeight",
-    "GetObjectType", "SetMovable", "RegisterForDrag", "HookScript", "SetTextColor", "RegisterForClicks", "GetFontString",
-    "SetPushedTextOffset", "GetWidth", "SetFontObject", "SetTextInsets", "Enable", "Disable", "SetClampedToScreen",
-    "SetOrientation", "SetHitRectInsets", "SetThumbTexture", "SetScrollChild", "EnableMouseWheel", "SetMinMaxValues",
-    "SetValueStep", "SetValue", "GetChildren", "SetAutoFocus", "GetStringWidth", "SetMultiLine", "SetCountInvisibleLetters",
-    "SetMaxLetters", "SetCursorPosition", "SetFading", "SetMaxLines"
-}
+FrameClass.__index = FrameClass
 
 function FrameClass:New(name)
-    local frame = {}
-    for _,method in ipairs(self.methods) do
-        frame[method] = self[method]
-    end
-    local frameProps = {
-        events = {},
-        scripts = {},
-        timer = GetTime(),
-        name = name,
-        isShow = true,
-        parent = nil,
-        text = nil,
-        textures = {}
-    }
-    return frame, frameProps
+    local self = setmetatable({}, FrameClass)
+    self.events = {}
+    self.scripts = {}
+    self.timer = GetTime()
+    self.name = name
+    self.isShow = true
+    self.parent = nil
+    self.text = nil
+    self.textures = {}
+    self[0] = "(userdata)"
+    return self
+
 end
 
 function FrameClass:SetID(id)
@@ -59,7 +41,7 @@ function FrameClass:RegisterForClicks()
 end
 
 function FrameClass:SetText(text)
-    frames[self].text = text
+    self.text = text
 end
 
 function FrameClass:SetTextColor()
@@ -68,7 +50,7 @@ end
 
 
 function FrameClass:SetScript(script,handler)
-    frames[self].scripts[script] = handler
+    self.scripts[script] = handler
 end
 
 function FrameClass:HookScript()
@@ -76,33 +58,33 @@ function FrameClass:HookScript()
 end
 
 function FrameClass:GetScript(script)
-    return frames[self].scripts[script]
+    return self.scripts[script]
 end
 
 function FrameClass:RegisterEvent(event)
-    frames[self].events[event] = true
+    self.events[event] = true
 end
 
 function FrameClass:UnregisterEvent(event)
-    frames[self].events[event] = nil
+    self.events[event] = nil
 end
 
 function FrameClass:UnregisterAllEvents(frame)
-    for event in pairs(frames[self].events) do
-        frames[self].events[event] = nil
+    for event in pairs(self.events) do
+        self.events[event] = nil
     end
 end
 
 function FrameClass:Show()
-    frames[self].isShow = true
+    self.isShow = true
 end
 
 function FrameClass:Hide()
-    frames[self].isShow = false
+    self.isShow = false
 end
 
 function FrameClass:IsShown()
-    return frames[self].isShow
+    return self.isShow
 end
 
 function FrameClass:IsVisible()
@@ -114,11 +96,11 @@ function FrameClass:ClearAllPoints()
 end
 
 function FrameClass:SetParent(parent)
-    frames[self].parent = parent
+    self.parent = parent
 end
 
 function FrameClass:GetParent()
-    return frames[self].parent
+    return self.parent
 end
 
 function FrameClass:GetFontString()
@@ -143,7 +125,7 @@ function FrameClass:GetFrameLevel()
 end
 
 function FrameClass:GetName()
-    return frames[self].name
+    return self.name
 end
 
 function FrameClass:SetOwner(owner, anchor)
@@ -239,57 +221,59 @@ function FrameClass:SetScale(scale)
 end
 
 function FrameClass:GetObjectType()
-    return frames[self].type
+    return self.type
 end
 
 function FrameClass:CreateTexture(name, texture, texturePath)
-    return CreateTexture(name, texture, texturePath)
+    return CreateTexture(name, texture, texturePath, self)
 end
 
 function FrameClass:SetNormalTexture(texture, texturePath)
-    local texture = CreateTexture("normal", texture, texturePath)
-    frames[self].textures['normal'] = texture
+    local texture = CreateTexture("normal", texture, texturePath, self)
+    self.textures['normal'] = texture
 end
 
 function FrameClass:GetNormalTexture()
-    return frames[self].textures['normal']
+    return self.textures['normal']
 end
 
 function FrameClass:SetPushedTexture(texture, texturePath)
-    local texture = CreateTexture("pushed", texture, texturePath)
-    frames[self].textures['pushed'] = texture
+    local texture = CreateTexture("pushed", texture, texturePath, self)
+    self.textures['pushed'] = texture
 end
 
 function FrameClass:GetPushedTexture()
-    return frames[self].textures['pushed']
+    return self.textures['pushed']
 end
 
 function FrameClass:SetHighlightTexture(texture, texturePath)
-    local texture = CreateTexture("highlight", texture, texturePath)
-    frames[self].textures['highlight'] = texture
+    local texture = CreateTexture("highlight", texture, texturePath, self)
+    self.textures['highlight'] = texture
 end
 
 function FrameClass:GetHighlightTexture()
-    return frames[self].textures['highlight']
+    return self.textures['highlight']
 end
 
-function FrameClass:EnableMouse(on)
-
+function FrameClass:CreateAnimationGroup(name)
+    return CreateAnimationGroup(name)
 end
 
-function FrameClass:SetAllPoints()
+function FrameClass:EnableMouse(on) end
 
-end
+function FrameClass:SetAllPoints() end
 
-function FrameClass:SetBackdropColor(r, g, b)
+function FrameClass:SetBackdropColor(r, g, b)  end
 
-end
-
-function FrameClass:SetBackdropBorderColor(r, g, b)
-
-end
+function FrameClass:SetBackdropBorderColor(r, g, b) end
 
 function FrameClass:SetFontObject(font) end
+
+function FrameClass:EnableMouseWheel() end
+
+function FrameClass:SetFading() end
+
+function FrameClass:SetMaxLines(l) end
 
 function FrameClass:SetTextInsets(a, b, c, d) end
 
@@ -306,8 +290,6 @@ function FrameClass:SetHitRectInsets() end
 function FrameClass:SetThumbTexture() end
 
 function FrameClass:SetScrollChild() end
-
-function FrameClass:EnableMouseWheel() end
 
 function FrameClass:SetMinMaxValues() end
 
@@ -329,101 +311,70 @@ function FrameClass:SetMaxLetters()  end
 
 function FrameClass:SetCursorPosition() end
 
-function FrameClass:SetFading() end
-
-function FrameClass:SetMaxLines(l) end
+function FrameClass:GetScale() return 1 end
 
 function CreateFrame(kind, name, parent, template)
-    local frame, internal = FrameClass:New(name)
-    internal.parent = parent
-    internal.type = kind
-    frame[0] = '(userdata)'
-    frames[frame] = internal
+    local frame = FrameClass:New(name)
+    frame.parent = parent
+    frame.type = kind
 
     if template then
         if template == 'UIDropDownMenuTemplate' then
-            internal['left'] = CreateFrame("Frame", name .. "Left", frame)
-            internal['middle'] = CreateFrame("Frame", name .. "Middle", frame)
-            internal['right'] = CreateFrame("Frame", name .. "Right", frame)
-            internal['button'] = CreateFrame("Frame", name .. "Button", frame)
-            internal['text'] = CreateFrame("Frame", name .. "Text", frame)
+            frame.left = CreateFrame("Frame", name .. "Left", frame)
+            frame.middle = CreateFrame("Frame", name .. "Middle", frame)
+            frame.right = CreateFrame("Frame", name .. "Right", frame)
+            frame.button = CreateFrame("Frame", name .. "Button", frame)
+            frame.text = CreateFrame("Frame", name .. "Text", frame)
         elseif template == 'UIPanelScrollFrameTemplate' then
-            internal['scrollBar'] = CreateFrame("Frame", name .. "ScrollBar", frame)
+            frame.scrollBar = CreateFrame("Frame", name .. "ScrollBar", frame)
         end
     end
-    if name then
-        _G[name] = frame
-    end
+
+    tinsert(frames, frame)
+    if name then _G[name] = frame end
     return frame
 end
 
 UIParent = CreateFrame('Frame', 'UIParent', {})
 GameTooltip = CreateFrame('Frame', 'GameTooltip', UIParent)
+Minimap = CreateFrame('Frame', 'Minimap', UIParent)
 
 _G.UIParent = UIParent
 _G.GameTooltip = GameTooltip
+_G.Minimap = Minimap
 
 local textures, TextureClass = {}, {}
+TextureClass.__index = TextureClass
 
-TextureClass.methods = {
-    "SetTexCoord", "SetAllPoints", "Hide", "SetTexture", "SetBlendMode", "SetWidth", "SetHeight", "SetPoint",
-    "SetVertexColor", "SetColorTexture", "SetDrawLayer", "SetDesaturated", "SetGradientAlpha"
-}
-
-function TextureClass:New(t)
-    local texture = {}
-    for _,method in ipairs(self.methods) do
-        texture[method] = self[method]
-    end
-
-    local textureProps = {
-        texture = t,
-        texturePath = nil,
-        coord = {}
-    }
-
-    return texture, textureProps
+function TextureClass:New(name)
+    local self = setmetatable({}, TextureClass)
+    self.name = name
+    self.texture = nil
+    self.texturePath = nil
+    self.coord = {}
+    self.parent = nil
+    return self
 end
 
-function TextureClass:SetTexCoord(left, right, top, bottom)
+function TextureClass:SetTexCoord(left, right, top, bottom) end
 
-end
+function TextureClass:SetColorTexture() end
 
-function TextureClass:SetColorTexture()
+function TextureClass:SetAllPoints() end
 
-end
+function TextureClass:Hide() end
 
-function TextureClass:SetAllPoints()
+function TextureClass:SetTexture(texture) end
 
-end
+function TextureClass:SetBlendMode(mode) end
 
-function TextureClass:Hide()
+function TextureClass:SetWidth(width) end
 
-end
+function TextureClass:SetHeight(width) end
 
-function TextureClass:SetTexture(texture)
+function TextureClass:SetPoint(point, relativeFrame, relativePoint, ofsx, ofsy)  end
 
-end
-
-function TextureClass:SetBlendMode(mode)
-
-end
-
-function TextureClass:SetWidth(width)
-
-end
-
-function TextureClass:SetHeight(width)
-
-end
-
-function TextureClass:SetPoint(point, relativeFrame, relativePoint, ofsx, ofsy)
-
-end
-
-function TextureClass:SetVertexColor(r, g, b)
-
-end
+function TextureClass:SetVertexColor(r, g, b) end
 
 function TextureClass:SetDrawLayer(layer) end
 
@@ -431,45 +382,92 @@ function TextureClass:SetDesaturated(saturated) end
 
 function TextureClass:SetGradientAlpha() end
 
-function CreateTexture(name, texture, texturePath)
-    local tex, internal = TextureClass:New(name)
-    internal.texture = texture
-    internal.texturePath = texturePath
-    internal.coord = {}
-    textures[tex] = internal
-    if name then
-        _G[name] = tex
-    end
+function TextureClass:SetSize() end
+
+function TextureClass:GetVertexColor() end
+
+function TextureClass:GetParent() return self.parent end
+
+
+function CreateTexture(name, texture, texturePath, parent)
+    local tex = TextureClass:New(name)
+    tex.texture = texture
+    tex.texturePath = texturePath
+    tex.parent = parent
+    tinsert(textures, tex)
+    if name then _G[name] = tex end
     return tex
 end
 
+local AgClass = {}
+AgClass.__index = AgClass
+
+function AgClass:New(name)
+    local self = setmetatable({}, AgClass)
+    self.name = name
+    self.animations = {}
+    return self
+end
+
+function AgClass:CreateAnimation(type, name)
+    return CreateAnimation(type, name)
+end
+
+function AgClass:SetToFinalAlpha() end
+
+function CreateAnimationGroup(name)
+    local ag = AgClass:New(name)
+    if name then _G[name] = ag end
+    return ag
+end
+
+local AnimationClass = {}
+AnimationClass.__index = AnimationClass
+
+function AnimationClass:New(type, name)
+    local self = setmetatable({}, AnimationClass)
+    self.type = type
+    self.name = name
+    return self
+end
+
+function AnimationClass:SetOrder() end
+function AnimationClass:SetDuration() end
+function AnimationClass:SetFromAlpha() end
+function AnimationClass:SetToAlpha() end
+function AnimationClass:SetStartDelay() end
+
+function CreateAnimation(type, name)
+    local a = AnimationClass:New(type, name)
+    if name then _G[name] = a end
+    return a
+end
+
+
 function WoWAPI_FireEvent(event,...)
-    for frame, props in pairs(frames) do
-        if props.events[event] then
-            if props.scripts["OnEvent"] then
+    for _, frame in pairs(frames) do
+        if frame.events[event] then
+            if frame.scripts["OnEvent"] then
                 for i=1,select('#',...) do
                     _G["arg"..i] = select(i,...)
                 end
                 _G.event=event
-                props.scripts["OnEvent"](frame,event,...)
+                frame.scripts["OnEvent"](frame,event,...)
             end
         end
     end
 end
 
 function WoWAPI_FireUpdate(forceNow)
-    if forceNow then
-        _time = forceNow
-    end
+    if forceNow then  _time = forceNow end
     local now = GetTime()
-    for frame,props in pairs(frames) do
-        if props.isShow and props.scripts.OnUpdate then
-            if now == 0 then
-                props.timer = 0	-- reset back in case we reset the clock for more testing
-            end
-            _G.arg1=now-props.timer
-            props.scripts.OnUpdate(frame,now-props.timer)
-            props.timer = now
+    for _,frame in pairs(frames) do
+        if frame.isShow and frame.scripts.OnUpdate then
+            -- reset back in case we reset the clock for more testing
+            if now == 0 then frame.timer = 0 end
+            _G.arg1 = now - frame.timer
+            frame.scripts.OnUpdate(frame, now - frame.timer)
+            frame.timer = now
         end
     end
 end

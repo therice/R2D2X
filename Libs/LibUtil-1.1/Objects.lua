@@ -74,13 +74,20 @@ function Self.Each(...)
     end
 end
 
+function Self.IEach(...)
+    if ... and type(...) == "table" then
+        return Fn, ...
+    else
+        return Self.Each(...)
+    end
+end
+
 function Self.In(val, ...)
     for _, v in Self.Each(...) do
         if v == val then return true end
     end
     return false
 end
-
 
 -- Get string representation of various object types
 function Self.ToString(val, depth)

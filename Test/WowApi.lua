@@ -163,6 +163,58 @@ function GetAddOnInfo()
     return
 end
 
+function GetRealmName()
+    return "Atiesh"
+end
+
+function GetCurrentRegion()
+    return 1 -- "US"
+end
+
+
+function UnitName(unit)
+    if unit == "player" then
+        return "Gnomechómsky"
+    elseif unit == "raid1" then
+        return "Gnomechómsky"
+    else
+        return unit
+    end
+end
+
+function UnitFullName(unit)
+    if unit == "player" then
+        return "Gnomechómsky", "Atiesh"
+    else
+        return unit
+    end
+end
+
+function UnitClass(unit)
+    if unit == "player" then
+        return "Warlock", "WARLOCK"
+    else
+        return "Warrior", "WARRIOR"
+    end
+end
+
+
+function UnitRace(unit)
+    if unit == "player" then
+        return "Gnome", "Gnome"
+    else
+        return "Human", "Human"
+    end
+end
+
+
+FACTION_HORDE = "Horde"
+FACTION_ALLIANCE = "Alliance"
+
+function UnitFactionGroup(unit)
+    return FACTION_ALLIANCE, FACTION_ALLIANCE
+end
+
 local function _errorhandler(msg)
     print(format("_errorhandler() : %s", dump(msg)))
 end
