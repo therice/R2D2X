@@ -48,10 +48,10 @@ local function BuildConfigOptions()
 
         if options then
             if options.args and embedEnableDisable then
-                for name, option in pairs(options.args) do
-                    Logging:Trace("BuildConfigOptions() : modifying 'disabled' property for option argument %s.%s", name, option)
-                    if option.disable then
-                        local oldDisabled = o.disabled
+                for n, option in pairs(options.args) do
+                    Logging:Trace("BuildConfigOptions() : modifying 'disabled' property for option argument %s.%s", n, option)
+                    if option.disabled then
+                        local oldDisabled = option.disabled
                         option.disabled = function(i)
                             return Util.Objects.IsFunction(oldDisabled) and oldDisabled(i) or module:IsDisabled()
                         end
