@@ -198,16 +198,11 @@ function IsInInstance()
     return (IsInGroup() or IsInRaid()), type
 end
 
-
-function GetGuildInfo(unit)
-    return "The Black Watch", "Quarter Master", 1, nil
-end
+function GetGuildInfo(unit) return "The Black Watch", "Quarter Master", 1, nil end
 
 function GetNumGuildMembers() return 0  end
 
-function GetRealmName()
-    return "Atiesh"
-end
+function GetRealmName() return "Atiesh" end
 
 function UnitName(unit)
     if unit == "player" then
@@ -243,8 +238,11 @@ function UnitRace(unit)
     end
 end
 
-function Ambiguate(fullName, context)
-    return fullName
+function Ambiguate(name, context)
+    if context == "short" then
+        name = gsub(name, "%-.+", "")
+    end
+    return name
 end
 
 function GetRaidRosterInfo(i)
@@ -254,6 +252,71 @@ end
 
 function GetInstanceInfo()
     return "Temple of Ahn\'Qiraj", "raid", 1, "40 Player", 40, 0, false, 531, nil
+end
+
+function IsLoggedIn() return false end
+
+local PlayerToGuid = {
+    ['Annasthétic'] = {
+        guid = 'Player-4372-011C6125',
+        name = 'Annasthétic-Atiesh',
+        realm = 'Atiesh',
+        class = 'PRIEST',
+    },
+    Eliovak = {
+        guid = 'Player-4372-00706FE5',
+        name = 'Eliovak-Atiesh',
+        realm = 'Atiesh',
+        class = 'ROGUE',
+    },
+    Folsom = {
+        guid = 'Player-4372-007073FE',
+        name = 'Folsom-Atiesh',
+        realm = 'Atiesh',
+        class = 'WARRIOR',
+    },
+    ['Gnomechómsky'] = {
+        guid = 'Player-4372-00C1D806',
+        name = 'Gnomechómsky-Atiesh',
+        realm = 'Atiesh',
+        class = 'WARLOCK',
+    },
+    Player1 = {
+        guid = "Player-1-00000001",
+        name = "Player1-Realm1",
+        realm = "Realm1",
+        class = "WARRIOR"
+    },
+    Player2 = {
+        guid = "Player-1-00000002",
+        name = "Player2-Realm1",
+        realm = "Realm1",
+        class = "WARRIOR"
+    },
+    Player3 = {
+        guid = "Player-1122-00000003",
+        name = "Player3-Realm2",
+        realm = "Realm2",
+        class = "WARRIOR"
+    },
+}
+
+local PlayerGuidInfo = {}
+for _, info in pairs(PlayerToGuid) do
+    PlayerGuidInfo[info.guid] = info
+end
+
+function UnitGUID (name)
+    return PlayerToGuid[name] and PlayerToGuid[name].guid or "Player-FFF-ABCDF012"
+end
+
+function GetPlayerInfoByGUID (guid)
+    local player = PlayerGuidInfo[guid]
+    if player then
+        return nil,player.class, nil,nil,nil, player.name, player.realm
+    else
+        return nil, "HUNTER", nil,nil,nil, "Unknown", "Unknown"
+    end
 end
 
 
@@ -272,12 +335,38 @@ function geterrorhandler()
     return _errorhandler
 end
 
-function IsLoggedIn() return false end
+
+function ChatFrame_AddMessageEventFilter(event, fn)  end
+
+function SendChatMessage(text, chattype, language, destination)
+    assert(#text<255)
+    WoWAPI_FireEvent("CHAT_MSG_"..strupper(chattype), text, "Sender", language or "Common")
+end
+
+local registeredPrefixes = {}
+function RegisterAddonMessagePrefix(prefix)
+    assert(#prefix<=16)	-- tested, 16 works /mikk, 20110327
+    registeredPrefixes[prefix] = true
+end
+
+function SendAddonMessage(prefix, message, distribution, target)
+    if RegisterAddonMessagePrefix then --4.1+
+        assert(#message <= 255,
+                string.format("SendAddonMessage: message too long (%d bytes > 255)",
+                        #message))
+        -- CHAT_MSG_ADDON(prefix, message, distribution, sender)
+        WoWAPI_FireEvent("CHAT_MSG_ADDON", prefix, message, distribution, "Sender")
+    else -- allow RegisterAddonMessagePrefix to be nilled out to emulate pre-4.1
+        assert(#prefix + #message < 255,
+                string.format("SendAddonMessage: message too long (%d bytes)",
+                        #prefix + #message))
+        -- CHAT_MSG_ADDON(prefix, message, distribution, sender)
+        WoWAPI_FireEvent("CHAT_MSG_ADDON", prefix, message, distribution, "Sender")
+    end
+end
 
 C_ChatInfo = {}
-function C_ChatInfo.RegisterAddonMessagePrefix(prefix)
-
-end
+C_ChatInfo.RegisterAddonMessagePrefix = RegisterAddonMessagePrefix
 
 C_FriendList = {}
 
@@ -314,6 +403,27 @@ C_CreatureInfo.ClassInfo = {
     },
     [12] = nil,
 }
+
+SlashCmdList = {}
+hash_SlashCmdList = {}
+
+function __WOW_Input(text)
+    local a, b = string.find(text, "^/%w+")
+    local arg, text = string.sub(text, a, b), string.sub(text, b + 2)
+    for k, handler in pairs(SlashCmdList) do
+        local i = 0
+        while true do
+            i = i + 1
+            if not _G["SLASH_" .. k .. i] then
+                break
+            elseif _G["SLASH_" .. k .. i] == arg then
+                handler(text)
+                return
+            end
+        end
+    end;
+    print("No command found:", text)
+end
 
 local ChatFrameTemplate = {
     AddMessage = function(self, text)

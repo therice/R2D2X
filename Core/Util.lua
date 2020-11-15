@@ -72,22 +72,24 @@ function AddOn:UnitIsUnit(unit1, unit2)
     return UnitIsUnit(unit1:lower(), unit2:lower())
 end
 
+local UnitNames = {}
 
 -- Gets a unit's name formatted with realmName.
 -- If the unit contains a '-' it's assumed it belongs to the realmName part.
 -- Note: If 'unit' is a playername, that player must be in our raid or party!
--- @param unit Any unit, except those that include '-' like "name-target".
+-- @param u Any unit, except those that include '-' like "name-target".
 -- @return Titlecased "unitName-realmName"
-function AddOn:UnitName(unit)
+function AddOn:UnitName(u)
+    if UnitNames[u] then return UnitNames[u] end
     -- First strip any spaces
-    unit = gsub(unit, " ", "")
+    local unit = gsub(u, " ", "")
     -- Then see if we already have a realm name appended
     local find = strfind(unit, "-", nil, true)
     if find and find < #unit then -- "-" isn't the last character
         -- Let's give it same treatment as below so we're sure it's the same
         local name, realm = strsplit("-", unit, 2)
         name = name:lower():gsub("^%l", string.upper)
-        return name.."-"..realm
+        return name .. "-" .. realm
     end
     -- Apparently functions like GetRaidRosterInfo() will return "real" name, while UnitName() won't
     -- always work with that (see ticket #145). We need this to be consistent, so just lowercase the unit:
@@ -95,13 +97,13 @@ function AddOn:UnitName(unit)
     -- Proceed with UnitName()
     local name, realm = UnitName(unit)
     -- Extract our own realm
-    if not realm or realm == "" then realm = self.realmName or "" end
+    if Util.Strings.IsEmpty(realm) then realm = GetRealmName() or "" end
     -- if the name isn't set then UnitName couldn't parse unit, most likely because we're not grouped.
-    if not name then
-        name = unit
-    end
+    if not name then name = unit end
     -- Below won't work without name
     -- We also want to make sure the returned name is always title cased (it might not always be! ty Blizzard)
     name = name:lower():gsub("^%l", string.upper)
-    return name and name.."-"..realm
+    local resolved = name and name .. "-" .. realm
+    UnitNames[u] = resolved
+    return resolved
 end

@@ -15,7 +15,7 @@ end
 
 describe("Semantic Version", function()
     setup(function()
-        AddOnName, AddOn = loadfile("Test/TestSetup.lua")(true, 'SemanticVersion')
+        AddOnName, AddOn = loadfile("Test/TestSetup.lua")(true, 'Models_SemanticVersion')
         SemanticVersion = AddOn.Package('Models').SemanticVersion
         Util = AddOn:GetLibrary('Util')
     end)

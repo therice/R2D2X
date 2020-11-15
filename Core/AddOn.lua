@@ -1,5 +1,6 @@
 local _, AddOn = ...
-local Logging = AddOn:GetLibrary("Logging")
+local L, Logging = AddOn.Locale, AddOn:GetLibrary("Logging")
+local Player, SlashCommands = AddOn.ImportPackage('Models').Player, AddOn.Require('Core.SlashCommands')
 
 function AddOn:OnInitialize()
     --@debug@
@@ -15,8 +16,7 @@ function AddOn:OnInitialize()
     if not _G.R2D2X_Testing then
         Logging:SetRootThreshold(self.db.profile.logThreshold)
     end
-    self:AddMinimapButton()
-    self:RegisterConfig()
+    SlashCommands:Register()
 end
 
 function AddOn:OnEnable()
@@ -30,16 +30,9 @@ function AddOn:OnEnable()
     -- this enables flag for persistence of stuff like points to officer's notes, history, and sync payloads
     -- it can be disabled as needed through /r2d2 pm
     self.mode:Enable(AddOn.Constants.Modes.Persistence)
+    self.player = Player:Get("player")
 
-    --[[
-    self.realmName = 'Atiesh'
-    self.player ={
-        name = 'Gnomechómsky',
-        guid = 'XXXX',
-        class = 'Warlock',
-        realm = self.realmName
-    }
-    --]]
+    Logging:Debug("OnEnable(%s) : %s", self:GetName(), tostring(self.player))
 
     for name, module in self:IterateModules() do
         Logging:Debug("OnEnable(%s) : Examining module (startup) '%s'", self:GetName(), name)
@@ -49,4 +42,19 @@ function AddOn:OnEnable()
             module:Enable()
         end
     end
+
+    self:RegisterConfig()
+    self:AddMinimapButton()
+    self:Print(format(L["chat version"], tostring(self.version)) .. " is now loaded. Thank you for trusting us to handle all your EP/GP needs!")
+
+    -- this filters out any responses to whispers related to addon
+    local ChatMsgWhisperInformFilter = function(_, event, msg, player, ...)
+        return strfind(msg, "[[\'" .. self:GetName() .. "\']]:")
+    end
+    ChatFrame_AddMessageEventFilter("CHAT_MSG_WHISPER_INFORM", ChatMsgWhisperInformFilter)
+end
+
+function AddOn:OnDisable()
+    Logging:Debug("OnDisable(%s)", self:GetName())
+    SlashCommands:Unregister()
 end

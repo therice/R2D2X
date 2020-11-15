@@ -1,10 +1,11 @@
 local MAJOR_VERSION = "LibGuildStorage-1.3"
 local MINOR_VERSION = 11305
+local LIB_MESSAGE_PREFIX = "GuildStorage13"
 
 local lib, _ = LibStub:NewLibrary(MAJOR_VERSION, MINOR_VERSION)
 if not lib then return end
 
-C_ChatInfo.RegisterAddonMessagePrefix(MAJOR_VERSION)
+C_ChatInfo.RegisterAddonMessagePrefix(LIB_MESSAGE_PREFIX)
 
 local Logging       = LibStub("LibLogging-1.0")
 local Class         = LibStub("LibClass-1.0")
@@ -40,7 +41,7 @@ lib.frame:SetScript(
 local SendAddonMessage = _G.SendAddonMessage
 if ChatThrottleLib then
     SendAddonMessage = function(...)
-        ChatThrottleLib:SendAddonMessage("ALERT", MAJOR_VERSION, ...)
+        ChatThrottleLib:SendAddonMessage("ALERT", LIB_MESSAGE_PREFIX, ...)
     end
 end
 
@@ -193,7 +194,7 @@ lib.frame:RegisterEvent("GUILD_ROSTER_UPDATE")
 
 function lib:CHAT_MSG_ADDON(prefix, msg, type, sender)
     -- only look at messages from this library and ignore ones from yourself
-    if prefix ~= MAJOR_VERSION or sender == UnitName("player") then return end
+    if prefix ~= LIB_MESSAGE_PREFIX or sender == UnitName("player") then return end
     Logging:Trace("CHAT_MSG_ADDON: %s, %s, %s, %s", prefix, msg, type, sender)
     
     if msg == Messages.ChangesPending then

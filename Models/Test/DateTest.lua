@@ -20,7 +20,7 @@ end
 
 describe("Date", function()
     setup(function()
-        AddOnName, AddOn = loadfile("Test/TestSetup.lua")(true, 'Date')
+        AddOnName, AddOn = loadfile("Test/TestSetup.lua")(true, 'Models_Date')
         local p = AddOn.Package('Models')
         Date, DateFormat = p.Date, p.DateFormat
         Util = AddOn:GetLibrary('Util')
