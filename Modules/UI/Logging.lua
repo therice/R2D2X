@@ -1,6 +1,7 @@
 local _, AddOn = ...
 local L, Log, Util = AddOn.Locale, AddOn:GetLibrary("Logging"), AddOn:GetLibrary("Util")
 local UI = AddOn.Require('UI.Native')
+local AceUI = AddOn.Require('UI.Ace')
 local Logging = AddOn:GetModule("Logging", true)
 
 function Logging:BuildFrame()
@@ -14,16 +15,29 @@ function Logging:BuildFrame()
         frame.msg = msg
 
         local close = UI:NewNamed('Button', frame.content, "Close")
-        close:SetText('Close')
+        close:SetText(_G.CLOSE)
         close:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -13, 5)
         close:SetScript("OnClick", function() frame:Hide() end)
         frame.close = close
 
-        local clear =  UI:NewNamed("Button", frame.content, "Clear")
-        clear:SetText('Clear')
+        local clear = UI:NewNamed("Button", frame.content, "Clear")
+        clear:SetText(L['clear'])
         clear:SetPoint("RIGHT", frame.close, "LEFT", -25)
         clear:SetScript("OnClick", function() frame.msg:Clear() end)
         frame.clear = clear
+
+        local threshold =
+            AceUI('Dropdown')
+                .SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 10, 7)
+                .SetLabel(nil)
+                .SetParent(frame)()
+        threshold:SetList(Logging.GetLoggingLevels())
+        threshold:SetValue(Log:GetRootThreshold())
+        threshold:SetCallback(
+                "OnValueChanged",
+                function (_, _, threshold) Logging:SetLoggingThreshold(threshold) end
+        )
+        frame.threshold = threshold
 
         self.frame = frame
     end

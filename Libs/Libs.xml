@@ -1,11 +1,12 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/..\FrameXML\UI.xsd">
     <Script file="LibStub\LibStub.lua"/>
+    <Include file="CallbackHandler-1.0\CallbackHandler-1.0.xml"/>
     <Include file="LibDeflate\LibDeflate.xml"/>
+    <Include file="LibBase64-1.0\LibBase64-1.0.xml"/>
     <Include file="LibClass-1.0\LibClass-1.0.xml"/>
     <Include file="LibLogging-1.0\LibLogging-1.0.xml"/>
     <Include file="LibUtil-1.1\LibUtil-1.1.xml"/>
-    <Include file="CallbackHandler-1.0\CallbackHandler-1.0.xml"/>
-
+    <Include file="LibRx-1.0\LibRx-1.0.xml"/>
     <Include file="AceAddon-3.0\AceAddon-3.0.xml"/>
     <Include file="AceEvent-3.0\AceEvent-3.0.xml"/>
     <Include file="AceTimer-3.0\AceTimer-3.0.xml"/>
@@ -22,4 +23,8 @@
     <Include file="LibDataBroker-1.1\LibDataBroker-1.1.xml"/>
     <Include file="LibDBIcon-1.0\LibDBIcon-1.0.xml"/>
     <Script file="LibWindow-1.1\LibWindow-1.1.lua" />
+    <Include file="lib-st\lib-st.xml" />
+    <Include file="MSA-DropDownMenu-1.0\MSA-DropDownMenu-1.0.xml" />
+    <Include file="LibGuildStorage-1.3\LibGuildStorage-1.3.xml"/>
+    <Include file="LibJSON-1.0\LibJSON-1.0.xml" />
 </Ui>

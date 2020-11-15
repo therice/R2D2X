@@ -2,7 +2,7 @@ local AddOnName, AddOn
 
 describe("Util", function()
     setup(function()
-        AddOnName, AddOn = loadfile("Test/TestSetup.lua")(true)
+        AddOnName, AddOn = loadfile("Test/TestSetup.lua")(true, 'Core_Util')
     end)
     teardown(function()
         After()

@@ -388,6 +388,8 @@ function TextureClass:GetVertexColor() end
 
 function TextureClass:GetParent() return self.parent end
 
+function TextureClass:ClearAllPoints() end
+
 
 function CreateTexture(name, texture, texturePath, parent)
     local tex = TextureClass:New(name)
@@ -472,3 +474,29 @@ function WoWAPI_FireUpdate(forceNow)
     end
 end
 
+function SendChatMessage(text, chattype, language, destination)
+    assert(#text < 255)
+    WoWAPI_FireEvent("CHAT_MSG_"..strupper(chattype), text, "Sender", language or "Common")
+end
+
+local registeredPrefixes = {}
+function RegisterAddonMessagePrefix(prefix)
+    assert(#prefix <= 16) -- tested, 16 works /mikk, 20110327
+    registeredPrefixes[prefix] = true
+end
+
+function SendAddonMessage(prefix, message, distribution, target)
+    if RegisterAddonMessagePrefix then --4.1+
+        assert(#message <= 255,
+                string.format("SendAddonMessage: message too long (%d bytes > 255)",
+                        #message))
+        -- CHAT_MSG_ADDON(prefix, message, distribution, sender)
+        WoWAPI_FireEvent("CHAT_MSG_ADDON", prefix, message, distribution, "Sender")
+    else -- allow RegisterAddonMessagePrefix to be nilled out to emulate pre-4.1
+        assert(#prefix + #message < 255,
+                string.format("SendAddonMessage: message too long (%d bytes)",
+                        #prefix + #message))
+        -- CHAT_MSG_ADDON(prefix, message, distribution, sender)
+        WoWAPI_FireEvent("CHAT_MSG_ADDON", prefix, message, distribution, "Sender")
+    end
+end

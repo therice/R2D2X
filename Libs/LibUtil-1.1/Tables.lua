@@ -27,6 +27,34 @@ function Self.Get(t, ...)
     return t
 end
 
+
+function Self.Set(t, ...)
+    local n, path = select("#", ...), ...
+    local val = select(n, ...)
+
+    if n == 2 and type(path) == "string" and path:find("%.") then
+        path = Self.Tmp(("."):split((...)))
+    elseif type(path) ~= "table" then
+        path = Self.Tmp(...)
+        tremove(path)
+    end
+
+    local u, j = t
+    for i,k in Util.IEach(path) do
+        if k == nil then
+            break
+        elseif j then
+            if u[j] == nil then u[j] = Self.New() end
+            u = u[j]
+        end
+        j = k
+    end
+
+    u[j] = val
+
+    return t, val
+end
+
 function Self.IsSet(t)
     return type(t) == "table" and next(t) and true or false
 end

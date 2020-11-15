@@ -31,6 +31,15 @@ function AddOn:OnEnable()
     -- it can be disabled as needed through /r2d2 pm
     self.mode:Enable(AddOn.Constants.Modes.Persistence)
 
+    --[[
+    self.realmName = 'Atiesh'
+    self.player ={
+        name = 'Gnomechómsky',
+        guid = 'XXXX',
+        class = 'Warlock',
+        realm = self.realmName
+    }
+    --]]
 
     for name, module in self:IterateModules() do
         Logging:Debug("OnEnable(%s) : Examining module (startup) '%s'", self:GetName(), name)

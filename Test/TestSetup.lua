@@ -16,11 +16,18 @@ loadAddon = params[1] or false
 -- custom assertions start
 --
 local function less(state, arguments)
+    if not #arguments == 2 then return false end
     return arguments[1] < arguments[2]
 end
 
 local function greater(state, arguments)
+    if not #arguments == 2 then return false end
     return arguments[1] > arguments[2]
+end
+
+local function isa(state, arguments)
+    if not #arguments == 2 then return false end
+    return type(arguments[1]) == 'table' and getmetatable(arguments[1]).__index == arguments[2]
 end
 
 say:set_namespace("en")
@@ -31,6 +38,10 @@ assert:register("assertion", "less", less, "assertion.less.positive", "assertion
 say:set("assertion.greater.positive", "Expected %s to be greater than %s")
 say:set("assertion.greater.negative", "Expected %s to not be greater than %s")
 assert:register("assertion", "greater", greater, "assertion.greater.positive", "assertion.greater.negative")
+
+say:set("assertion.isa.positive", "Expected object: %s to be of type %s")
+say:set("assertion.isa.negative", "Expected object: %s to not be of type %s")
+assert:register("assertion", "is_a", isa, "assertion.isa.positive", "assertion.isa.negative")
 --
 -- custom assertions end
 --

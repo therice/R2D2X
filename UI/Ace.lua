@@ -1,5 +1,6 @@
 local _, AddOn = ...
 local Logging, Util, AceGUI = AddOn:GetLibrary('Logging'), AddOn:GetLibrary('Util'), AddOn:GetLibrary('AceGUI')
+local AceConfigBuilder = AddOn.ImportPackage('UI').AceConfigBuilder
 
 local Ace = AddOn.Instance(
         'UI.Ace',
@@ -12,6 +13,10 @@ local Ace = AddOn.Instance(
             }
         end
 )
+
+function Ace.ConfigBuilder(options, ...)
+    return AceConfigBuilder(options, ...)
+end
 
 local AceChainFn = function(...)
     local chain, widget, key = Ace.Chain, rawget(Ace.Chain, "widget"), rawget(Ace.Chain, "key")

@@ -151,6 +151,14 @@ function hooksecurefunc(func_name, post_hook_func)
     end
 end
 
+function GetFramerate()
+    return 60
+end
+
+function GetServerTime ()
+    return os.time()
+end
+
 function GetAddOnMetadata(name, attr)
     if string.lower(attr) == 'version' then
         return "2.0.0-beta"
@@ -163,14 +171,43 @@ function GetAddOnInfo()
     return
 end
 
-function GetRealmName()
-    return "Atiesh"
-end
-
 function GetCurrentRegion()
     return 1 -- "US"
 end
 
+function GuildRoster ()  end
+
+function IsInGuild() return 1  end
+
+
+function IsInRaid() return _G.IsInRaidVal end
+
+function UnitInRaid() return _G.IsInRaidVal end
+
+function IsInGroup() return _G.IsInGroupVal end
+
+function UnitInParty() return _G.IsInGroupVal end
+
+function IsInInstance()
+    local type = "none"
+    if _G.IsInGroupVal then
+        type = "party"
+    elseif _G.IsInRaidVal then
+        type = "raid"
+    end
+    return (IsInGroup() or IsInRaid()), type
+end
+
+
+function GetGuildInfo(unit)
+    return "The Black Watch", "Quarter Master", 1, nil
+end
+
+function GetNumGuildMembers() return 0  end
+
+function GetRealmName()
+    return "Atiesh"
+end
 
 function UnitName(unit)
     if unit == "player" then
@@ -178,7 +215,7 @@ function UnitName(unit)
     elseif unit == "raid1" then
         return "Gnomechómsky"
     else
-        return unit
+        return unit, "Realm1"
     end
 end
 
@@ -186,7 +223,7 @@ function UnitFullName(unit)
     if unit == "player" then
         return "Gnomechómsky", "Atiesh"
     else
-        return unit
+        return unit,"Realm1"
     end
 end
 
@@ -198,13 +235,25 @@ function UnitClass(unit)
     end
 end
 
-
 function UnitRace(unit)
     if unit == "player" then
         return "Gnome", "Gnome"
     else
         return "Human", "Human"
     end
+end
+
+function Ambiguate(fullName, context)
+    return fullName
+end
+
+function GetRaidRosterInfo(i)
+    -- name, _, _, _, _, class
+    return "Character" .. i, nil, nil, nil, nil, C_CreatureInfo.GetClassInfo(math.random(1,5)).classFile
+end
+
+function GetInstanceInfo()
+    return "Temple of Ahn\'Qiraj", "raid", 1, "40 Player", 40, 0, false, 531, nil
 end
 
 
@@ -225,6 +274,12 @@ end
 
 function IsLoggedIn() return false end
 
+C_ChatInfo = {}
+function C_ChatInfo.RegisterAddonMessagePrefix(prefix)
+
+end
+
+C_FriendList = {}
 
 C_CreatureInfo = {}
 C_CreatureInfo.ClassInfo = {
@@ -260,6 +315,21 @@ C_CreatureInfo.ClassInfo = {
     [12] = nil,
 }
 
+local ChatFrameTemplate = {
+    AddMessage = function(self, text)
+        print((string.gsub(text, "|c%x%x%x%x%x%x%x%x(.-)|r", "%1")))
+    end
+}
+
+for i = 1, 7 do
+    local f = {}
+    for k, v in pairs(ChatFrameTemplate) do
+        f[k] = v
+    end
+    _G["ChatFrame"..i] = f
+end
+DEFAULT_CHAT_FRAME = ChatFrame1
+
 local Color = {}
 function Color:New(r, g, b, a)
     local c = {r=r, g=g, b=b, a=a}
@@ -281,6 +351,79 @@ _G.ITEM_QUALITY_COLORS = {
     {color = Color:New(7, 0, 0, 0)},
 }
 
+_G.RAID_CLASS_COLORS = {}
+
+-- https://github.com/Gethe/wow-ui-source/tree/classic
+_G.INVTYPE_HEAD = "Head"
+_G.INVTYPE_NECK = "Neck"
+_G.INVTYPE_SHOULDER = "Shoulder"
+_G.INVTYPE_CHEST = "Chest"
+_G.INVTYPE_WAIST = "Waist"
+_G.INVTYPE_LEGS = "Legs"
+_G.INVTYPE_FEET = "Feet"
+_G.INVTYPE_WRIST = "Wrist"
+_G.INVTYPE_HAND = "Hands"
+_G.INVTYPE_FINGER = "Finger"
+_G.INVTYPE_TRINKET = "Trinket"
+_G.INVTYPE_CLOAK = "Back"
+_G.SHIELDSLOT = "Shield"
+_G.INVTYPE_HOLDABLE = "Held In Off-Hand"
+_G.INVTYPE_RANGED = "Ranged"
+_G.INVTYPE_RELIC =  "Relic"
+_G.INVTYPE_WEAPON = "One-Hand"
+_G.INVTYPE_2HWEAPON = "Two-Handed"
+_G.INVTYPE_WEAPONMAINHAND = "Main Hand"
+_G.INVTYPE_WEAPONOFFHAND = "Off Hand"
+_G.WEAPON = "Weapon"
+_G.LE_ITEM_WEAPON_AXE1H = 0
+_G.LE_ITEM_WEAPON_AXE2H = 1
+_G.LE_ITEM_WEAPON_BOWS = 2
+_G.LE_ITEM_WEAPON_GUNS = 3
+_G.LE_ITEM_WEAPON_MACE1H = 4
+_G.LE_ITEM_WEAPON_MACE2H = 5
+_G.LE_ITEM_WEAPON_POLEARM = 6
+_G.LE_ITEM_WEAPON_SWORD1H = 7
+_G.LE_ITEM_WEAPON_SWORD2H = 8
+_G.LE_ITEM_WEAPON_WARGLAIVE = 9
+_G.LE_ITEM_WEAPON_STAFF = 10
+_G.LE_ITEM_WEAPON_BEARCLAW = 11
+_G.LE_ITEM_WEAPON_CATCLAW = 12
+_G.LE_ITEM_WEAPON_UNARMED = 13
+_G.LE_ITEM_WEAPON_GENERIC = 14
+_G.LE_ITEM_WEAPON_DAGGER = 15
+_G.LE_ITEM_WEAPON_THROWN = 16
+_G.LE_ITEM_WEAPON_CROSSBOW = 18
+_G.LE_ITEM_WEAPON_WAND = 19
+_G.LE_ITEM_ARMOR_GENERIC = 0
+_G.LE_ITEM_ARMOR_CLOTH = 1
+_G.LE_ITEM_ARMOR_LEATHER = 2
+_G.LE_ITEM_ARMOR_MAIL = 3
+_G.LE_ITEM_ARMOR_PLATE = 4
+_G.LE_ITEM_ARMOR_COSMETIC = 5
+_G.LE_ITEM_ARMOR_SHIELD = 6
+_G.LE_ITEM_ARMOR_LIBRAM = 7
+_G.LE_ITEM_ARMOR_IDOL = 8
+_G.LE_ITEM_ARMOR_TOTEM = 9
+_G.LE_ITEM_ARMOR_SIGIL = 10
+_G.LE_ITEM_ARMOR_RELIC = 11
+
+_G.LE_ITEM_CLASS_WEAPON = 2
+_G.LE_ITEM_CLASS_ARMOR = 4
+
+_G.RANDOM_ROLL_RESULT = "%s rolls %d (%d-%d)"
+
+_G.TOOLTIP_DEFAULT_BACKGROUND_COLOR = {
+    r = 0,
+    g = 0,
+    b = 0,
+}
+_G.TOOLTIP_DEFAULT_COLOR = {
+    r = 0,
+    g = 0,
+    b = 0,
+}
+
+_G.AUTO_LOOT_DEFAULT_TEXT = "Auto Loot"
 
 
 loadfile('Test/WowApiUI.lua')()

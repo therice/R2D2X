@@ -8,6 +8,12 @@ AddOn.Constants = {
     player  =   "player",
     party   =   "party",
 
+    CommPrefixes = {
+      Main      =   name,
+      Version   =   name .. 'v',
+      Sync      =   name .. 's',
+    },
+
     Channels = {
         None        =   "NONE",
         Guild       =   "GUILD",
