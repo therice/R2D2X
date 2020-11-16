@@ -1,17 +1,12 @@
-local AddOnName, AddOn, C, Util
+local AddOnName, AddOn, C, Util, Player
 
 describe("Comm", function()
     setup(function()
         AddOnName, AddOn = loadfile("Test/TestSetup.lua")(true, 'Core_Comm')
         C, Util = AddOn.Constants, AddOn:GetLibrary('Util')
+        Player = AddOn.Package('Models').Player
         ConfigureLogging()
-        AddOn.realmName = 'Realm1'
-        AddOn.player = {
-            name = 'Player1',
-            guid = 'XXXX',
-            class = 'Warlock',
-            realm = AddOn.realmName
-        }
+        AddOn.player = Player:Get("Player1")
     end)
     teardown(function()
         After()
@@ -372,14 +367,8 @@ describe("Comm", function()
             local s = spy.new(function(data,sender,command, dist) return unpack(data) end)
             Comm:Subscribe(C.CommPrefixes.Main, "test_cmd", s)
 
-            local target =  {
-                name = 'Player1',
-                guid = 'XXXX',
-                class = 'Warlock',
-                realm = AddOn.realmName
-            }
-            AddOn.realmName = target.realm
-            AddOn.UnitIsUnit = function(self, unit1, unit2)
+            local target = Player:Get("Player1")
+            _G.UnitIsUnit = function(unit1, unit2)
                 return true
             end
 
@@ -415,6 +404,7 @@ describe("Comm", function()
             WoWAPI_FireUpdate(GetTime()+10)
             assert.spy(s).was_called(3)
             assert.spy(s).returned_with(data)
+            _G.UnitIsUnit = nil
         end)
     end)
 end)

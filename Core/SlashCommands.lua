@@ -11,13 +11,15 @@ end
 function SlashCommandsInternal:Help()
     print(format(L["chat version"], tostring(AddOn.version)))
     for _, cmd in pairs(self.commands) do
-        print("|cff20a200", cmd.cmd, "|r:", cmd.desc or "")
+        if not cmd.hidden or AddOn:DevModeEnabled() then
+            print("|cff20a200", cmd.cmd, "|r:", cmd.desc or "")
+        end
     end
 end
 
 function SlashCommandsInternal:HandleCommand(msg)
     local args = Util.Tables.Temp(self.AceConsole:GetArgs(msg, 10))
-    Logging:Debug("HandleCommand() : %s", Util.Objects.ToString(args))
+    Logging:Trace("HandleCommand() : %s", Util.Objects.ToString(args))
     local cmd = tremove(args, 1)
     if Util.Objects.IsTable(cmd) then cmd = nil else cmd = cmd:trim():lower() end
     if Util.Strings.IsEmpty(cmd) or Util.Strings.Equal(cmd, 'help') then
@@ -35,7 +37,7 @@ function SlashCommandsInternal:HandleCommand(msg)
                         return true
                     end
             )
-            Logging:Debug("HandleCommand(%s) : dispatching %s to subject", cmd, Util.Objects.ToString(args))
+            Logging:Trace("HandleCommand(%s) : dispatching %s to subject", cmd, Util.Objects.ToString(args))
             subject:next(unpack(args))
         else
             self:Help()
@@ -45,13 +47,14 @@ function SlashCommandsInternal:HandleCommand(msg)
     Util.Tables.ReleaseTemp(args)
 end
 
-function SlashCommandsInternal:RegisterCommand(cmds, desc)
+function SlashCommandsInternal:RegisterCommand(cmds, desc, hidden)
     for _, cmd in ipairs(cmds) do
         if not self.commands[cmd:lower()] then
             -- Logging:Trace('RegisterCommand() : %s', tostring(cmd))
             self.commands[cmd] = {
                 cmd = cmd:lower(),
                 desc = desc,
+                hidden = hidden,
             }
         end
     end
@@ -89,7 +92,7 @@ local SlashCommands = AddOn.Instance(
 
 AddOn:GetLibrary('AceConsole'):Embed(SlashCommands.private.AceConsole)
 
-function SlashCommands:Subscribe(cmds, desc, func)
+function SlashCommands:Subscribe(cmds, desc, func, hidden)
     assert(
         Util.Objects.IsTable(cmds) and #cmds > 0 and Util.Tables.CountFn(cmds, function(v) return Util.Strings.IsSet(v) and 1 or 0 end) == #cmds,
         "'cmds' must be a table of strings with at least one entry"
@@ -97,7 +100,8 @@ function SlashCommands:Subscribe(cmds, desc, func)
     assert(Util.Objects.IsString(desc), "'desc' was not provided")
     assert(Util.Objects.IsFunction(func), "'func' was not provided")
     Logging:Debug("SlashCommands:Subscribe() : %s", Util.Objects.ToString(cmds))
-    self.private:RegisterCommand(cmds, desc)
+    hidden = Util.Objects.IsEmpty(hidden) and false or hidden
+    self.private:RegisterCommand(cmds, desc, hidden)
     return self.private:Subject(cmds):subscribe(func)
 end
 
@@ -109,7 +113,7 @@ function SlashCommands:BulkSubscribe(...)
     local subs, idx = {}, 1
     for i=1, select("#", ...) do
         local command = select(i, ...)
-        subs[idx] = self:Subscribe(command[1], command[2], command[3])
+        subs[idx] = self:Subscribe(unpack(command))
         idx = idx + 1
     end
     return subs

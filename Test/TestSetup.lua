@@ -116,12 +116,25 @@ local function xpcall_restore()
     _G.xpcallo = nil
 end
 
+local LoadedAddOns = {}
+
+_G.IsAddOnLoaded = function(name)
+    return LoadedAddOns[name] or false
+end
+
 function AddOnLoaded(name, enable)
     WoWAPI_FireEvent("ADDON_LOADED", name)
+    LoadedAddOns[name] = true
+
     if enable then
         _G.IsLoggedIn = function() return true end
         WoWAPI_FireEvent("PLAYER_LOGIN")
     end
+end
+
+function PlayerEnteredWorld()
+    _G.IsLoggedIn = function() return true end
+    WoWAPI_FireEvent("PLAYER_ENTERING_WORLD")
 end
 
 function After()

@@ -1,6 +1,8 @@
 local _, AddOn = ...
 local L, Logging = AddOn.Locale, AddOn:GetLibrary("Logging")
-local Player, SlashCommands = AddOn.ImportPackage('Models').Player, AddOn.Require('Core.SlashCommands')
+local C, Comm, Player, SlashCommands =
+    AddOn.Constants, AddOn.Require('Core.Comm'), AddOn.ImportPackage('Models').Player,
+    AddOn.Require('Core.SlashCommands')
 
 function AddOn:OnInitialize()
     --@debug@
@@ -13,10 +15,14 @@ function AddOn:OnInitialize()
     self.mode = AddOn.Package('Core').Mode()
 
     self.db = self:GetLibrary("AceDB"):New(self:Qualify('DB'), self.Defaults)
-    if not _G.R2D2X_Testing then
-        Logging:SetRootThreshold(self.db.profile.logThreshold)
-    end
+    if not _G.R2D2X_Testing then Logging:SetRootThreshold(self.db.profile.logThreshold) end
     SlashCommands:Register()
+    self:RegisterChatCommands()
+
+    Comm:Register(C.CommPrefixes.Main)
+    Comm:Register(C.CommPrefixes.Version)
+    self.Send = Comm:GetSender(C.CommPrefixes.Main)
+    self:SubscribeToPermanentComms()
 end
 
 function AddOn:OnEnable()
@@ -42,6 +48,9 @@ function AddOn:OnEnable()
             module:Enable()
         end
     end
+
+    -- register events
+    self:SubscribeToEvents()
 
     self:RegisterConfig()
     self:AddMinimapButton()

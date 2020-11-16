@@ -33,8 +33,10 @@ end
 
 function Logging:OnEnable()
     Log:Debug("OnEnable(%s)", self:GetName())
-    self:SwitchDestination(accum)
-    accum = nil
+    if not _G.R2D2X_Testing then
+        self:SwitchDestination(accum)
+        accum = nil
+    end
 end
 
 function Logging:EnableOnStartup()

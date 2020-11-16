@@ -38,11 +38,19 @@ AddOn.Constants = {
     },
 
     Events = {
-
+        GroupLeft               =   "GROUP_LEFT",
+        LootClosed              =   "LOOT_CLOSED",
+        LootOpened              =   "LOOT_OPENED",
+        LootReady               =   "LOOT_READY",
+        LootSlotCleared         =   "LOOT_SLOT_CLEARED",
+        PlayerEnteringWorld     =   "PLAYER_ENTERING_WORLD",
+        PartyLootMethodChanged  =   "PARTY_LOOT_METHOD_CHANGED",
+        PartyLeaderChanged      =   "PARTY_LEADER_CHANGED",
     },
 
     Messages = {
-
+        PlayerInfo              =   "pi",
+        PlayerInfoRequest       =   "pir",
     },
 
     Modes = {

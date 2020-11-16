@@ -1,6 +1,6 @@
 local _, AddOn = ...
 local L, Logging, Util, Rx = AddOn.Locale, AddOn:GetLibrary('Logging'), AddOn:GetLibrary('Util'), AddOn:GetLibrary('Rx')
-local Subject, Comms, Compression = Rx.rx.Subject, AddOn.Package('Core'):Class('Comm'), Util.Compression
+local Subject, Comms, Compression = Rx.rx.Subject, AddOn.Package('Core'):Class('Comms'), Util.Compression
 local C, Compressor = AddOn.Constants, Compression.GetCompressors(Compression.CompressorType.LibDeflate)[1]
 
 --- scrubs passed value for transmission over the wire
@@ -126,7 +126,6 @@ function Comms:SendComm(prefix, target, prio, callback, callbackarg, command, ..
     Logging:Debug("SendComm(%s, %s, %s) : %s (%d)",
             prefix, Util.Objects.ToString(target), command,
             '[omitted]', #toSend
-    -- -- Logging:IsEnabledFor(Logging.Level.Trace) and Util.Objects.ToString(toSend, 1) or '[omitted]'
     )
 
     if target == C.group then
@@ -135,14 +134,12 @@ function Comms:SendComm(prefix, target, prio, callback, callbackarg, command, ..
     elseif target == C.guild then
         self.AceComm:SendCommMessage(prefix, toSend, C.Channels.Guild, nil, prio, callback, callbackarg)
     else
-
-        -- todo : revisit this to verify correctness once handle players consisteny
-        target = Util.Objects.IsTable(target) and target.name or target
+        target = Util.Objects.IsTable(target) and target:GetName() or target
         Logging:Debug("SendComm() : %s", target)
         -- If target == "player"
         if AddOn:UnitIsUnit(target, C.player) then
             Logging:Debug("SendComm() : UnitIsUnit(true), %s", AddOn.player.name)
-            self.AceComm:SendCommMessage(prefix, toSend, C.Channels.Whisper, AddOn.player.name, prio, callback, callbackarg)
+            self.AceComm:SendCommMessage(prefix, toSend, C.Channels.Whisper, AddOn.player:GetName(), prio, callback, callbackarg)
         else
             Logging:Debug("SendComm() : UnitIsUnit(false), %s", target)
             self.AceComm:SendCommMessage(prefix, toSend, C.Channels.Whisper, target, prio, callback, callbackarg)

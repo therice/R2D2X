@@ -129,7 +129,7 @@ describe("SlashCommands", function()
                 SC:Unregister()
             end)
 
-            it("not invoked with no arguments", function()
+            it("invokes all", function()
                 __WOW_Input('/r2d2x')
                 assert.spy(onReceiveSpy).was_called(0)
 
