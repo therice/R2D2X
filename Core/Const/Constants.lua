@@ -38,6 +38,8 @@ AddOn.Constants = {
     },
 
     Events = {
+        EncounterEnd            =   "ENCOUNTER_END",
+        EncounterStart          =   "ENCOUNTER_START",
         GroupLeft               =   "GROUP_LEFT",
         LootClosed              =   "LOOT_CLOSED",
         LootOpened              =   "LOOT_OPENED",
@@ -46,6 +48,9 @@ AddOn.Constants = {
         PlayerEnteringWorld     =   "PLAYER_ENTERING_WORLD",
         PartyLootMethodChanged  =   "PARTY_LOOT_METHOD_CHANGED",
         PartyLeaderChanged      =   "PARTY_LEADER_CHANGED",
+        PlayerRegenEnabled      =   "PLAYER_REGEN_ENABLED",
+        PlayerRegenDisabled     =   "PLAYER_REGEN_DISABLED",
+        RaidInstanceWelcome     =   "RAID_INSTANCE_WELCOME",
     },
 
     Messages = {

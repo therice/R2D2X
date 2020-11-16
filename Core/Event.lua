@@ -23,10 +23,10 @@ function Events:HandleEvent(event, ...)
 end
 
 function Events:RegisterEvent(event)
-    Logging:Debug("RegisterEvent(%s)", event)
+    Logging:Trace("RegisterEvent(%s)", event)
 
     if not self.registered[event] then
-        Logging:Debug("RegisterEvent(%s) : registering 'self' with AceEvent", event)
+        Logging:Trace("RegisterEvent(%s) : registering 'self' with AceEvent", event)
         self.registered[event] = true
         self.AceEvent:RegisterEvent(event, function(event, ...) return self:HandleEvent(event, ...) end)
     end
@@ -48,7 +48,7 @@ AddOn:GetLibrary('AceEvent'):Embed(Event.private.AceEvent)
 function Event:Subscribe(event, func)
     assert(Util.Strings.IsSet(event), "'event' was not provided")
     assert(Util.Objects.IsFunction(func), "'func' was not provided")
-    Logging:Debug("Subscribe(%s) : %s", tostring(event), Util.Objects.ToString(func))
+    Logging:Trace("Subscribe(%s) : %s", tostring(event), Util.Objects.ToString(func))
     self.private:RegisterEvent(event)
     return self.private:Subject(event):subscribe(func)
 end

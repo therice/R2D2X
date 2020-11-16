@@ -19,7 +19,7 @@ end
 
 function SlashCommandsInternal:HandleCommand(msg)
     local args = Util.Tables.Temp(self.AceConsole:GetArgs(msg, 10))
-    Logging:Trace("HandleCommand() : %s", Util.Objects.ToString(args))
+    Logging:Debug("HandleCommand() : %s", Util.Objects.ToString(args))
     local cmd = tremove(args, 1)
     if Util.Objects.IsTable(cmd) then cmd = nil else cmd = cmd:trim():lower() end
     if Util.Strings.IsEmpty(cmd) or Util.Strings.Equal(cmd, 'help') then
@@ -99,7 +99,7 @@ function SlashCommands:Subscribe(cmds, desc, func, hidden)
     )
     assert(Util.Objects.IsString(desc), "'desc' was not provided")
     assert(Util.Objects.IsFunction(func), "'func' was not provided")
-    Logging:Debug("SlashCommands:Subscribe() : %s", Util.Objects.ToString(cmds))
+    Logging:Trace("SlashCommands:Subscribe() : %s", Util.Objects.ToString(cmds))
     hidden = Util.Objects.IsEmpty(hidden) and false or hidden
     self.private:RegisterCommand(cmds, desc, hidden)
     return self.private:Subject(cmds):subscribe(func)

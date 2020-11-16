@@ -66,7 +66,7 @@ function Comms:PrepareForSend(command, ...)
     local serialized = self:Serialize(command, scrubbed)
     local data = Compressor:compress(serialized, true)
     Util.Tables.ReleaseTemp(scrubbed)
-    Logging:Debug("PrepareForSend(%s) : Compressed length '%d' -> '%d'", command, #serialized, #data)
+    Logging:Trace("PrepareForSend(%s) : Compressed length '%d' -> '%d'", command, #serialized, #data)
     return data
 end
 
@@ -76,7 +76,7 @@ function Comms:ProcessReceived(msg)
         return false
     end
 
-    Logging:Debug("ProcessReceived() : len=%d", #msg)
+    Logging:Trace("ProcessReceived() : len=%d", #msg)
 
     local decompressed = Compressor:decompress(msg, true)
     if not decompressed then
@@ -107,14 +107,14 @@ function Comms:ReceiveComm(prefix, msg, dist, sender)
 end
 
 function Comms:RegisterComm(prefix)
-    Logging:Debug("RegisterComm(%s)", prefix)
+    Logging:Trace("RegisterComm(%s)", prefix)
 
     if not C.CommPrefixes[prefix] then
         C.CommPrefixes[prefix] = prefix
     end
 
     if not self.registered[prefix] then
-        Logging:Debug("RegisterComm(%s) : registering 'self' with AceComm", prefix)
+        Logging:Trace("RegisterComm(%s) : registering 'self' with AceComm", prefix)
         self.registered[prefix] = true
         self.AceComm:RegisterComm(prefix, function(...) return self:ReceiveComm(...) end)
     end
@@ -164,13 +164,13 @@ AddOn:GetLibrary('AceSerializer'):Embed(Comm.private)
 function Comm:Subscribe(prefix, command, func)
     assert(prefix and type(prefix) == 'string', "subscription prefix was not provided")
     assert(tInvert(C.CommPrefixes)[prefix], format("'%s' is not a registered prefix", tostring(prefix)))
-    Logging:Debug("Subscribe(%s) : '%s' -> %s", prefix, Util.Objects.ToString(command), Util.Objects.ToString(func))
+    Logging:Trace("Subscribe(%s) : '%s' -> %s", prefix, Util.Objects.ToString(command), Util.Objects.ToString(func))
     return self.private:Subject(prefix, command):subscribe(func)
 end
 
 function Comm:BulkSubscribe(prefix, funcs)
     assert(funcs and type(funcs) == 'table', "functions must be a table")
-    Logging:Debug("BulkSubscribe(%s) :%s", prefix, Util.Objects.ToString(funcs))
+    Logging:Trace("BulkSubscribe(%s) :%s", prefix, Util.Objects.ToString(funcs))
 
     local subs, idx = {}, 1
     for command, func in pairs(funcs) do

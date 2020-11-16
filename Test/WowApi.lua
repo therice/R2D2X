@@ -256,6 +256,20 @@ end
 
 function IsLoggedIn() return false end
 
+function GetLootMethod() return "master", nil, 1 end
+
+function IsMasterLooter() return true end
+
+function UnitHealthMax() return 100  end
+
+function UnitHealth() return 50 end
+
+function GetNumRaidMembers() return 40 end
+
+function GetNumPartyMembers() return 5 end
+
+function GetNumGroupMembers() return 40 end
+
 local PlayerToGuid = {
     ['Annasthétic'] = {
         guid = 'Player-4372-011C6125',
@@ -535,5 +549,14 @@ _G.TOOLTIP_DEFAULT_COLOR = {
 
 _G.AUTO_LOOT_DEFAULT_TEXT = "Auto Loot"
 
+
+_G.UNKNOWNOBJECT = "Unknown"
+_G.StaticPopup_DisplayedFrames = {}
+
+_G.PlaySound = function(...) end
+
+_G.FauxScrollFrame_Update = function() end
+_G.FauxScrollFrame_GetOffset = function() return 0 end
+_G.CLASS_ICON_TCOORDS = {}
 
 loadfile('Test/WowApiUI.lua')()

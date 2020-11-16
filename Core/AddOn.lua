@@ -1,5 +1,5 @@
 local _, AddOn = ...
-local L, Logging = AddOn.Locale, AddOn:GetLibrary("Logging")
+local L, Logging, GuildStorage = AddOn.Locale, AddOn:GetLibrary("Logging"), AddOn:GetLibrary('GuildStorage')
 local C, Comm, Player, SlashCommands =
     AddOn.Constants, AddOn.Require('Core.Comm'), AddOn.ImportPackage('Models').Player,
     AddOn.Require('Core.SlashCommands')
@@ -13,12 +13,23 @@ function AddOn:OnInitialize()
     self.version = AddOn.Package('Models').SemanticVersion(self.version)
     -- bitfield which keeps track of our operating mode
     self.mode = AddOn.Package('Core').Mode()
+    -- our guild (start off as unguilded, will get callback when ready to populate)
+    self.guildRank = L["unguilded"]
+    -- the master looter (Player)
+    self.masterLooter = nil
+    -- capture looting method for later required checks
+    self.lootMethod = GetLootMethod() or "freeforall"
+    -- does addon handle loot?
+    self.handleLoot = false
 
     self.db = self:GetLibrary("AceDB"):New(self:Qualify('DB'), self.Defaults)
     if not _G.R2D2X_Testing then Logging:SetRootThreshold(self.db.profile.logThreshold) end
+
+    -- register slash commands
     SlashCommands:Register()
     self:RegisterChatCommands()
 
+    -- setup comms
     Comm:Register(C.CommPrefixes.Main)
     Comm:Register(C.CommPrefixes.Version)
     self.Send = Comm:GetSender(C.CommPrefixes.Main)
@@ -49,10 +60,36 @@ function AddOn:OnEnable()
         end
     end
 
+    if IsInGuild() then
+        -- Register with guild storage for state change callback
+        GuildStorage.RegisterCallback(
+                self,
+                GuildStorage.Events.StateChanged,
+                function(event, state)
+                    Logging:Debug("GuildStorage.Callback(%s, %s)", tostring(event), tostring(state))
+                    if state == GuildStorage.States.Current then
+                        local me = GuildStorage:GetMember(AddOn.player:GetName())
+                        if me then
+                            AddOn.guildRank = me.rank
+                            GuildStorage.UnregisterCallback(self, GuildStorage.Events.StateChanged)
+                            Logging:Debug("GuildStorage.Callback() : Guild Rank = %s", AddOn.guildRank)
+                        else
+                            Logging:Debug("GuildStorage.Callback() : Not Found")
+                            AddOn.guildRank = L["not_found"]
+                        end
+                    end
+                end
+        )
+
+        -- todo
+        -- self:ScheduleTimer("SendGuildVersionCheck", 2)
+    end
+
     -- register events
     self:SubscribeToEvents()
-
+    -- register configuration
     self:RegisterConfig()
+    -- add minimap button
     self:AddMinimapButton()
     self:Print(format(L["chat version"], tostring(self.version)) .. " is now loaded. Thank you for trusting us to handle all your EP/GP needs!")
 
