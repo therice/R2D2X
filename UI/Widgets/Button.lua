@@ -1,6 +1,6 @@
 local _, AddOn = ...
 local NativeUI = AddOn.Require('UI.Native')
-local BaseWidget = AddOn.ImportPackage('UI').NativeWidget
+local BaseWidget = AddOn.ImportPackage('UI.Native').Widget
 local Button = AddOn.Package('UI.Widgets'):Class('Button', BaseWidget)
 
 function Button:initialize(parent, name)

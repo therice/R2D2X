@@ -23,7 +23,24 @@ AddOn.Defaults = {
                 scale	    = 1.1,
             },
         },
-
+        -- module specific data storage
+        modules = {
+            ['*'] = {
+                -- by default, following are included
+                filters = {
+                    ['*'] = true,
+                    class = {
+                        ['*'] = true,
+                    },
+                    member_of = {
+                        ['*'] = false,
+                    },
+                    minimums = {
+                        ['*'] = false,
+                    }
+                },
+            },
+        },
     }
 }
 

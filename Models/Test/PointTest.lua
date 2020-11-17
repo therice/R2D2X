@@ -116,8 +116,10 @@ describe("Point", function()
 
         it("populates guild subjects", function()
             local a = Award(NewAwardData(Award.ActionType.Add))
+            a:SetResource(Award.ResourceType.Ep, 10)
             GuildRosterUpdate()
             a:SetSubjects(Award.SubjectType.Guild)
+            print(a:ToAnnouncement())
             assert(#a.subjects == GetNumGuildMembers())
             for _, e in pairs(a.subjects) do
                 local player, class = e[1], e[2]

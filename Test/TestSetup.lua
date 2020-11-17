@@ -105,7 +105,7 @@ local function xpcall_patch()
         local success, result = _G.pcall(func, ...)
         if not success then
             print('(xpcall_patch) ' .. dump(result))
-            error(result)
+            -- error(result)
             -- print(debugstack(1, 4, 0))
             -- error(debugstack(1, 4, 0))
         end
@@ -183,6 +183,7 @@ function GetSize(tbl, includeIndices, includeKeys)
     return size;
 end
 
+-- todo : determine why this needs patched at all
 xpcall_patch()
 Before()
 

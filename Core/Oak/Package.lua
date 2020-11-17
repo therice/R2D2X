@@ -6,23 +6,23 @@ local Class = LibStub("LibClass-1.0")
 
 local pkgs = {}
 
+-- for defining a package that can be later imported
+-- classes can the be attached to packages for namespacing
 local Package = Class('Package')
 function Package:initialize(name)
     self.name = name
     self.classes = {}
 end
 
+-- create a class associated with this package
 function Package:Class(name, super)
-    -- class names must always be string
-    assert(name and type(name) == 'string', 'Class name was not provided')
-    -- if super class provided, must be a table (class)
-    if super then assert(type(super) == 'table', format("Superclass was of incorrect type '%s'", type(super))) end
     if self.classes[name] then error(format("Class '%s' already defined in Package '%s'", name, self.name)) end
-    local class = Class(name, super)
+    local class = AddOn.Class(name, super)
     self.classes[name] = class
     return class
 end
 
+-- easy access to class via Package.Class
 function Package:__index(name)
     -- print(format('__index(%s)', tostring(name)))
     local c = self.classes[name]
@@ -30,6 +30,16 @@ function Package:__index(name)
     return c
 end
 
+-- define a new class which isn't associated with a package
+-- useful for scoping classes to only hwere needed
+function AddOn.Class(name, super)
+    -- class names must always be string
+    assert(name and type(name) == 'string', 'Class name was not provided')
+    if super then assert(type(super) == 'table', format("Superclass was of incorrect type '%s'", type(super))) end
+    return Class(name, super)
+end
+
+-- get existing or define new package
 function AddOn.Package(name)
     assert(type(name) == 'string')
     local pkg = pkgs[name]
@@ -40,6 +50,7 @@ function AddOn.Package(name)
     return pkg
 end
 
+-- get an existing package, fails if not defined
 function AddOn.ImportPackage(name)
     assert(type(name) == "string")
     local pkg = pkgs[name]

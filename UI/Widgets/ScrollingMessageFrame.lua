@@ -1,6 +1,6 @@
 local _, AddOn = ...
 local NativeUI = AddOn.Require('UI.Native')
-local BaseWidget = AddOn.ImportPackage('UI').NativeWidget
+local BaseWidget = AddOn.ImportPackage('UI.Native').Widget
 local ScrollingMessageFrame = AddOn.Package('UI.Widgets'):Class('ScrollingMessageFrame', BaseWidget)
 
 function ScrollingMessageFrame:initialize(parent, name)

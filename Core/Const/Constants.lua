@@ -30,7 +30,16 @@ AddOn.Constants = {
     },
 
     Colors = {
-    
+        Evergreen       =   CreateColor(0, 1, 0.59, 1),
+        ItemArtifact    =   _G.ITEM_QUALITY_COLORS[6].color,
+        ItemCommon      =   _G.ITEM_QUALITY_COLORS[1].color,
+        ItemEpic        =   _G.ITEM_QUALITY_COLORS[4].color,
+        ItemHeirloom    =   _G.ITEM_QUALITY_COLORS[7].color,
+        ItemLegendary   =   _G.ITEM_QUALITY_COLORS[5].color,
+        ItemPoor        =   _G.ITEM_QUALITY_COLORS[0].color,
+        ItemRare        =   _G.ITEM_QUALITY_COLORS[3].color,
+        ItemUncommon    =   _G.ITEM_QUALITY_COLORS[2].color,
+
     },
     
     Commands = {
@@ -38,7 +47,8 @@ AddOn.Constants = {
     },
 
     DropDowns = {
-
+        StandingsRightClick     = name .. "_Standings_RightClick",
+        StandingsFilter         = name .. "_Standings_Filter",
     },
 
     Events = {

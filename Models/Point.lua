@@ -168,7 +168,7 @@ function Award:SetSubjects(type, ...)
     if not Util.Tables.ContainsValue(SubjectType, type) then error("Invalid Subject Type specified") end
     -- Logging:Debug("SetSubjects(%s)", tostring(type))
     self.subjectType = type
-    if self.subjectType == SubjectType.Character or self.subjectType == SubjectType.Standby then
+    if Util.Objects.In(self.subjectType, SubjectType.Character, self.subjectType == SubjectType.Standby) then
         local subjects = Util.Tables.New(...)
         self.subjects =  Util.Tables.Map(
                 subjects,
@@ -240,3 +240,44 @@ function Award:SetSubjects(type, ...)
     end)
     --Logging:Debug("%s", Util.Objects.ToString(self.subjects))
 end
+
+function Award:ToAnnouncement()
+    local resource, subject = Award.TypeIdToResource[self.resourceType]:upper(), nil
+
+    if self.subjectType == SubjectType.Character then
+        subject = self.subjects[1][1]
+    else
+        subject = Award.TypeIdToSubject[self.subjectType]
+    end
+
+    if Util.Objects.In(self.actionType, ActionType.Add, ActionType.Subtract) then
+        -- "X EP added to name"
+        return format(
+                "%d %s %s %s %s (%s)",
+                self.resourceQuantity,
+                resource,
+                Award.TypeIdToAction[self.actionType]:lower() .. "ed", -- added, subtracted
+                self.actionType == ActionType.Add and "to" or "from",
+                subject,
+                self.description and self.description or "N/A"
+        )
+    elseif self.actionType == ActionType.Decay then
+        -- "Decayed EP for Guild by X%"
+        return format(
+                "Decayed %s for %s by %d %%",
+                resource,
+                subject,
+                self.resourceQuantity * 100
+        )
+    elseif self.actionType == ActionType.Reset then
+        -- "Reset EP for X"
+        return format(
+                "Reset %s for %s",
+                resource,
+                subject
+        )
+    else
+        return "Unhandled Award Announcement (this is a bug)"
+    end
+end
+

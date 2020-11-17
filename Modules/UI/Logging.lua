@@ -22,7 +22,7 @@ function Logging:BuildFrame()
 
         local clear = UI:NewNamed("Button", frame.content, "Clear")
         clear:SetText(L['clear'])
-        clear:SetPoint("RIGHT", frame.close, "LEFT", -25)
+        clear:SetPoint("RIGHT", frame.close, "LEFT", -10, 0)
         clear:SetScript("OnClick", function() frame.msg:Clear() end)
         frame.clear = clear
 

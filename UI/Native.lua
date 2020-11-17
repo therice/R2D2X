@@ -1,17 +1,17 @@
 local _, AddOn = ...
 local Logging = AddOn:GetLibrary('Logging')
-local pkg = AddOn.Package('UI')
+local pkg = AddOn.Package('UI.Native')
 
-local NativeWidget = pkg:Class('NativeWidget')
-function NativeWidget:initialize(parent, name)
+local Widget = pkg:Class('Widget')
+function Widget:initialize(parent, name)
     self.parent = parent
     self.name = name
 end
 
-function NativeWidget:Create() error("Create() not implemented")end
+function Widget:Create() error("Create() not implemented")end
 
 -- Class UI.Natives
-local Natives = pkg:Class('Natives')
+local Natives = AddOn.Class('Natives')
 function Natives:initialize()
     self.widgets = {}   -- mapping of widget type to widget class
     self.count = {}     -- mapping of widget type to count of instances created without an explicit name

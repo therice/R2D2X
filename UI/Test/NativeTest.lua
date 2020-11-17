@@ -1,8 +1,8 @@
 local AddOn, NativeUI, Class
 
 local function CustomWidget()
-    local NativeWidget = AddOn.ImportPackage('UI').NativeWidget
-    local Widget = Class('Widget', NativeWidget)
+    local NativeWidget = AddOn.ImportPackage('UI.Native').Widget
+    local Widget = Class('CustomWidget', NativeWidget)
     function Widget:initialize(parent, name, ...)
         NativeWidget.initialize(self, parent, name)
         self.args = {...}
@@ -52,12 +52,12 @@ describe("Native UI", function()
         it("succeeds with valid arguments", function()
             NativeUI:RegisterWidget('awidget', CustomWidget())
             local w = NativeUI:New('awidget')
-            assert(w.clazz.name == 'Widget')
+            assert(w.clazz.name == 'CustomWidget')
             assert(w.name == format('%s_UI_awidget_%d', AddOn.Constants.name, 1))
             assert(w.parent == _G.UIParent)
             assert(w.SetMultipleScripts and type(w.SetMultipleScripts) == 'function')
             w = NativeUI:NewNamed('awidget', {}, 'WidgetName')
-            assert(w.clazz.name == 'Widget')
+            assert(w.clazz.name == 'CustomWidget')
             assert(w.name == 'WidgetName')
             assert.are.same(w.parent, { })
             assert(w.SetMultipleScripts and type(w.SetMultipleScripts) == 'function')

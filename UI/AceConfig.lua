@@ -1,116 +1,84 @@
 local _, AddOn = ...
 local Logging, Util = AddOn:GetLibrary('Logging'), AddOn:GetLibrary('Util')
+local Attributes, Builder = AddOn.Package('UI.Util').Attributes, AddOn.Package('UI.Util').Builder
 
-local Package = AddOn.Package('UI')
-local AceConfigOption = Package:Class('AceConfigOption')
-local AceConfigBuilder = Package:Class('AceConfigBuilder')
-
-function AceConfigOption:initialize(builder, param, type, name, order)
-    self.builder = builder
+local Option = AddOn.Class('Option', Attributes)
+function Option:initialize(param, type, name, order)
+    Attributes.initialize(
+            self, {
+                type = type,
+                name = name,
+                order = order or 0,
+            }
+    )
     -- param is the key for the configuration table at which option will associated
     self.param = param
-    -- attrs are the key/value pairs which define the option
-    self.attrs = {
-        type = type,
-        name = name,
-        order = order or 0,
-    }
 end
 
-function AceConfigOption:set(attr, value)
-    self.attrs[attr] = value
-    return self
-end
+function Option:named(name) return self:set('name', name) end
+function Option:type(type) return self:set('type', type) end
+function Option:order(order) return self:set('order', order or 0) end
+function Option:desc(desc) return self:set('desc', desc) end
 
-function AceConfigOption:named(name) return self:set('name', name) end
-function AceConfigOption:type(type) return self:set('type', type) end
-function AceConfigOption:order(order) return self:set('order', order or 0) end
-function AceConfigOption:desc(desc) return self:set('desc', desc) end
-
-function AceConfigBuilder:initialize(options, path)
-    self.options = options or {}
+local ConfigBuilder = AddOn.Package('UI.AceConfig'):Class('ConfigBuilder', Builder)
+function ConfigBuilder:initialize(options, path)
+    Builder.initialize(self, options or {})
     self.path = path or nil
-    self.pending = nil
+    tinsert(self.embeds, 'args')
+    tinsert(self.embeds, 'header')
+    tinsert(self.embeds, 'group')
+    tinsert(self.embeds, 'toggle')
+    tinsert(self.embeds, 'execute')
+    tinsert(self.embeds, 'description')
+    tinsert(self.embeds, 'select')
 end
 
-local _Embeds = {
-    'build',
-    'args',
-    'header',
-    'group',
-    'toggle',
-    'execute',
-    'description',
-    'select',
-}
-
-local function _Embed(builder, option)
-    for _, method in pairs(_Embeds) do
-        option[method] = function(_, ...)
-            return builder[method](builder, ...)
-        end
-    end
-    return option
-end
-
-
-local function _ParameterName(self, param)
+function ConfigBuilder:_ParameterName( param)
     return self.path and (self.path .. '.' .. param) or param
 end
 
-local function _CheckPending(self)
-    if self.pending then
-        Util.Tables.Set(self.options, self.pending.param, self.pending.attrs)
-        self.pending = nil
-    end
+function ConfigBuilder:_InsertPending()
+    Util.Tables.Set(self.entries, self.pending.param, self.pending.attrs)
 end
 
-local function _CreateOption(self, param, ...)
-    _CheckPending(self)
-    self.pending = _Embed(self, AceConfigOption(self, _ParameterName(self, param), ...))
-    return self.pending
-end
-
-
-function AceConfigBuilder:SetPath(path)
-   _CheckPending(self)
-    self.path  = path
-    return self
-end
-
-function AceConfigBuilder:args()
-    local path = self.pending and Util.Strings.Join('.', self.pending.param, 'args') or 'args'
-    _CheckPending(self)
-    Util.Tables.Set(self.options, path, { })
+function ConfigBuilder:SetPath(path)
+    self:_CheckPending()
     self.path = path
     return self
 end
 
-function AceConfigBuilder:header(param, name)
-    return _CreateOption(self, param, 'header', name)
+function ConfigBuilder:args()
+    local path = self.pending and Util.Strings.Join('.', self.pending.param, 'args') or 'args'
+    self:_CheckPending()
+    Util.Tables.Set(self.entries, path, { })
+    self.path = path
+    return self
 end
 
-function AceConfigBuilder:group(param, name)
-    return _CreateOption(self, param, 'group', name)
+function ConfigBuilder:entry(class, param, ...)
+    return Builder.entry(self, class, self:_ParameterName(param), ...)
 end
 
-function AceConfigBuilder:toggle(param, name)
-    return _CreateOption(self, param, 'toggle', name)
+function ConfigBuilder:header(param, name)
+    return self:entry(Option, param, 'header', name)
 end
 
-function AceConfigBuilder:execute(param, name)
-    return _CreateOption(self, param, 'execute', name)
+function ConfigBuilder:group(param, name)
+    return self:entry(Option, param, 'group', name)
 end
 
-function AceConfigBuilder:description(param, name)
-    return _CreateOption(self, param, 'description', name):set('fontSize', 'medium')
+function ConfigBuilder:toggle(param, name)
+    return self:entry(Option, param, 'toggle', name)
 end
 
-function AceConfigBuilder:select(param, name)
-    return _CreateOption(self, param, 'select', name)
+function ConfigBuilder:execute(param, name)
+    return self:entry(Option, param, 'execute', name)
 end
 
-function AceConfigBuilder:build()
-    _CheckPending(self)
-    return self.options
+function ConfigBuilder:description(param, name)
+    return self:entry(Option, param, 'description', name):set('fontSize', 'medium')
+end
+
+function ConfigBuilder:select(param, name)
+    return self:entry(Option, param, 'select', name)
 end

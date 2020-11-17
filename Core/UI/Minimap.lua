@@ -23,7 +23,7 @@ function MinimapButton:initialize()
                         if IsShiftKeyDown() then
                             AddOn:ToggleConfig()
                         else
-                            -- AddOn:ToggleModule("Points")
+                            AddOn:ToggleModule("Standings")
                         end
                     end
                 end,

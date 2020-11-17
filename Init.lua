@@ -100,6 +100,10 @@ local ModulePrototype = {
     ImportData = function(self, data)
 
     end,
+
+    ModuleSettings = function(self)
+        return AddOn:ModuleSettings(self:GetName())
+    end
 }
 
 AddOn:SetDefaultModulePrototype(ModulePrototype)

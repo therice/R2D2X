@@ -1,6 +1,8 @@
 local _, AddOn = ...
 local instances = {}
 
+-- for defining new singleton instances
+-- only one can exist in scope of addon
 function AddOn.Instance(name, meta, ...)
     assert(name and type(name) == 'string', 'Instance name was not provided')
     assert(meta, format('Instance meta-data not provided for \'%s\'', name))
@@ -32,6 +34,8 @@ function AddOn.Instance(name, meta, ...)
     return instance
 end
 
+-- obtain a singleton instance
+-- fails if does not exist
 function AddOn.Require(name)
     assert(name and type(name) == "string", 'Instance name was not provided')
     local instance = instances[name]

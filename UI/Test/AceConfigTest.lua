@@ -3,7 +3,7 @@ local AddOnName, AddOn, ACB, Util
 describe("AceConfig", function()
     setup(function()
         AddOnName, AddOn = loadfile("Test/TestSetup.lua")(true, 'UI_AceConfig')
-        ACB = AddOn.ImportPackage('UI').AceConfigBuilder
+        ACB = AddOn.ImportPackage('UI.AceConfig').ConfigBuilder
         Util = AddOn:GetLibrary('Util')
     end)
 
@@ -33,13 +33,10 @@ describe("AceConfig", function()
         end)
         it("args no children", function()
             local config =
-                ACB()
-                    :group('group_param1', 'group_name1'):order(1)
-                        :args()
-                    :build()
+                ACB():args():build()
             assert.are.same(
                     config,
-                    { group_param1 = { order = 1, type = 'group', name = 'group_name1', args = {} } }
+                    { args = {} }
             )
         end)
         it("args with children", function()
@@ -74,7 +71,6 @@ describe("AceConfig", function()
                     config,
                     { group_param1 = { order = 1, type = 'group', name = 'group_name1', args = { group_param2 = { order = 0, type = 'group', name = 'group_name2', args = { execute_param3 = { order = 6, type = 'execute', name = 'execute_name3', desc = 'execute_desc3' }, toggle_param2 = { order = 2, type = 'toggle', name = 'toggle_name2', desc = 'toggle_desc2' }, execute_param2 = { order = 5, type = 'execute', name = 'execute_name2', desc = 'execute_desc2' }, header_param2 = { order = 3, type = 'header', name = 'header_name2' }, toggle_param1 = { order = 1, type = 'toggle', name = 'toggle_name1', desc = 'toggle_desc1' }, execute_param1 = { order = 4, type = 'execute', name = 'execute_name1', desc = 'execute_desc1' } } } } }, header_param1 = { order = 0, type = 'header', name = 'header_name1' } }
             )
-            -- print(Util.Objects.ToString(config, 10))
         end)
     end)
 end)

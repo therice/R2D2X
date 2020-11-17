@@ -137,7 +137,7 @@ function Comms:SendComm(prefix, target, prio, callback, callbackarg, command, ..
         target = Util.Objects.IsTable(target) and target:GetName() or target
         Logging:Debug("SendComm() : %s", target)
         -- If target == "player"
-        if AddOn:UnitIsUnit(target, C.player) then
+        if AddOn.UnitIsUnit(target, C.player) then
             Logging:Debug("SendComm() : UnitIsUnit(true), %s", AddOn.player.name)
             self.AceComm:SendCommMessage(prefix, toSend, C.Channels.Whisper, AddOn.player:GetName(), prio, callback, callbackarg)
         else

@@ -19,25 +19,29 @@ function AddOn:PersistenceModeEnabled()
     return self.mode:Enabled(C.Modes.Persistence)
 end
 
+function AddOn:ModuleSettings(module)
+    return AddOn.db.profile.modules[module]
+end
+
 function AddOn:CallModule(module)
-    Logging:Debug("CallModule(%s)", module)
+    Logging:Trace("CallModule(%s)", module)
     if not self.enabled then return end
     self:EnableModule(module)
 end
 
 function AddOn:IsModuleEnabled(module)
-    Logging:Debug("IsModuleEnabled(%s)", module)
+    Logging:Trace("IsModuleEnabled(%s)", module)
     local m = self:GetModule(module)
     return m and m:IsEnabled()
 end
 
 function AddOn:YieldModule(module)
-    Logging:Debug("YieldModule(%s)", module)
+    Logging:Trace("YieldModule(%s)", module)
     self:DisableModule(module)
 end
 
 function AddOn:ToggleModule(module)
-    Logging:Debug("ToggleModule(%s)", module)
+    Logging:Trace("ToggleModule(%s)", module)
     if self:IsModuleEnabled(module) then
         self:YieldModule(module)
     else
@@ -47,6 +51,10 @@ end
 
 function AddOn:GearPointsModule()
     return self:GetModule("GearPoints")
+end
+
+function AddOn:StandingsModule()
+    return self:GetModule("Standings")
 end
 
 function AddOn:RegisterChatCommands()
@@ -124,6 +132,8 @@ function AddOn:NewMasterLooterCheck()
     Logging:Debug("NewMasterLooterCheck()")
 
     local oldMl, oldLm = self.masterLooter and self.masterLooter:GetName() or nil, self.lootMethod
+    -- todo
+    -- this could be nil, check it
     _, self.masterLooter = self:GetMasterLooter()
     self.lootMethod = GetLootMethod()
 
@@ -141,6 +151,8 @@ function AddOn:NewMasterLooterCheck()
         self:StopHandleLoot()
     end
 
+    if Util.Objects.IsEmpty(self.masterLooter) then return end
+
     if self:UnitIsUnit(oldMl, self.masterLooter:GetName()) and Util.Strings.Equal(oldLm, self.lootMethod) then
         Logging:Debug("NewMasterLooterCheck() : No Master Looter change")
         return
@@ -148,8 +160,6 @@ function AddOn:NewMasterLooterCheck()
 
     -- todo
     -- if self:MasterLooterModule():DbValue('usage.never') then return end
-
-    if Util.Objects.IsEmpty(self.masterLooter) then return end
 
     -- request ML DB if not received within 15 seconds
     -- todo

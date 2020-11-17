@@ -179,7 +179,6 @@ function GuildRoster ()  end
 
 function IsInGuild() return 1  end
 
-
 function IsInRaid() return _G.IsInRaidVal end
 
 function UnitInRaid() return _G.IsInRaidVal end
@@ -533,6 +532,7 @@ _G.ITEM_QUALITY_COLORS = {
     {color = Color:New(6, 0, 0, 0)},
     {color = Color:New(7, 0, 0, 0)},
 }
+_G.ITEM_QUALITY_COLORS[0] = {color = Color:New(0, 0, 0, 0)}
 
 _G.RAID_CLASS_COLORS = {}
 

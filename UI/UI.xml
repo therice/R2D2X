@@ -4,4 +4,5 @@
     <Include file="Widgets\Widgets.xml"/>
     <Script file="AceConfig.lua"/>
     <Script file="Ace.lua"/>
+    <Script file="ScrollingTable.lua"/>
 </Ui>

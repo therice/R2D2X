@@ -13,6 +13,7 @@ function AddOn:OnInitialize()
     self.version = AddOn.Package('Models').SemanticVersion(self.version)
     -- bitfield which keeps track of our operating mode
     self.mode = AddOn.Package('Core').Mode()
+    self.enabled = true
     -- our guild (start off as unguilded, will get callback when ready to populate)
     self.guildRank = L["unguilded"]
     -- the master looter (Player)

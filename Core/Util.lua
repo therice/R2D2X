@@ -49,6 +49,10 @@ function AddOn:IsInNonInstance()
     end
 end
 
+function AddOn.Ambiguate(name)
+    return Ambiguate(name, "none")
+end
+
 local UnitNames = {}
 
 -- Gets a unit's name formatted with realmName.
@@ -96,7 +100,7 @@ end
 -- Custom, better UnitIsUnit() function.
 -- Blizz UnitIsUnit() doesn't know how to compare unit-realm with unit.
 -- Seems to be because unit-realm isn't a valid unitid.
-function AddOn:UnitIsUnit(unit1, unit2)
+function AddOn.UnitIsUnit(unit1, unit2)
     if Util.Objects.IsTable(unit1) then unit1 = unit1.name end
     if Util.Objects.IsTable(unit2) then unit2 = unit2.name end
     if not unit1 or not unit2 then return false end
@@ -108,6 +112,7 @@ function AddOn:UnitIsUnit(unit1, unit2)
     if strfind(unit2, "-", nil, true) ~= nil then
         unit2 = Ambiguate(unit2, "short")
     end
+
     -- There's problems comparing non-ascii characters of different cases using UnitIsUnit()
     -- I.e. UnitIsUnit("Foo", "foo") works, but UnitIsUnit("Æver", "æver") doesn't.
     -- Since I can't find a way to ensure consistent returns from UnitName(),
@@ -119,4 +124,14 @@ function AddOn:UnitClass(name)
     local player = Player:Get(name)
     if player and Util.Strings.IsSet(player.class) then return player.class end
     return select(2, UnitClass(Ambiguate(name, "short")))
+end
+
+AddOn.FilterClassesByFactionFn = function(class)
+    local faction =  UnitFactionGroup(AddOn.Constants.player)
+    if faction== 'Alliance' then
+        return class ~= "Shaman"
+    elseif faction == 'Horde' then
+        return class ~= "Paladin"
+    end
+    return true
 end
