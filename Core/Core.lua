@@ -19,6 +19,36 @@ function AddOn:PersistenceModeEnabled()
     return self.mode:Enabled(C.Modes.Persistence)
 end
 
+function AddOn:CallModule(module)
+    Logging:Debug("CallModule(%s)", module)
+    if not self.enabled then return end
+    self:EnableModule(module)
+end
+
+function AddOn:IsModuleEnabled(module)
+    Logging:Debug("IsModuleEnabled(%s)", module)
+    local m = self:GetModule(module)
+    return m and m:IsEnabled()
+end
+
+function AddOn:YieldModule(module)
+    Logging:Debug("YieldModule(%s)", module)
+    self:DisableModule(module)
+end
+
+function AddOn:ToggleModule(module)
+    Logging:Debug("ToggleModule(%s)", module)
+    if self:IsModuleEnabled(module) then
+        self:YieldModule(module)
+    else
+        self:CallModule(module)
+    end
+end
+
+function AddOn:GearPointsModule()
+    return self:GetModule("GearPoints")
+end
+
 function AddOn:RegisterChatCommands()
     Logging:Debug("RegisterChatCommands(%s)", self:GetName())
     SlashCommands:BulkSubscribe(
@@ -57,7 +87,10 @@ function AddOn:GetMasterLooter()
     Logging:Debug("GetMasterLooter()")
     local lootMethod, mlPartyId, mlRaidId = GetLootMethod()
     self.lootMethod = lootMethod
-    Logging:Trace("GetMasterLooter() : Loot Method is '%s'", self.lootMethod)
+    Logging:Trace(
+        "GetMasterLooter() : lootMethod='%s', mlPartyId=%s, mlRaidId=%s",
+        self.lootMethod, tostring(mlPartyId), tostring(mlRaidId)
+    )
 
     -- always the player when testing alone
     if GetNumGroupMembers() == 0 and (self:TestModeEnabled() or self:DevModeEnabled()) then

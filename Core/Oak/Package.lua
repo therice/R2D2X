@@ -47,7 +47,7 @@ function AddOn.ImportPackage(name)
     return pkg
 end
 
-if _G.Package_Testing or _G.R2D2X_Testing then
+if AddOn._IsTestContext('Package') then
     function Package:DiscardClasses()
         self.classes = {}
     end

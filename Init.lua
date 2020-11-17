@@ -3,6 +3,7 @@ local AddOnName, AddOn = ...
 
 AddOn = AceAddon:NewAddon(AddOn, AddOnName, 'AceConsole-3.0', 'AceEvent-3.0', "AceHook-3.0", "AceTimer-3.0", "AceBucket-3.0")
 AddOn:SetDefaultModuleState(false)
+_G.R2D2X = AddOn
 
 -- just capture version here, it will be turned into semantic version later
 -- as we don't have access to that model yet here
@@ -36,6 +37,7 @@ do
     AddOn:AddLibrary('AceConfigCmd', 'AceConfigCmd-3.0')
     AddOn:AddLibrary('AceConfigDialog', 'AceConfigDialog-3.0')
     AddOn:AddLibrary('AceConfigRegistry', 'AceConfigRegistry-3.0')
+    AddOn:AddLibrary('ItemUtil', 'LibItemUtil-1.1')
     AddOn:AddLibrary('Window', 'LibWindow-1.1')
     AddOn:AddLibrary('ScrollingTable', 'ScrollingTable')
     AddOn:AddLibrary('DataBroker', 'LibDataBroker-1.1')
@@ -46,16 +48,16 @@ end
 
 AddOn.Locale = AddOn:GetLibrary("AceLocale"):GetLocale(AddOn.Constants.name)
 
-local Logging, Tables = AddOn:GetLibrary("Logging"), AddOn:GetLibrary("Util").Tables
+local Logging, Util = AddOn:GetLibrary("Logging"), AddOn:GetLibrary("Util")
 
 local function GetDbValue(self, i)
     Logging:Debug("GetDbValue(%s, %s)", self:GetName(), tostring(i[#i]))
-    return Tables.Get(self.db.profile, tostring(i[#i]))
+    return Util.Tables.Get(self.db.profile, tostring(i[#i]))
 end
 
 local function SetDbValue(self, i, v)
     Logging:Debug("SetDbValue(%s, %s, %s)", self:GetName(), tostring(i[#i]), tostring(v or 'nil'))
-    Tables.Set(self.db.profile, tostring(i[#i]), v)
+    Util.Tables.Set(self.db.profile, tostring(i[#i]), v)
     -- AddOn:ConfigTableChanged(self:GetName(), i[#i])
 end
 
@@ -101,3 +103,20 @@ local ModulePrototype = {
 }
 
 AddOn:SetDefaultModulePrototype(ModulePrototype)
+
+-- stuff below here is strictly for use during tests of addon
+-- not to be confused with addon test mode
+local function _testNs(name) return  Util.Strings.Join('_', name, 'Testing')  end
+local AddOnTestNs = _testNs(AddOnName)
+function AddOn._IsTestContext(name)
+    if _G[AddOnTestNs] then
+        return true
+    end
+    if Util.Strings.IsSet(name) then
+        if _G[_testNs(name)] then
+            return true
+        end
+    end
+
+    return false
+end

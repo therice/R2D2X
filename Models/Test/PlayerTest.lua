@@ -1,6 +1,5 @@
 local AddOnName, AddOn, Player, Util
 
-
 describe("Player", function()
     setup(function()
         AddOnName, AddOn = loadfile("Test/TestSetup.lua")(true, 'Models_Player')

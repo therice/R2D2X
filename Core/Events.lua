@@ -13,20 +13,24 @@ function AddOn:SubscribeToEvents()
     end
 end
 
--- track whether initial login rather than reload or zone change
-local handledEnteringWorld = false
-
+-- track whether initial load of addon or has it been reloaded (either via login or explicit reload)
+local initialLoad = true
 -- this event is triggered when the player logs in, /reloads the UI, or zones between map instances
 -- basically whenever the loading screen appears
-function AddOn:PlayerEnteringWorld(_, ...)
-    Logging:Debug("PlayerEnteringWorld(%s)", AddOn.player:GetName())
+--
+-- initial login = true, false
+-- reload ui = false, true
+-- instance zone event = false, false
+function AddOn:PlayerEnteringWorld(_, isLogin, isReload)
+    Logging:Debug("PlayerEnteringWorld(%s) : isLogin=%s, isReload=%s", AddOn.player:GetName(), tostring(isLogin), tostring(isReload))
     self:NewMasterLooterCheck()
     -- if we have not yet handled the initial entering world event
-    if not handledEnteringWorld then
-        if not handledEnteringWorld and not self:IsMasterLooter() and Util.Objects.IsSet(self.masterLooter) then
+    if initialLoad then
+        if not self:IsMasterLooter() and Util.Objects.IsSet(self.masterLooter) then
             Logging:Debug("Player '%s' entering world", tostring(self.player))
+            -- todo
         end
-        handledEnteringWorld = true
+        initialLoad = false
     end
 end
 

@@ -124,7 +124,7 @@ function TestSetup(toc, preload_functions, postload_functions)
 
     if #preload_functions > 0 then
         -- print('Invoking Preload Functions (' .. #preload_functions .. ')')
-        for _, f in pairs(preload_functions) do f() end
+        for _, f in pairs(preload_functions) do f(addOnName, addOnNamespace) end
     end
     
     -- from WowXmlParser.lua
@@ -132,10 +132,12 @@ function TestSetup(toc, preload_functions, postload_functions)
 
     if #postload_functions > 0 then
         -- print('Invoking Preload Functions (' .. #preload_functions .. ')')
-        for _, f in pairs(postload_functions) do f() end
+        for _, f in pairs(postload_functions) do f(addOnName, addOnNamespace) end
     end
+
     -- not generic, specific to this addon
     -- addOnNamespace.defaults.profile.logThreshold = addOnNamespace.Libs.Logging.Level.Trace
+    ConfigureLogging()
     return addOnName, addOnNamespace
 end
 

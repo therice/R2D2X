@@ -1,5 +1,9 @@
 local name, AddOn = ...
 
+-- this will be first non-library file to load
+-- shim it here so available until re-established
+if not AddOn._IsTestContext then AddOn._IsTestContext = function() return false end end
+
 AddOn.Constants = {
     name    =   name,
     chat    =   "chat",

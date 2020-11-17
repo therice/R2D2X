@@ -73,7 +73,7 @@ function Native:RegisterWidget(widgetType, class)
     self.private.widgets[widgetType] = class
 end
 
-if _G.UI_Native_Testing or _G.R2D2X_Testing then
+if AddOn._IsTestContext('UI_Native') then
     function Native:UnregisterWidget(type)
         self.private.widgets[type] = nil
     end

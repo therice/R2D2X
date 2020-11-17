@@ -6,7 +6,7 @@ local C, Comm, Player, SlashCommands =
 
 function AddOn:OnInitialize()
     --@debug@
-    Logging:SetRootThreshold(Logging.Level.Debug)
+    Logging:SetRootThreshold(AddOn._IsTestContext() and Logging.Level.Trace or Logging.Level.Debug)
     --@end-debug@
     Logging:Debug("OnInitialize(%s)", self:GetName())
     -- convert to a semantic version
@@ -23,7 +23,7 @@ function AddOn:OnInitialize()
     self.handleLoot = false
 
     self.db = self:GetLibrary("AceDB"):New(self:Qualify('DB'), self.Defaults)
-    if not _G.R2D2X_Testing then Logging:SetRootThreshold(self.db.profile.logThreshold) end
+    if not AddOn._IsTestContext() then Logging:SetRootThreshold(self.db.profile.logThreshold) end
 
     -- register slash commands
     SlashCommands:Register()

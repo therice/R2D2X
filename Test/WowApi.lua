@@ -188,6 +188,13 @@ function IsInGroup() return _G.IsInGroupVal end
 
 function UnitInParty() return _G.IsInGroupVal end
 
+-- https://wow.gamepedia.com/API_UnitIsUnit
+function UnitIsUnit(a, b)
+    -- extremely rudimentary, doesnt' handle things like resolving targettarget, player, etc
+    if a == b then return 1 else return nil end
+end
+
+
 function IsInInstance()
     local type = "none"
     if _G.IsInGroupVal then
@@ -198,77 +205,6 @@ function IsInInstance()
     return (IsInGroup() or IsInRaid()), type
 end
 
-function GetGuildInfo(unit) return "The Black Watch", "Quarter Master", 1, nil end
-
-function GetNumGuildMembers() return 0  end
-
-function GetRealmName() return "Atiesh" end
-
-function UnitName(unit)
-    if unit == "player" then
-        return "Gnomechómsky"
-    elseif unit == "raid1" then
-        return "Gnomechómsky"
-    else
-        return unit, "Realm1"
-    end
-end
-
-function UnitFullName(unit)
-    if unit == "player" then
-        return "Gnomechómsky", "Atiesh"
-    else
-        return unit,"Realm1"
-    end
-end
-
-function UnitClass(unit)
-    if unit == "player" then
-        return "Warlock", "WARLOCK"
-    else
-        return "Warrior", "WARRIOR"
-    end
-end
-
-function UnitRace(unit)
-    if unit == "player" then
-        return "Gnome", "Gnome"
-    else
-        return "Human", "Human"
-    end
-end
-
-function Ambiguate(name, context)
-    if context == "short" then
-        name = gsub(name, "%-.+", "")
-    end
-    return name
-end
-
-function GetRaidRosterInfo(i)
-    -- name, _, _, _, _, class
-    return "Character" .. i, nil, nil, nil, nil, C_CreatureInfo.GetClassInfo(math.random(1,5)).classFile
-end
-
-function GetInstanceInfo()
-    return "Temple of Ahn\'Qiraj", "raid", 1, "40 Player", 40, 0, false, 531, nil
-end
-
-function IsLoggedIn() return false end
-
-function GetLootMethod() return "master", nil, 1 end
-
-function IsMasterLooter() return true end
-
-function UnitHealthMax() return 100  end
-
-function UnitHealth() return 50 end
-
-function GetNumRaidMembers() return 40 end
-
-function GetNumPartyMembers() return 5 end
-
-function GetNumGroupMembers() return 40 end
 
 local PlayerToGuid = {
     ['Annasthétic'] = {
@@ -320,7 +256,114 @@ for _, info in pairs(PlayerToGuid) do
     PlayerGuidInfo[info.guid] = info
 end
 
+function AddPlayerGuid(name, guid, realm, class)
+    if not PlayerToGuid[name] then
+        local info = {
+            guid = guid,
+            name = name .. '-' .. realm,
+            realm = realm,
+            class = class
+        }
+        PlayerToGuid[name] = info
+        PlayerGuidInfo[guid] = info
+        -- print(format('AddPlayerGuid added %s, %s', name, guid))
+    end
+end
+
+function GetGuildInfo(unit) return "The Black Watch", "Quarter Master", 1, nil end
+
+function GetGuildInfoText() return "This is my guild info" end
+
+function GetNumGuildMembers() return 10  end
+
+function GetGuildRosterInfo(index)
+    local workingIdx = 100 + index
+    local name, guid, realm = "Player" .. workingIdx, 'Player-1-' .. string.format("%08d", workingIdx), 'Realm1'
+    local classInfo = C_CreatureInfo.GetClassInfo(math.random(1,5))
+
+    AddPlayerGuid(name, guid, realm, classInfo.classFile)
+
+    -- local name, rank, rankIndex, _, class, _, _, officerNote, _, _, classTag, _, _, _, _, _, guid =
+    return
+        name .. '-' .. realm, 'Member', 2, 60, classInfo.className, 'IronForge', "", "1240, 34", 1, 0, classInfo.classFileName,
+        -1, 64, false, false, 3, guid
+end
+
+function GetRealmName() return 'Realm1' end
+
+function UnitName(unit)
+    if unit == "player" then
+        return "Player1"
+    elseif unit == "raid1" then
+        return "Player1"
+    else
+        return unit --, "Realm1"
+    end
+end
+
+function UnitFullName(unit)
+    return UnitName(unit), GetRealmName()
+end
+
+function UnitClass(unit)
+    if unit == "player" then
+        return "Warlock", "WARLOCK"
+    else
+        return "Warrior", "WARRIOR"
+    end
+end
+
+function UnitRace(unit)
+    if unit == "player" then
+        return "Gnome", "Gnome"
+    else
+        return "Human", "Human"
+    end
+end
+
+function Ambiguate(name, context)
+    if context == "short" then
+        name = gsub(name, "%-.+", "")
+    end
+    return name
+end
+
+function GetRaidRosterInfo(i)
+    local workingIdx = 500 + i
+    local name, guid, realm = "Player" .. workingIdx, 'Player-1-' .. string.format("%08d", workingIdx), 'Realm1'
+    local classInfo = C_CreatureInfo.GetClassInfo(math.random(1,5))
+    AddPlayerGuid(name, guid, realm, classInfo.classFile)
+
+    -- https://wow.gamepedia.com/API_GetRaidRosterInfo
+    -- name, _, _, _, _, _, zone, online
+    return name, nil, nil, nil, nil, nil, classInfo.classFile, 1
+end
+
+function GetInstanceInfo()
+    return "Temple of Ahn\'Qiraj", "raid", 1, "40 Player", 40, 0, false, 531, nil
+end
+
+function IsLoggedIn() return false end
+
+function GetLootMethod() return "master", nil, 1 end
+
+function IsMasterLooter() return true end
+
+function UnitHealthMax() return 100  end
+
+function UnitHealth() return 50 end
+
+function GetNumRaidMembers() return 40 end
+
+function GetNumPartyMembers() return 5 end
+
+function GetNumGroupMembers() return 40 end
+
+
 function UnitGUID (name)
+    if name == 'player' then name = UnitName(name) end
+    if name == 'noguid' then return nil end
+    --print(format('UnitGUID(%s)', name))
     return PlayerToGuid[name] and PlayerToGuid[name].guid or "Player-FFF-ABCDF012"
 end
 
@@ -384,6 +427,8 @@ C_ChatInfo.RegisterAddonMessagePrefix = RegisterAddonMessagePrefix
 
 C_FriendList = {}
 
+_G.MAX_CLASSES = 9
+
 C_CreatureInfo = {}
 C_CreatureInfo.ClassInfo = {
     [1] = {
@@ -417,6 +462,20 @@ C_CreatureInfo.ClassInfo = {
     },
     [12] = nil,
 }
+
+-- className (localized name, e.g. "Warrior"), classFile (non-localized name, e.g. "WARRIOR"), classID
+function C_CreatureInfo.GetClassInfo(classID)
+    local classInfo = C_CreatureInfo.ClassInfo[classID]
+    if classInfo then
+        return {
+            className = classInfo[1],
+            classFile = classInfo[2],
+            classID = classID
+        }
+    end
+    return nil
+end
+
 
 SlashCmdList = {}
 hash_SlashCmdList = {}

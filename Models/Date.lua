@@ -389,7 +389,7 @@ local is_number = Util.Strings.IsNumber
 local function tonum(s, l1, l2, kind)
     kind = kind or ''
     local n = tonumber(s)
-    if not n then error(("% is snot a number: '%s'"):format(kind, s)) end
+    if not n then error(("% is not a number: '%s'"):format(kind, s)) end
     if n < l1 or n > l2 then
         error(("%s out of range: %s is not between %d and %d"):format(kind, s, l1, l2))
     end

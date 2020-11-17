@@ -39,7 +39,7 @@ function AddOn.Require(name)
     return instance
 end
 
-if _G.Instance_Testing or _G.R2D2X_Testing then
+if AddOn._IsTestContext('Instance') then
     function AddOn.DiscardInstances()
        instances = {}
     end

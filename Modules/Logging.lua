@@ -4,7 +4,7 @@ local Logging = AddOn:NewModule("Logging")
 local AceUI = AddOn.Require('UI.Ace')
 local accum, configOptions
 
-if not _G.R2D2X_Testing then
+if not AddOn._IsTestContext() then
     accum = {}
     Log:SetWriter(
         function(msg)
@@ -33,7 +33,7 @@ end
 
 function Logging:OnEnable()
     Log:Debug("OnEnable(%s)", self:GetName())
-    if not _G.R2D2X_Testing then
+    if not AddOn._IsTestContext() then
         self:SwitchDestination(accum)
         accum = nil
     end

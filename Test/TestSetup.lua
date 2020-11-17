@@ -104,8 +104,10 @@ local function xpcall_patch()
     _G.xpcall = function(func, err, ...)
         local success, result = _G.pcall(func, ...)
         if not success then
-            print('ERROR -> ' .. dump(result))
+            print('(xpcall_patch) ' .. dump(result))
             error(result)
+            -- print(debugstack(1, 4, 0))
+            -- error(debugstack(1, 4, 0))
         end
         return success, result
     end
@@ -134,7 +136,12 @@ end
 
 function PlayerEnteredWorld()
     _G.IsLoggedIn = function() return true end
-    WoWAPI_FireEvent("PLAYER_ENTERING_WORLD")
+    WoWAPI_FireEvent("PLAYER_ENTERING_WORLD", true, false)
+end
+
+function GuildRosterUpdate()
+    WoWAPI_FireEvent("GUILD_ROSTER_UPDATE", true)
+    WoWAPI_FireUpdate()
 end
 
 function After()
@@ -149,6 +156,33 @@ function After()
     ResetLogging()
 end
 
+
+function GetSize(tbl, includeIndices, includeKeys)
+    local size = 0;
+
+    includeIndices = (includeIndices == nil and true) or includeIndices
+    includeKeys = (includeKeys == nil and true) or includeKeys
+
+    if (includeIndices and includeKeys) then
+        for _, _ in pairs(tbl) do
+            size = size + 1
+        end
+
+    elseif (includeIndices and not includeKeys) then
+        for _, _ in ipairs(tbl) do
+            size = size + 1
+        end
+    elseif (not includeIndices and includeKeys) then
+        for key, _ in pairs(tbl) do
+            if (type(key) == "string") then
+                size = size + 1
+            end
+        end
+    end
+
+    return size;
+end
+
 xpcall_patch()
 Before()
 
@@ -156,17 +190,22 @@ local thisDir = pl.abspath(debug.getinfo(1).source:match("@(.*)/.*.lua$"))
 local wowApi = thisDir .. '/WowApi.lua'
 loadfile(wowApi)()
 
+local True = function(...) return true end
+
 local name, addon
 
 if loadAddon then
     local toc = pl.abspath(thisDir .. '/../R2D2X.toc')
     print('Loading TOC @ ' .. toc)
     loadfile('Test/WowAddonParser.lua')()
-    name, addon = TestSetup(toc, params[3] or {}, params[4] or {})
+    local preload_fns = params[3] or {}
+    tinsert(preload_fns, function(_, addon) addon._IsTestContext = True end)
+    name, addon = TestSetup(toc, preload_fns, params[4] or {})
 else
     loadfile('Libs/LibStub/LibStub.lua')()
     name, addon = "AddOnName", {}
+    addon._IsTestContext = True
 end
 
-xpcall_restore()
+--xpcall_restore()
 return name, addon

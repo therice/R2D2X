@@ -86,18 +86,22 @@ local state, initialized, index, cache, guildInfo, guildName =
 
 local GuildStorageEntry = Class('GuildStorageEntry')
 
---  name, rank, rankIndex, _, class, _, _, officerNote, _, _, classTag
 -- class : String - The class (Mage, Warrior, etc) of the player.
 -- classTag : String - Upper-case English classname - localisation independant.
 -- rank : String - The member's rank in the guild ( Guild Master, Member ...)
 -- rankIndex : Number - The number corresponding to the guild's rank (already with 1 added to API return value)
-function GuildStorageEntry:initialize(name, class, classTag, rank, rankIndex, officerNote)
+-- guid : String - The player's globally unique id, https://wowwiki.fandom.com/wiki/API_UnitGUID
+function GuildStorageEntry:initialize(
+        name, class, classTag, rank,
+        rankIndex, officerNote, guid
+)
     self.name = name
     self.class = class
     self.classTag = classTag
     self.rank = rank
     self.rankIndex = rankIndex
     self.officerNote = officerNote
+    self.guid = guid
     self.pendingOfficerNote = nil
     self.seen = nil
 end
@@ -139,12 +143,22 @@ function lib:GetMembers()
 end
 
 function lib:GetMember(name)
-    return cache[name]
+    -- return cache[name]
+    local _, member =
+        Util.Tables.FindFn(
+            cache,
+            function(g)
+                return Util.Strings.Equal(g.name, name) or
+                       Util.Strings.Equal(Ambiguate(g.name, "short"), name)
+            end
+        )
+    return member
 end
 
 function lib:GetMemberAttribute(name, attr)
     local entry = self:GetMember(name)
     if entry and entry[attr] then return entry[attr] end
+    return nil
 end
 
 function lib:GetOfficerNote(name)
@@ -185,6 +199,10 @@ function lib:GetRank(name)
     if entry then return entry.rank, entry.rankIndex end
 end
 
+function lib:GetGUID(name)
+    return self:GetMemberAttribute(name, 'guid')
+end
+
 lib.frame:RegisterEvent("CHAT_MSG_ADDON")
 -- https://wow.gamepedia.com/PLAYER_GUILD_UPDATE
 lib.frame:RegisterEvent("PLAYER_GUILD_UPDATE")
@@ -218,7 +236,6 @@ function lib:PLAYER_ENTERING_WORLD()
 end
 
 function lib:GUILD_ROSTER_UPDATE(canRequestRosterUpdate)
-    Logging:Trace("GUILD_ROSTER_UPDATE(%s)", tostring(canRequestRosterUpdate))
     if canRequestRosterUpdate then
         SetState(States.PendingChanges)
     else
@@ -242,14 +259,13 @@ local function OnUpdate()
         Logging:Trace("No Guild Members, exiting...")
         return
     end
-    
+
     if not index or index >= guildMemberCount then
-        Logging:Trace("Re-setting index to 1 => %d", tostring(index))
+        Logging:Trace("Re-setting index(%s) to 1", tostring(index))
         index = 1
     end
-    
+
     if index == 1 then
-    
         local newGuildName = GetGuildInfo("player") or nil
         if newGuildName ~= guildName then
             guildName = newGuildName
@@ -272,7 +288,9 @@ local function OnUpdate()
     
     Logging:Trace("Processing guild members from %d to %s", index, lastIndex)
     for i = index, lastIndex do
-        local name, rank, rankIndex, _, class, _, _, officerNote, _, _, classTag = GetGuildRosterInfo(i)
+        -- https://wowwiki.fandom.com/wiki/API_GetGuildRosterInfo
+        local name, rank, rankIndex, _, class, _, _, officerNote, _, _, classTag, _, _, _, _, _, guid =
+            GetGuildRosterInfo(i)
         -- The Rank Index starts at 0, add 1 to correspond with the index
         -- for usage in GuildControlGetRankName(index)
         rankIndex = rankIndex + 1
@@ -281,13 +299,14 @@ local function OnUpdate()
             local entry = lib:GetMember(name)
             -- Logging:Trace("BEFORE(%s) = %s", name, Util.Objects.ToString(entry))
             if not entry then
-                entry = GuildStorageEntry(name, class, classTag, rank, rankIndex, officerNote)
+                entry = GuildStorageEntry(name, class, classTag, rank, rankIndex, officerNote, guid)
                 cache[name] = entry
             else
                 entry.rank = rank
                 entry.rankIndex = rankIndex
                 entry.class = class
                 entry.classTag = classTag
+                entry.guid = guid
             end
             entry.seen = true
             

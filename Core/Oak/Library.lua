@@ -22,7 +22,7 @@ function AddOn:GetLibrary(name)
     return self.Libs[name], self.LibsMinor[name]
 end
 
-if _G.Library_Testing or _G.R2D2X_Testing then
+if AddOn._IsTestContext('Library') then
     function AddOn:DiscardLibraries()
         AddOn.Libs, AddOn.LibsMinor = {}, {}
     end
