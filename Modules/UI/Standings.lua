@@ -50,9 +50,7 @@ function Standings:BuildFrame()
         local decay = UI:NewNamed('Button', frame.content, "Decay")
         decay:SetText(L["decay"])
         decay:SetPoint("RIGHT", frame.filter, "LEFT", -10, 0)
-        if not (AddOn:DevModeEnabled() or CanEditOfficerNote()) then
-            decay:Disable()
-        end
+        if not (AddOn:DevModeEnabled() or CanEditOfficerNote()) then decay:Disable() end
         -- todo : scripts
         -- decay:SetScript("OnClick", function() self:UpdateDecayFrame() end)
         frame.decay = decay

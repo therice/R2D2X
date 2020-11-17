@@ -30,7 +30,6 @@ local function _Embed(builder, entry)
     return entry
 end
 
-
 function Builder:_CheckPending()
     if self.pending then
         self:_InsertPending()
@@ -52,7 +51,6 @@ function Builder:build()
     self:_CheckPending()
     return self.entries
 end
-
 
 
 local Private = UI:Class('Utils')
