@@ -184,7 +184,7 @@ function GetSize(tbl, includeIndices, includeKeys)
 end
 
 -- todo : determine why this needs patched at all
--- xpcall_patch()
+xpcall_patch()
 Before()
 
 local thisDir = pl.abspath(debug.getinfo(1).source:match("@(.*)/.*.lua$"))
