@@ -3,11 +3,12 @@ local L, C, Logging, Util, ItemUtil =
     AddOn.Locale, AddOn.Constants,
     AddOn:GetLibrary("Logging"), AddOn:GetLibrary("Util"),
     AddOn:GetLibrary("ItemUtil")
-local UI, UIUtil, ST, Award =
+local UI, UIUtil, ST, DropDown =
     AddOn.Require('UI.Native'), AddOn.Require('UI.Util'),
-    AddOn.Require('UI.ScrollingTable'), AddOn.Package('Models').Award
-local STColumnBuilder, STCellBuilder =
-    AddOn.Package('UI.ScrollingTable').ColumnBuilder, AddOn.Package('UI.ScrollingTable').CellBuilder
+    AddOn.Require('UI.ScrollingTable'), AddOn.Require('UI.DropDown')
+local Award, STColumnBuilder, STCellBuilder =
+    AddOn.Package('Models').Award, AddOn.Package('UI.ScrollingTable').ColumnBuilder,
+    AddOn.Package('UI.ScrollingTable').CellBuilder
 
 local Standings = AddOn:GetModule("Standings", true)
 
@@ -275,11 +276,10 @@ Standings.RightClickEntries = {
 }
 ]]--
 
-Standings.RightClickMenu = UIUtil.RightClickMenu(
+Standings.RightClickMenu = DropDown.RightClickMenu(
         function() return AddOn:DevModeEnabled() or CanEditOfficerNote() end,
         {} --Standings.RightClickEntries
 )
-
 
 
 function Standings:Hide()

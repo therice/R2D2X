@@ -5,4 +5,5 @@
     <Script file="AceConfig.lua"/>
     <Script file="Ace.lua"/>
     <Script file="ScrollingTable.lua"/>
+    <Script file="DropDown.lua"/>
 </Ui>

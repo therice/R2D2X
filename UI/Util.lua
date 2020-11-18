@@ -130,7 +130,6 @@ function U.RightClickMenu(predicate, entries, callback)
     end
 end
 
-
 function U:CreateHypertip(link)
     if Util.Strings.IsEmpty(link) then return end
     -- this is to support shift click comparison on all tooltips
