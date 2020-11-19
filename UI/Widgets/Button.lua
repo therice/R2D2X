@@ -59,6 +59,15 @@ function Button:Create()
     b.DisabledTexture:SetPoint("TOPLEFT")
     b.DisabledTexture:SetPoint("BOTTOMRIGHT")
     b:SetDisabledTexture(b.DisabledTexture)
+
+    b.HideTextures = function(self)
+        self.HighlightTexture:Hide()
+        self.PushedTexture:Hide()
+        self.Texture:Hide()
+        self.DisabledTexture:Hide()
+        self:HideBorders()
+    end
+
     return b
 end
 

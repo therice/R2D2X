@@ -8,7 +8,7 @@ function Entry:text(text) return self:set('text', text) end
 function Entry:checkable(val) return self:set('notCheckable', not val) end
 function Entry:arrow(val) return self:set('hasArrow',val) end
 function Entry:value(val) return self:set('value',val) end
-function Entry:fn(fn) return self:set('func',fn)  end
+function Entry:fn(fn) return self:set('func', fn)  end
 
 local EntryBuilder = AddOn.Package('UI.DropDown'):Class('EntryBuilder', Builder)
 function EntryBuilder:initialize(entries)
@@ -62,22 +62,30 @@ function DropDown.EntryBuilder()
 end
 
 
+function DropDown.ToggleMenu(level, menu, cellFrame)
+    MSA_ToggleDropDownMenu(level, nil, menu, cellFrame, 0, 0)
+end
+
 function DropDown.RightClickMenu(predicate, entries, callback)
     return function(menu, level)
         if not predicate() then return end
         if not menu or not level then return end
 
-        local candidateName = menu.name
-        local el = menu.entry
+        local candidateName, el = menu.name, menu.entry
         local value = _G.MSA_DROPDOWNMENU_MENU_VALUE
+        local levelEntries = entries[level]
+        if not levelEntries then return end
 
         local info
-        for _, entry in ipairs(entries[level]) do
+        for _, entry in ipairs(levelEntries) do
             info = MSA_DropDownMenu_CreateInfo()
             if not entry.special then
                 if not entry.onValue or entry.onValue == value or (Util.Objects.IsFunction(entry.onValue) and entry.onValue(candidateName, el)) then
                     if (entry.hidden and Util.Objects.IsFunction(entry.hidden) and not entry.hidden(candidateName, el)) or not entry.hidden then
                         for name, val in pairs(entry) do
+                            -- custom attributes with support for callbacks
+                            -- the paramters are attributes on the menu itself, which must be manually specified
+                            -- typically done in the OnClick event, see Standings.lua for example
                             if name == "func" then
                                 info[name] = function() return val(candidateName, el) end
                             elseif Util.Objects.IsFunction(val) then

@@ -1,5 +1,3 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/..\FrameXML\UI.xsd">
-    <Script file="MoreInfo.lua" />
-    <Script file="Logging.lua" />
-    <Script file="Standings.lua" />
+    <Script file="LibDialog-1.0.lua"/>
 </Ui>

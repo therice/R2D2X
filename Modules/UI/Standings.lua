@@ -1,17 +1,17 @@
 local _, AddOn = ...
-local L, C, Logging, Util, ItemUtil =
+local L, C, Logging, Util, ItemUtil, Dialog =
     AddOn.Locale, AddOn.Constants,
     AddOn:GetLibrary("Logging"), AddOn:GetLibrary("Util"),
-    AddOn:GetLibrary("ItemUtil")
-local UI, UIUtil, ST, DropDown =
-    AddOn.Require('UI.Native'), AddOn.Require('UI.Util'),
+    AddOn:GetLibrary("ItemUtil"), AddOn:GetLibrary("Dialog")
+local UI, UIUtil, MI, ST, DropDown =
+    AddOn.Require('UI.Native'), AddOn.Require('UI.Util'), AddOn.Require('UI.MoreInfo'),
     AddOn.Require('UI.ScrollingTable'), AddOn.Require('UI.DropDown')
 local Award, STColumnBuilder, STCellBuilder =
     AddOn.Package('Models').Award, AddOn.Package('UI.ScrollingTable').ColumnBuilder,
     AddOn.Package('UI.ScrollingTable').CellBuilder
+local AceUI = AddOn.Require('UI.Ace')
 
 local Standings = AddOn:GetModule("Standings", true)
-
 local RightClickMenu, FilterMenu
 local ScrollColumns =
         STColumnBuilder()
@@ -24,28 +24,52 @@ local ScrollColumns =
                 :column(L["pr_abbrev"]):width(60):sort(STColumnBuilder.Descending):sortnext(4) -- pr (6)
                 :build()
 
-function Standings:BuildFrame()
+function Standings:GetFrame()
     if not self.frame then
         RightClickMenu = MSA_DropDownMenu_Create(C.DropDowns.StandingsRightClick, UIParent)
         FilterMenu = MSA_DropDownMenu_Create(C.DropDowns.StandingsFilter, UIParent)
         MSA_DropDownMenu_Initialize(RightClickMenu, self.RightClickMenu, "MENU")
         MSA_DropDownMenu_Initialize(FilterMenu, self.FilterMenu)
 
-        local frame = UI:NewNamed('Frame', UIParent, 'StandingsWindow', 'Standings', L['frame_standings'], 350, 600)
+        local frame = UI:NewNamed('Frame', UIParent, 'Standings', 'Standings', L['frame_standings'], 350, 600)
         local st = ST.New(ScrollColumns, 20, 25, nil, frame)
+        st:RegisterEvents({
+            -- https://www.wowace.com/projects/lib-st/pages/ui-events
+            -- function (rowFrame, cellFrame, data, cols, row, realrow, column, scrollingTable, ...)
+            ["OnClick"] = function(_, cellFrame, data, _, row, realrow, _, _, button, ...)
+                if button == C.Buttons.Right and row then
+                    RightClickMenu.name = data[realrow].name
+                    RightClickMenu.entry = data[realrow].entry
+                    DropDown.ToggleMenu(1, RightClickMenu, cellFrame)
+                elseif button == "LeftButton" and row then
+                    -- data : the information provided to SetData()
+                    -- row : index of the row that the event was triggered for
+                    -- realrow : exact index (after sorting and filtering) that the event was triggered for
+                    --
+                    -- local celldata = data[realrow].cols[column]
+                    MI.Update(frame, data, realrow)
+                end
+                return false
+            end,
+            -- todo (maybe)
+            ["OnEnter"] = Util.Functions.Noop,
+            ["OnLeave"] = Util.Functions.Noop,
+        })
         st:SetFilter(Standings.FilterFunc)
         st:EnableSelection(true)
 
+        MI.EmbedWidgets(self:GetName(), frame, AddOn.UpdateMoreInfo)
+
         local close = UI:NewNamed('Button', frame.content, "Close")
         close:SetText(_G.CLOSE)
-        close:SetPoint("TOPRIGHT", frame.content, "TOPRIGHT", -10, -20)
+        close:SetPoint("RIGHT", frame.moreInfoBtn, "LEFT", -10, 0)
         close:SetScript("OnClick", function() self:Disable() end)
         frame.close = close
 
         local filter = UI:NewNamed('Button', frame.content, "Filter")
         filter:SetText(_G.FILTER)
         filter:SetPoint("RIGHT", frame.close, "LEFT", -10, 0)
-        filter:SetScript("OnClick", function(self) MSA_ToggleDropDownMenu(1, nil, FilterMenu, self, 0, 0) end )
+        filter:SetScript("OnClick", function(self) DropDown.ToggleMenu(1, FilterMenu, self) end )
         frame.filter = filter
 
         local decay = UI:NewNamed('Button', frame.content, "Decay")
@@ -98,7 +122,6 @@ function Standings:Update(force)
     end
 end
 
-
 function Standings.FilterFunc(table, row)
     local settings = AddOn:ModuleSettings(Standings:GetName())
     if not settings.filters then return true end
@@ -106,7 +129,7 @@ function Standings.FilterFunc(table, row)
     local filters, name = settings.filters, row.name
     local subject = Standings:GetEntry(name)
 
-     Logging:Debug("FilterFunc : %s", Util.Objects.ToString(subject:toTable()))
+    -- Logging:Debug("FilterFunc : %s", Util.Objects.ToString(subject:toTable()))
 
     local include = true
 
@@ -230,61 +253,318 @@ function Standings.FilterMenu(_, level)
     end
 end
 
---[[
-Standings.RightClickEntries = {
-    -- level 1
-    {
-        -- 1 Adjust
-        {
-            text = "Adjust",
-            notCheckable = true,
-            hasArrow = true,
-            value = "ADJUST"
-        },
-    },
-    -- level 2
-    {
-        SubjectAdjustLevel:ToMenuOption(),
-        GuildAdjustLevel:ToMenuOption(),
-        GroupAdjustLevel:ToMenuOption(),
-    },
-    -- level 3
-    {
-        -- 1 EP
-        {
-            text = function()
-                return UI.ColoredDecorator(AddOn.GetResourceTypeColor(Award.ResourceType.Ep)):decorate(L["ep_abbrev"])
-            end,
-            notCheckable = true,
-            func = function(_)
-                GetAdjustLevel():ChildAction(Award.ResourceType.Ep)
-            end,
-        },
-        -- 2 GP
-        {
-            text = function()
-                return UI.ColoredDecorator(AddOn.GetResourceTypeColor(Award.ResourceType.Gp)):decorate(L["gp_abbrev"])
-            end,
-            notCheckable = true,
-            func = function(_)
-                GetAdjustLevel():ChildAction(Award.ResourceType.Gp)
-            end,
-        },
-        -- 3 Rescale
-        -- 4 Decay
-    }
-}
-]]--
+Standings.RightClickEntries =
+    DropDown.EntryBuilder()
+            :nextlevel()
+                :add():text('Adjust'):checkable(false):arrow(true):value('ADJUST')
+            :nextlevel()
+                :add():text(UIUtil.SubjectTypeDecorator(Award.SubjectType.Guild)
+                    :decorate(_G.GUILD)):checkable(false):arrow(true):value(Award.SubjectType.Guild)
+                :add():text(UIUtil.SubjectTypeDecorator(Award.SubjectType.Raid)
+                    :decorate(_G.GROUP)):checkable(false):arrow(true):value(Award.SubjectType.Raid)
+                :add():text(
+                        function(name, entry)
+                            return UIUtil.ClassColorDecorator(entry.class):decorate(AddOn.Ambiguate(name))
+                        end
+                    ):checkable(false):arrow(true):value(Award.SubjectType.Character)
+            :nextlevel()
+                :add():text(UIUtil.ResourceTypeDecorator(Award.ResourceType.Ep):decorate(L["ep_abbrev"]))
+                    :checkable(false):arrow(false)
+                    :fn(function(_, entry)
+                            Standings:AdjustAction(MSA_DROPDOWNMENU_MENU_VALUE, Award.ResourceType.Ep, entry)
+                        end
+                    )
+                :add():text(UIUtil.ResourceTypeDecorator(Award.ResourceType.Gp):decorate(L["gp_abbrev"]))
+                   :checkable(false):arrow(false)
+                    :fn(
+                        function(_, entry)
+                            Standings:AdjustAction(MSA_DROPDOWNMENU_MENU_VALUE, Award.ResourceType.Gp, entry)
+                        end
+                    )
+            :build()
+
 
 Standings.RightClickMenu = DropDown.RightClickMenu(
         function() return AddOn:DevModeEnabled() or CanEditOfficerNote() end,
-        {} --Standings.RightClickEntries
+        Standings.RightClickEntries
 )
 
+function Standings:GetAdjustFrame()
+    if not self.adjustFrame then
+        local f = UI:NewNamed('Frame', UIParent, 'AdjustPoints', 'AdjustPoints', L['frame_adjust_points'], 230, 275)
+        f:SetPoint("TOPRIGHT", self.frame, "TOPLEFT", -150)
+
+        local name = f.content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        name:SetPoint("CENTER", f.content, "TOP", 0, -30)
+        name:SetText("...")
+        f.name = name
+
+        local rtLabel = f.content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        rtLabel:SetPoint("TOPLEFT", f.content, "TOPLEFT", 15, -45)
+        rtLabel:SetText(L["resource_type"])
+        f.rtLabel = rtLabel
+
+        local resourceType =
+            AceUI('Dropdown')
+                .SetPoint("TOPLEFT", f.rtLabel, "BOTTOMLEFT", 0, -5)
+                .SetParent(f)()
+        local values = Util(Award.TypeIdToResource):Copy()()
+        values[0] = L["all"]
+        resourceType:SetList(values)
+        resourceType:SetValue(0) -- default to 'All'
+        f.resourceType = resourceType
+
+        local atLabel = f.content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        atLabel:SetPoint("TOPLEFT", f.rtLabel, "TOPLEFT", 0, -45)
+        atLabel:SetText(L["action_type"])
+        f.atLabel = atLabel
+
+        -- todo : remove decay and maybe reseet
+        local actionType =
+            AceUI('Dropdown')
+                .SetPoint("TOPLEFT", f.resourceType.frame, "BOTTOMLEFT", 0, -20)
+                .SetParent(f)()
+        local actions = Util(Award.TypeIdToAction):Copy()()
+        actionType:SetList(actions)
+        f.actionType = actionType
+
+        local qtyLabel = f.content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        qtyLabel:SetPoint("TOPLEFT", f.atLabel, "TOPLEFT", 0, -45)
+        qtyLabel:SetText(L["quantity"])
+        f.qtyLabel = qtyLabel
+
+        local quantity = UI:New("EditBox", f.content)
+        quantity:SetHeight(25)
+        quantity:SetWidth(100)
+        quantity:SetPoint("TOPLEFT", f.actionType.frame , "BOTTOMLEFT", 3, -23)
+        quantity:SetPoint("TOPRIGHT", f.actionType.frame , "TOPRIGHT", -6, 0)
+        quantity:SetNumeric(true)
+        f.quantity = quantity
+
+        local descLabel = f.content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        descLabel:SetPoint("TOPLEFT", f.qtyLabel, "TOPLEFT", 0, -48)
+        descLabel:SetText(L["description"])
+        f.descLabel = descLabel
+
+        local desc = UI:New("EditBox", f.content)
+        desc:SetHeight(25)
+        desc:SetWidth(100)
+        desc:SetPoint("TOPLEFT", f.quantity, "BOTTOMLEFT", 0, -23)
+        desc:SetPoint("TOPRIGHT", f.quantity, "TOPRIGHT",  0, 0)
+        f.desc = desc
+
+        local close = UI:New('Button', f.content)
+        close:SetText(_G.CANCEL)
+        close:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -10, 7)
+        close:SetScript("OnClick",
+                function()
+                    if f.errorTooltip then f.errorTooltip:Hide() end
+                    if f.subjectTooltip then f.subjectTooltip:Hide() end
+                    f:Hide()
+                end)
+        f.close = close
+
+        local adjust = UI:New('Button', f.content)
+        adjust:SetText(L["adjust"])
+        adjust:SetPoint("RIGHT", f.close, "LEFT", -10, 0)
+        adjust:SetScript("OnClick",
+                function()
+                    local award, validationErrors = f.Validate()
+                    if Util.Tables.Count(validationErrors) ~= 0 then
+                        f.UpdateErrorTooltip(validationErrors)
+                    else
+                        f.errorTooltip:Hide()
+                        Dialog:Spawn(AddOn.Constants.Popups.ConfirmAdjustPoints, award)
+                    end
+                end
+        )
+        f.adjust = adjust
+
+        f.errorTooltip = UI:NewNamed('GameTooltip', f, 'ErrorTooltip')
+        f.subjectTooltip = UI:NewNamed('GameTooltip', f, 'SubjectTooltip')
+
+        f.UpdateErrorTooltip = function(errors)
+            local tip = f.errorTooltip
+            tip:SetOwner(f, "ANCHOR_LEFT")
+            tip:AddLine(UIUtil.ColoredDecorator(0.77, 0.12, 0.23):decorate(L["errors"]))
+            tip:AddLine(" ")
+            local errorDeco = UIUtil.ColoredDecorator(1, 0.96, 0.41)
+            for _, error in pairs(errors) do
+                tip:AddLine(errorDeco:decorate(error))
+            end
+            tip:Show()
+            tip:SetAnchorType("ANCHOR_LEFT", 0, -tip:GetHeight())
+        end
+
+        f.UpdateSubjectTooltip = function (subjects)
+            local tip = f.subjectTooltip
+            tip:SetOwner(f, "ANCHOR_LEFT")
+            tip:AddLine(UIUtil.ColoredDecorator(1, 1, 1):decorate(L["characters"]))
+            tip:AddLine(" ")
+
+            for _, subject in pairs(subjects) do
+                tip:AddLine(
+                    UIUtil.ClassColorDecorator(subject[2]):decorate(subject[1])
+                )
+            end
+            tip:Show()
+            tip:SetAnchorType("ANCHOR_LEFT", 0, -tip:GetHeight())
+        end
+
+        f.Validate = function()
+            local validationErrors = {}
+            local award = Award()
+
+            local subject = f.name:GetText()
+            if Util.Strings.IsEmpty(subject) then
+                Util.Tables.Push(validationErrors, format(L["x_unspecified_or_incorrect_type"], L["name"]))
+            else
+                local subjectType = tonumber(f.subjectType)
+                if subjectType== Award.SubjectType.Character then
+                    award:SetSubjects(subjectType, subject)
+                else
+                    if f.subjects and Util.Tables.Count(f.subjects) ~= 0 then
+                        local subjects =
+                            Util(f.subjects):Map(
+                                function(subject)
+                                    return AddOn:UnitName(subject[1])
+                                end
+                            ):Copy()()
+                        award:SetSubjects(subjectType, unpack(subjects))
+                    else
+                        award:SetSubjects(subjectType)
+                    end
+                end
+            end
+
+            local actionType = f.actionType:GetValue()
+            if Util.Objects.IsEmpty(actionType) or not Util.Objects.IsNumber(actionType) then
+                Util.Tables.Push(validationErrors, format(L["x_unspecified_or_incorrect_type"], L["action_type"]))
+            else
+                award:SetAction(tonumber(actionType))
+            end
+
+            local setResource = true
+            local resourceType = f.resourceType:GetValue()
+            if Util.Objects.IsEmpty(resourceType) or not Util.Objects.IsNumber(resourceType) then
+                Util.Tables.Push(validationErrors, format(L["x_unspecified_or_incorrect_type"], L["resource_type"]))
+                setResource = false
+            end
+
+            local quantity = f.quantity:GetText()
+            if Util.Objects.IsEmpty(quantity) or not Util.Strings.IsNumber(quantity) then
+                Util.Tables.Push(validationErrors, format(L["x_unspecified_or_incorrect_type"], L["quantity"]))
+                setResource = false
+            end
+
+            if setResource then award:SetResource(tonumber(resourceType), tonumber(quantity)) end
+
+            local description = f.desc:GetText()
+            if Util.Strings.IsEmpty(description) then
+                Util.Tables.Push(validationErrors, format(L["x_unspecified_or_incorrect_type"], L["description"]))
+            else
+                award.description = description
+            end
+
+            return award, validationErrors
+        end
+
+        f.Update = function(subjectType, resourceType, subjects)
+            local subjectColor, text
+
+            if subjectType == Award.SubjectType.Character then
+                subjectColor = UIUtil.GetPlayerClassColor(subjects)
+                text = subjects
+            else
+                subjectColor = UIUtil.GetSubjectTypeColor(subjectType)
+                text = Award.TypeIdToSubject[subjectType]
+            end
+
+            if subjectType ~= Award.SubjectType.Character and Util.Objects.IsTable(subjects) then
+                f.subjects = subjects
+
+                text = text .. "(" .. Util.Tables.Count(subjects) .. ")"
+                f.UpdateSubjectTooltip(
+                    Util(subjects)
+                            :Sort(function (a, b) return a[1] < b[1] end)
+                            :Map(function(e) return { AddOn.Ambiguate(e[1]), e[2] } end)
+                            :Copy()()
+                )
+            else
+                f.subjectTooltip:Hide()
+                f.subjects = nil
+            end
+
+            f.subjectType = subjectType
+
+            f.name:SetText(text)
+            f.name:SetTextColor(subjectColor.r, subjectColor.g, subjectColor.b, subjectColor.a)
+
+            f.resourceType:SetValue(resourceType)
+            f.resourceType:SetText(Award.TypeIdToResource[resourceType]:upper())
+
+            f.actionType:SetValue(nil)
+            f.actionType:SetText(nil)
+
+            f.quantity:SetText('')
+            f.desc:SetText('')
+
+            if not f:IsVisible() then f:Show() end
+        end
+
+        self.adjustFrame = f
+    end
+
+    return self.adjustFrame
+end
+
+-- all 3 parameters are passed, but entry may not be applicable based upon subjectType
+function Standings:AdjustAction(subjectType, resourceType, entry)
+    Logging:Debug("AdjustAction() : %d, %d, %s", subjectType, resourceType, entry.name)
+    self:GetAdjustFrame().Update(subjectType, resourceType, AddOn.Ambiguate(entry.name))
+end
+
+function Standings.AdjustOnShow(frame, award)
+    UIUtil.DecoratePopup(frame)
+
+    local decoratedText
+    if award.subjectType == Award.SubjectType.Character then
+        local subject = award.subjects[1]
+        decoratedText = UIUtil.ClassColorDecorator(subject[2]):decorate(AddOn.Ambiguate(subject[1]))
+    else
+        decoratedText = UIUtil.SubjectTypeDecorator(award.subjectType):decorate("the " .. award:GetSubjectOriginText())
+    end
+
+    -- Are you certain you want to %s %d %s %s %s?
+    frame.text:SetText(
+            format(L["confirm_adjust_player_points"],
+                    Award.TypeIdToAction[award.actionType]:lower(),
+                    tostring(award.resourceQuantity),
+                    Award.TypeIdToResource[award.resourceType]:upper(),
+                    award.actionType == Award.ActionType.Add and "to" or "from",
+                    decoratedText
+            )
+    )
+end
+
+function Standings.AdjustOnClickYes(_, award, ...)
+    Standings:Adjust(award)
+    Standings:HideAdjust()
+end
 
 function Standings:Hide()
     if self.frame then
         self.frame:Hide()
+    end
+
+    self:HideAdjust()
+end
+
+function Standings:HideAdjust()
+    if self.adjustFrame then
+        self.adjustFrame:Hide()
+        self.adjustFrame.errorTooltip:Hide()
+        self.adjustFrame.subjectTooltip:Hide()
     end
 end
 

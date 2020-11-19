@@ -5,7 +5,6 @@ describe("Comm", function()
         AddOnName, AddOn = loadfile("Test/TestSetup.lua")(true, 'Core_Comm')
         C, Util = AddOn.Constants, AddOn:GetLibrary('Util')
         Player = AddOn.Package('Models').Player
-        ConfigureLogging()
         AddOn.player = Player:Get("Player1")
     end)
     teardown(function()

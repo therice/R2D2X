@@ -40,6 +40,7 @@ do
     AddOn:AddLibrary('ItemUtil', 'LibItemUtil-1.1')
     AddOn:AddLibrary('Window', 'LibWindow-1.1')
     AddOn:AddLibrary('ScrollingTable', 'ScrollingTable')
+    AddOn:AddLibrary('Dialog', 'LibDialog-1.0')
     AddOn:AddLibrary('DataBroker', 'LibDataBroker-1.1')
     AddOn:AddLibrary('DbIcon', 'LibDBIcon-1.0')
     AddOn:AddLibrary('GuildStorage', 'LibGuildStorage-1.3')
@@ -49,6 +50,9 @@ end
 AddOn.Locale = AddOn:GetLibrary("AceLocale"):GetLocale(AddOn.Constants.name)
 
 local Logging, Util = AddOn:GetLibrary("Logging"), AddOn:GetLibrary("Util")
+--@debug@
+Logging:SetRootThreshold(AddOn._IsTestContext() and Logging.Level.Trace or Logging.Level.Debug)
+--@end-debug@
 
 local function GetDbValue(self, i)
     Logging:Debug("GetDbValue(%s, %s)", self:GetName(), tostring(i[#i]))

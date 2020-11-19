@@ -5,9 +5,6 @@ local C, Comm, Player, SlashCommands =
     AddOn.Require('Core.SlashCommands')
 
 function AddOn:OnInitialize()
-    --@debug@
-    Logging:SetRootThreshold(AddOn._IsTestContext() and Logging.Level.Trace or Logging.Level.Debug)
-    --@end-debug@
     Logging:Debug("OnInitialize(%s)", self:GetName())
     -- convert to a semantic version
     self.version = AddOn.Package('Models').SemanticVersion(self.version)
@@ -47,7 +44,9 @@ function AddOn:OnEnable()
 
     -- this enables flag for persistence of stuff like points to officer's notes, history, and sync payloads
     -- it can be disabled as needed through /r2d2 pm
-    self.mode:Enable(AddOn.Constants.Modes.Persistence)
+    self.mode:Disable(AddOn.Constants.Modes.Persistence)
+    -- todo : go back to enabled once out of development
+    -- self.mode:Enable(AddOn.Constants.Modes.Persistence)
     self.player = Player:Get("player")
 
     Logging:Debug("OnEnable(%s) : %s", self:GetName(), tostring(self.player))

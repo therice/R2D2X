@@ -98,19 +98,18 @@ function ResetLogging()
 end
 
 local function xpcall_patch()
-    -- this is dubious, something strange occurring with Ace3 Libs and invocations of xpcall via unit tests
-    -- probably should back this out, but a workaround for now
+    -- there's an issue on lua5.1 with xpcall accepting function aruments, so patch it
+    -- xpcall(function() func(self, event, unpack(args)) end, errorhandler)
     _G.xpcallo = _G.xpcall
-    _G.xpcall = function(func, err, ...)
-        local success, result = _G.pcall(func, ...)
+    _G.xpcall = function(fn, err, ...)
+        local success, result = _G.pcall(fn, ...)
         if not success then
-            print('(xpcall_patch) ' .. dump(result))
-            -- error(result)
-            -- print(debugstack(1, 4, 0))
-            -- error(debugstack(1, 4, 0))
+            print('(xpcall_patch)' .. dump(result))
+            print('(xpcall_patch)' .. debug.traceback())
         end
         return success, result
     end
+
 end
 
 local function xpcall_restore()

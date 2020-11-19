@@ -1,6 +1,6 @@
 local name, AddOn = ...
-local L, Util, DbIcon, DataBroker =
-    AddOn.Locale, AddOn:GetLibrary("Util"), AddOn:GetLibrary("DbIcon"), AddOn:GetLibrary("DataBroker")
+local L, C, Util, DbIcon, DataBroker =
+    AddOn.Locale, AddOn.Constants, AddOn:GetLibrary("Util"), AddOn:GetLibrary("DbIcon"), AddOn:GetLibrary("DataBroker")
 local MinimapButton = AddOn.Package('Core.UI'):Class('MinimapButton')
 local TooltipEntry = "|cFFCFCFCF%s:|r %s"
 
@@ -14,14 +14,15 @@ function MinimapButton:initialize()
                 OnTooltipShow = function(tooltip)
                     tooltip:AddDoubleLine(format("|cfffe7b2c%s|r", name), format("|cffFFFFFF%s|r", tostring(AddOn.version)))
                     tooltip:AddLine(format(TooltipEntry, L["left_click"], L["open_standings"]))
-                    tooltip:AddLine(format(TooltipEntry, L["right_click"] .. ' / ' .. L["shift_left_click"], L["open_config"]))
+                    tooltip:AddLine(format(TooltipEntry, L["right_click"] , L["open_config"]))
+                    tooltip:AddLine(format(TooltipEntry, L["shift_left_click"], L['logging_window_toggle']))
                 end,
-                OnClick = function(self, button)
-                    if button == "RightButton" then
+                OnClick = function(_, button)
+                    if button == C.Buttons.Right then
                         AddOn.ToggleConfig()
                     else
                         if IsShiftKeyDown() then
-                            AddOn:ToggleConfig()
+                            AddOn:LoggingModule():Toggle()
                         else
                             AddOn:ToggleModule("Standings")
                         end

@@ -5,4 +5,5 @@
     <Script file="Text.lua"/>
     <Script file="Frame.lua"/>
     <Script file="ScrollingMessageFrame.lua"/>
+    <Script file="GameTooltip.lua"/>
 </Ui>

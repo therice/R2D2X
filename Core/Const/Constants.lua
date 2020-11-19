@@ -12,6 +12,11 @@ AddOn.Constants = {
     player  =   "player",
     party   =   "party",
 
+    Buttons = {
+        Left    =   "LeftButton",
+        Right   =   "RightButton",
+    },
+
     CommPrefixes = {
       Main      =   name,
       Version   =   name .. 'v',
@@ -39,11 +44,11 @@ AddOn.Constants = {
         ItemPoor        =   _G.ITEM_QUALITY_COLORS[0].color,
         ItemRare        =   _G.ITEM_QUALITY_COLORS[3].color,
         ItemUncommon    =   _G.ITEM_QUALITY_COLORS[2].color,
-
     },
     
     Commands = {
-    
+        PlayerInfo              =   "pi",
+        PlayerInfoRequest       =   "pir",
     },
 
     DropDowns = {
@@ -68,8 +73,7 @@ AddOn.Constants = {
     },
 
     Messages = {
-        PlayerInfo              =   "pi",
-        PlayerInfoRequest       =   "pir",
+
     },
 
     Modes = {
@@ -80,7 +84,7 @@ AddOn.Constants = {
     },
     
     Popups = {
-
+        ConfirmAdjustPoints     =   name .. "_ConfirmAdjustPoints",
     },
 
     Responses = {

@@ -1,10 +1,12 @@
 local _, AddOn = ...
-local C, Logging, Util = AddOn.Constants, AddOn:GetLibrary('Logging'), AddOn:GetLibrary('Util')
+local L, C, Logging, Util =
+    AddOn.Locale, AddOn.Constants, AddOn:GetLibrary('Logging'), AddOn:GetLibrary('Util')
+local UIPackage, UIUtilPackage, UI =
+    AddOn.Package('UI'), AddOn.Package('UI.Util'), AddOn.Require('UI.Native')
 local Award = AddOn.Package('Models').Award
-local UI, UIUtil = AddOn.Package('UI'), AddOn.Package('UI.Util')
 
 -- generic build entry attributes
-local Attributes = UIUtil:Class('Attributes')
+local Attributes = UIUtilPackage:Class('Attributes')
 function Attributes:initialize(attrs) self.attrs = attrs end
 function Attributes:set(attr, value)
     self.attrs[attr] = value
@@ -12,7 +14,7 @@ function Attributes:set(attr, value)
 end
 
 -- generic builder which handles entries of attributes
-local Builder =  UIUtil:Class('Builder')
+local Builder =  UIUtilPackage:Class('Builder')
 function Builder:initialize(entries)
     self.entries = entries
     self.pending = nil
@@ -53,16 +55,16 @@ function Builder:build()
 end
 
 
-local Private = UI:Class('Utils')
+local Private = UIPackage:Class('Utils')
 function Private:initialize()
-    self.tooltip = nil
+    self.hypertip = nil
 end
 
-function Private:GetTooltip(creator)
-    if not self.tooltip and creator then
-        self.tooltip = creator()
+function Private:GetHypertip(creator)
+    if not self.hypertip and creator then
+        self.hypertip = creator()
     end
-    return self.tooltip
+    return self.hypertip
 end
 
 local U = AddOn.Instance(
@@ -74,11 +76,11 @@ local U = AddOn.Instance(
         end
 )
 
-local Decorator = UI:Class('Decorator')
+local Decorator = UIPackage:Class('Decorator')
 function Decorator:initialize() end
 function Decorator:decorate(...) return Util.Strings.Join('', ...) end
 
-local ColoredDecorator = UI:Class('ColoredDecorator', Decorator)
+local ColoredDecorator = UIPackage:Class('ColoredDecorator', Decorator)
 function ColoredDecorator:initialize(r, g, b)
     Decorator.initialize(self)
     if Util.Objects.IsTable(r) then
@@ -93,67 +95,23 @@ function ColoredDecorator:initialize(r, g, b)
 end
 
 function ColoredDecorator:decorate(...)
-    return U.RGBToHexPrefix(self.r, self.b, self.g) .. ColoredDecorator.super:decorate(...) .. "|r"
+    return U.RGBToHexPrefix(self.r, self.g, self.b) .. ColoredDecorator.super:decorate(...) .. "|r"
 end
 
-function U.RightClickMenu(predicate, entries, callback)
-    return function(menu, level)
-        if not predicate() then return end
-        if not menu or not level then return end
-
-        local info = MSA_DropDownMenu_CreateInfo()
-        local candidateName = menu.name
-        local el = menu.entry
-        local value = _G.MSA_DROPDOWNMENU_MENU_VALUE
-
-        for _, entry in ipairs(entries[level]) do
-            info = MSA_DropDownMenu_CreateInfo()
-            if not entry.special then
-                if not entry.onValue or entry.onValue == value or (Util.Objects.IsFunction(entry.onValue) and entry.onValue(candidateName, el)) then
-                    if (entry.hidden and Util.Objects.IsFunction(entry.hidden) and not entry.hidden(candidateName, el)) or not entry.hidden then
-                        for name, val in pairs(entry) do
-                            if name == "func" then
-                                info[name] = function() return val(candidateName, el) end
-                            elseif Util.Objects.IsFunction(val) then
-                                info[name] = val(candidateName, el)
-                            else
-                                info[name] = val
-                            end
-                        end
-                        MSA_DropDownMenu_AddButton(info, level)
-                    end
-                end
-            else
-                if callback then callback(info, menu, level, entry, value) end
-            end
-        end
-    end
+--- Used to decorate LibDialog Popups
+function U.DecoratePopup(frame)
+    frame:SetFrameStrata("DIALOG")
+    frame:SetBackdrop({
+        bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+        edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+        tile = true, tileSize = 8, edgeSize = 2,
+        insets = { left = 2, right = 2, top = 2, bottom = 2 },
+    })
+    frame:SetBackdropColor(0, 0, 0, 1)
+    frame:SetBackdropBorderColor(0, 0, 0, 1)
 end
 
-function U:CreateHypertip(link)
-    if Util.Strings.IsEmpty(link) then return end
-    -- this is to support shift click comparison on all tooltips
-    local function tip()
-        local tip = CreateFrame("GameTooltip", AddOn:Qualify("TooltipEventHandler"), UIParent, "GameTooltipTemplate")
-        tip:RegisterEvent("MODIFIER_STATE_CHANGED")
-        tip:SetScript("OnEvent",
-                function(_, event, arg)
-                    local tooltip = self.private.tooltip
-                    if tooltip.showing and event == "MODIFIER_STATE_CHANGED" and (arg == "LSHIFT" or arg == "RSHIFT") and tooltip.link then
-                        self:CreateHypertip(tooltip.link)
-                    end
-                end
-        )
-        return tip
-    end
-
-    local tooltip = self.private:GetTooltip(tip)
-    tooltip.showing = true
-    tooltip.link = link
-    GameTooltip:SetOwner(UIParent, "ANCHOR_CURSOR")
-    GameTooltip:SetHyperlink(link)
-end
-
+-- creates a tooltip anchored to cursor using the standard GameTooltip
 function U.CreateTooltip(...)
     GameTooltip:SetOwner(UIParent, "ANCHOR_CURSOR")
     for i = 1, select("#", ...) do
@@ -162,10 +120,36 @@ function U.CreateTooltip(...)
     GameTooltip:Show()
 end
 
+-- hides the tooltip created via CreateTooltip
 function U:HideTooltip()
-    local tooltip = self.private:GetTooltip()
-    if tooltip then tooltip.showing = false end
+    local tip = self.private:GetHypertip()
+    if tip then tip.showing = false end
     GameTooltip:Hide()
+end
+
+-- creates and displays a hyperlink tooltip
+function U:CreateHypertip(link)
+    if Util.Strings.IsEmpty(link) then return end
+    -- this is to support shift click comparison on all tooltips
+    local function hypertip()
+        local tip = UI:NewNamed("GameTooltip", AddOn:Qualify("TooltipEventHandler"))
+        tip:RegisterEvent("MODIFIER_STATE_CHANGED")
+        tip:SetScript("OnEvent",
+                function(_, event, arg)
+                    local tip = self.private:GetHypertip()
+                    if tip.showing and event == "MODIFIER_STATE_CHANGED" and (arg == "LSHIFT" or arg == "RSHIFT") and tip.link then
+                        self:CreateHypertip(tip.link)
+                    end
+                end
+        )
+        return tip
+    end
+
+    local tooltip = self.private:GetHypertip(hypertip)
+    tooltip.showing = true
+    tooltip.link = link
+    GameTooltip:SetOwner(UIParent, "ANCHOR_CURSOR")
+    GameTooltip:SetHyperlink(link)
 end
 
 function U.GetClassColorRGB(class)
@@ -174,14 +158,16 @@ function U.GetClassColorRGB(class)
 end
 
 function U.GetClassColor(class)
-    local color = RAID_CLASS_COLORS[class:upper()]
+    local color = class and RAID_CLASS_COLORS[class:upper()] or nil
     -- if class not found, return epic color.
     if not color then return {r=1,g=1,b=1,a=1} end
     color.a = 1.0
     return color
 end
 
-
+function U.GetPlayerClassColor(name)
+    return U.GetClassColor(AddOn:UnitClass(name))
+end
 
 function U.RGBToHex(r,g,b)
     return string.format("%02x%02x%02x", math.floor(255*r), math.floor(255*g), math.floor(255*b))
@@ -193,6 +179,22 @@ end
 
 function U.ColoredDecorator(...)
     return ColoredDecorator(...)
+end
+
+function U.ClassColorDecorator(class)
+    return ColoredDecorator(U.GetClassColor(class))
+end
+
+function U.PlayerClassColorDecorator(name)
+    return ColoredDecorator(U.GetPlayerClassColor(name))
+end
+
+function U.SubjectTypeDecorator(subjectType)
+    return ColoredDecorator(U.GetSubjectTypeColor(subjectType))
+end
+
+function U.ResourceTypeDecorator(resourceType)
+    return ColoredDecorator(U.GetResourceTypeColor(resourceType))
 end
 
 local Colors = {
@@ -212,6 +214,7 @@ function U.GetSubjectTypeColor(subjectType)
     if Util.Objects.IsString(subjectType) then subjectType = Award.SubjectType[subjectType] end
     return Colors.SubjectTypes[subjectType]
 end
+
 function U.GetResourceTypeColor(resourceType)
     if Util.Objects.IsString(resourceType) then resourceType = Award.ResourceType[resourceType] end
     return Colors.ResourceTypes[resourceType]

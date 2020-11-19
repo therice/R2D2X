@@ -49,6 +49,10 @@ function AddOn:ToggleModule(module)
     end
 end
 
+function AddOn:LoggingModule()
+    return self:GetModule("Logging")
+end
+
 function AddOn:GearPointsModule()
     return self:GetModule("GearPoints")
 end
@@ -194,6 +198,10 @@ function AddOn:NewMasterLooterCheck()
     --]]
 end
 
+
+function AddOn:StartHandleLoot()
+    Logging:Debug("StartHandleLoot()")
+end
 
 function AddOn:StopHandleLoot()
     Logging:Debug("StopHandleLoot()")

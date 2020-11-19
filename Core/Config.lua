@@ -112,6 +112,7 @@ end
 function AddOn.HideConfig()
     local _, f = ConfigFrame()
     if f then
+        -- todo
         -- local gpm = AddOn:GearPointsCustomModule()
         -- if gpm.addItemFrame then gpm.addItemFrame:Hide() end
         ACD:Close(AddOn.Constants.name)
