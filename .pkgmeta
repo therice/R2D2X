@@ -4,6 +4,7 @@ ignore:
   - Test
   - */Test/*
   - .gitignore
+  - .luacov
   - .luacheckrc
   - .pkgmeta
   - .travis.yml
