@@ -1,5 +1,5 @@
 local _, AddOn = ...
-local Logging, Util = AddOn:GetLibrary('Logging'), AddOn:GetLibrary('Util')
+local L, Logging, Util = AddOn.Locale, AddOn:GetLibrary('Logging'), AddOn:GetLibrary('Util')
 local Mode, Player = AddOn.Package('Core'):Class('Mode'), AddOn.ImportPackage('Models').Player
 
 local function bbit(p) return 2 ^ (p - 1) end
@@ -134,4 +134,17 @@ AddOn.FilterClassesByFactionFn = function(class)
         return class ~= "Paladin"
     end
     return true
+end
+
+function AddOn.ConvertIntervalToString(years, months, days)
+
+    local text = format(L["n_days"], days)
+
+    if years > 0 then
+        text = format(L["n_years_and_n_months_and_n_days"], years, months, text)
+    elseif months > 0 then
+        text = format(L["n_months_and_n_days"], months, text)
+    end
+
+    return text
 end

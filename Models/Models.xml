@@ -6,4 +6,5 @@
     <Script file="Point.lua"/>
     <Script file="History\History.lua"/>
     <Script file="History\Traffic.lua"/>
+    <Script file="History\Loot.lua"/>
 </Ui>

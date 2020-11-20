@@ -109,6 +109,7 @@ _G.sort = table.sort
 -- this isn't functionally correct
 _G.debugprofilestop = function() return 0 end
 
+
 local wow_api_locale = 'enUS'
 function GetLocale()
     return wow_api_locale

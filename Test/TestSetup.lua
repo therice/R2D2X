@@ -109,8 +109,8 @@ end
 -- It seems Wow doesn't follow the 5.1 spec for xpcall (no additional arguments),
 -- but instead the one from 5.2 where that's allowed.
 -- Try to recreate that here.
-local xpcall_orig = _G.xpcall
 
+local xpcall_orig = _G.xpcall
 function xpcall_patch()
     --there's an issue on lua5.1 with xpcall accepting function aruments, so patch it
     --_G.xpcall = function(fn, err, ...)  return Dispatchers[select("#", ...)](fn, ...) end
@@ -121,15 +121,14 @@ function xpcall_patch()
     _G.xpcall = function(f, err, ...)
         local status, code = pcall(f, ...)
         if not status then
-            --[[
-            ...sers/tedri/opt/r2d2/R2D2X/Models/History/Traffic.lua:30: The specified data was not of the correct type : table
-
-            stack traceback:
-                    ...sers/tedri/opt/r2d2/R2D2X/Models/History/Traffic.lua:30: in function 'initialize'
-                    ...ri/opt/r2d2/R2D2X/Libs/LibClass-1.0/LibClass-1.0.lua:159: in function <...ri/opt/r2d2/R2D2X/Libs/LibClass-1.0/LibClass-1.0.lua:156>
-                    (tail call): ?
-                    ./Models/History/Test/TrafficTest.lua:28: in function <./Models/History/Test/TrafficTest.lua:27>
-            --]]
+            --...sers/tedri/opt/r2d2/R2D2X/Models/History/Traffic.lua:30: The specified data was not of the correct type : table
+            --
+            --stack traceback:
+            --        ...sers/tedri/opt/r2d2/R2D2X/Models/History/Traffic.lua:30: in function 'initialize'
+            --        ...ri/opt/r2d2/R2D2X/Libs/LibClass-1.0/LibClass-1.0.lua:159: in function <...ri/opt/r2d2/R2D2X/Libs/LibClass-1.0/LibClass-1.0.lua:156>
+            --        (tail call): ?
+            --        ./Models/History/Test/TrafficTest.lua:28: in function <./Models/History/Test/TrafficTest.lua:27>
+            --
             --print(code)
             --print(dump(debug.getinfo(1)))
             geterrorhandler()(code)
@@ -211,8 +210,9 @@ function GetSize(tbl, includeIndices, includeKeys)
     return size;
 end
 
-xpcall_patch()
+
 Before()
+xpcall_patch()
 
 local thisDir = pl.abspath(debug.getinfo(1).source:match("@(.*)/.*.lua$"))
 local wowApi = thisDir .. '/WowApi.lua'
@@ -220,7 +220,6 @@ print('Loading WowApi @ ' .. wowApi)
 loadfile(wowApi)()
 
 local True = function(...) return true end
-
 local name, addon
 
 if loadAddon then

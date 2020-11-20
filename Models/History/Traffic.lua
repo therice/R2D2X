@@ -7,8 +7,6 @@ local Award, History = AddOn.ImportPackage('Models').Award, HistoryPkg.History
 -- lazy memoization, only require once used
 local UI = AddOn.RequireOnUse('UI.Util')
 
--- local UI = AddOn.Require('UI.Util')
-
 local Traffic = HistoryPkg:Class('Traffic', History)
 function Traffic:initialize(instant, data)
     History.initialize(self, instant)
