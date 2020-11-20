@@ -157,14 +157,17 @@ function AddOnLoaded(name, enable)
 end
 
 function PlayerEnteredWorld()
+    -- print('PlayerEnteredWorld')
     _G.IsLoggedIn = function() return true end
     WoWAPI_FireEvent("PLAYER_ENTERING_WORLD", true, false)
 end
 
 function GuildRosterUpdate()
-    WoWAPI_FireEvent("GUILD_ROSTER_UPDATE", true)
+    -- print('GuildRosterUpdate')
+    WoWAPI_FireEvent("GUILD_ROSTER_UPDATE", false)
     WoWAPI_FireUpdate()
 end
+
 
 function After()
     if logFile then

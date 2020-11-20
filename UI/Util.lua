@@ -86,12 +86,16 @@ function ColoredDecorator:initialize(r, g, b)
     if Util.Objects.IsTable(r) then
         if r.GetRGB then
             self.r, self.g, self.b = r:GetRGB()
+        elseif r.r and r.g and r.b then
+            self.r, self.g, self.b = r.r, r.g, r.b
         else
             self.r, self.g, self.b = unpack(r)
         end
     else
         self.r, self.g, self.b = r, g, b
     end
+
+    -- Logging:Debug("%s, %s, %s", tostring(self.r), tostring(self.g), tostring(self.b))
 end
 
 function ColoredDecorator:decorate(...)
@@ -160,7 +164,9 @@ end
 function U.GetClassColor(class)
     local color = class and RAID_CLASS_COLORS[class:upper()] or nil
     -- if class not found, return epic color.
-    if not color then return {r=1,g=1,b=1,a=1} end
+    if not color then
+        return {r=1,g=1,b=1,a=1}
+    end
     color.a = 1.0
     return color
 end

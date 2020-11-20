@@ -77,6 +77,7 @@ _G.floor = math.floor
 _G.strlower = string.lower
 _G.strupper = string.upper
 _G.mod = function(a,b) return a - math.floor(a/b) * b end
+_G.max = math.max
 
 -- https://wowwiki.fandom.com/wiki/API_strsplit
 -- A list of strings. Not a table. If the delimiter is not found in the string, the whole subject string will be returned.
@@ -110,6 +111,15 @@ _G.sort = table.sort
 _G.debugprofilestop = function() return 0 end
 
 
+function getglobal(k)
+    return _G[k]
+end
+
+function setglobal(k, v)
+    _G[k] = v
+end
+
+
 local wow_api_locale = 'enUS'
 function GetLocale()
     return wow_api_locale
@@ -135,6 +145,7 @@ if not wipe then
         for k in pairs(tbl) do
             tbl[k]=nil
         end
+        return tbl
     end
 
     if not table.wipe then
@@ -176,7 +187,14 @@ function GetCurrentRegion()
     return 1 -- "US"
 end
 
-function GuildRoster ()  end
+function GuildRoster ()
+    -- dubious to work around issues with library using this function
+    -- being called before addon is loaded
+    if _G.IsAddOnLoaded('R2D2X') then
+        print('GuildRoster')
+        GuildRosterUpdate()
+    end
+end
 
 function IsInGuild() return 1  end
 
@@ -285,7 +303,7 @@ function GetGuildRosterInfo(index)
 
     -- local name, rank, rankIndex, _, class, _, _, officerNote, _, _, classTag, _, _, _, _, _, guid =
     return
-        name .. '-' .. realm, 'Member', 2, 60, classInfo.className, 'IronForge', "", "1240, 34", 1, 0, classInfo.classFileName,
+        name .. '-' .. realm, 'Member', 2, 60, classInfo.className, 'IronForge', "", "1240,34", 1, 0, classInfo.classFileName,
         -1, 64, false, false, 3, guid
 end
 

@@ -1,5 +1,5 @@
 local _, AddOn = ...
-local Standings = AddOn:NewModule('Standings')
+local Standings = AddOn:NewModule('Standings',  "AceTimer-3.0")
 local L, Logging, Util, GuildStorage =
     AddOn.Locale, AddOn:GetLibrary("Logging"), AddOn:GetLibrary("Util"), AddOn:GetLibrary("GuildStorage")
 local Award, Subject = AddOn.Package('Models').Award, AddOn.Package('Models').Subject
@@ -49,6 +49,7 @@ end
 
 function Standings.Points(name)
     local e = Standings:GetEntry(name)
+    Logging:Trace("Points(%s) : %s", name, tostring(e and true or false))
     if e then return e:Points() end
     -- todo : just nil?
     return 0, 0, 0
@@ -57,15 +58,15 @@ end
 -- todo : need to handle addition and removal of members to scrolling table
 -- this is currently only invoked as part of officer's note changing, nothing else
 function Standings:MemberModified(_, name, note)
+    Logging:Trace("MemberModified(%s) : '%s'", name, note)
     -- don't need to remove, it overwrites
     -- name with be character-realm
     self:_AddEntry(name, Subject:FromGuildMember(GuildStorage:GetMember(name)))
-    Logging:Trace("MemberModified(%s) : '%s'", name, note)
 end
 
 function Standings:MemberDeleted(_, name)
-    self._RemoveEntry(name)
     Logging:Trace("MemberDeleted(%s)", name)
+    self._RemoveEntry(name)
 end
 
 -- todo : maybe it's better to just fire from individual events
@@ -167,7 +168,7 @@ function Standings:Adjust(award)
                 GuildStorage:SetOfficeNote(target.name, target:ToNote())
             else
                 Logging:Warn(
-                    "Adjust(%d, %d, %.2f) : Skipping adjustment of EP/GP for '%s' ",
+                    "Adjust(%d, %d, %.2f) : Skipping persistence of EP/GP adjustment for '%s' ",
                     award.actionType, award.resourceType, award.resourceQuantity, target.name
                 )
             end

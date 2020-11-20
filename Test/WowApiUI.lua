@@ -1,23 +1,40 @@
 local frames, FrameClass = {}, {}
 FrameClass.__index = FrameClass
 
+local id = 0
+
+local function nextid()
+    id = id + 1
+    return id
+end
+
 function FrameClass:New(name)
+    if name then
+        assert(name and type(name) == 'string')
+        print(name)
+    end
+
     local self = setmetatable({}, FrameClass)
     self.events = {}
     self.scripts = {}
     self.timer = GetTime()
-    self.name = name
+    self.fname = name
     self.isShow = true
     self.parent = nil
     self.text = nil
     self.textures = {}
+    self.id = nextid()
     self[0] = "(userdata)"
     return self
 
 end
 
 function FrameClass:SetID(id)
+    self.id = id
+end
 
+function FrameClass:GetID()
+    return self.id
 end
 
 function FrameClass:SetToplevel(top)
@@ -125,7 +142,7 @@ function FrameClass:GetFrameLevel()
 end
 
 function FrameClass:GetName()
-    return self.name
+    return self.fname
 end
 
 function FrameClass:SetOwner(owner, anchor)
@@ -176,6 +193,14 @@ function FrameClass:SetHeight(width)
 
 end
 
+function FrameClass:AddLine() end
+
+function FrameClass:GetText() end
+
+function FrameClass:SetFormattedText() end
+
+function FrameClass:SetAnchorType() end
+
 function FrameClass:SetNormalFontObject(font)
 
 end
@@ -219,6 +244,8 @@ end
 function FrameClass:SetScale(scale)
 
 end
+
+function FrameClass:SetNumeric() end
 
 function FrameClass:GetObjectType()
     return self.type
@@ -313,10 +340,14 @@ function FrameClass:SetCursorPosition() end
 
 function FrameClass:GetScale() return 1 end
 
+function FrameClass:LockHighlight() end
+
+function FrameClass:UnlockHighlight() end
+
 function CreateFrame(kind, name, parent, template)
     local frame = FrameClass:New(name)
-    frame.parent = parent
     frame.type = kind
+    frame.parent = parent
 
     if template then
         if template == 'UIDropDownMenuTemplate' then
@@ -348,13 +379,18 @@ TextureClass.__index = TextureClass
 
 function TextureClass:New(name)
     local self = setmetatable({}, TextureClass)
-    self.name = name
+    self.tname = name
     self.texture = nil
     self.texturePath = nil
+    self.isShow = true
     self.coord = {}
     self.parent = nil
     return self
 end
+
+function TextureClass:Show() self.isShow = true end
+
+function TextureClass:Hide() self.isShow = false end
 
 function TextureClass:SetTexCoord(left, right, top, bottom) end
 
@@ -382,6 +418,8 @@ function TextureClass:SetDesaturated(saturated) end
 
 function TextureClass:SetGradientAlpha() end
 
+function TextureClass:SetAlpha() end
+
 function TextureClass:SetSize() end
 
 function TextureClass:GetVertexColor() end
@@ -406,7 +444,7 @@ AgClass.__index = AgClass
 
 function AgClass:New(name)
     local self = setmetatable({}, AgClass)
-    self.name = name
+    self.agname = name
     self.animations = {}
     return self
 end
@@ -429,7 +467,7 @@ AnimationClass.__index = AnimationClass
 function AnimationClass:New(type, name)
     local self = setmetatable({}, AnimationClass)
     self.type = type
-    self.name = name
+    self.acname = name
     return self
 end
 

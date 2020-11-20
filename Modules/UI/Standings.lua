@@ -213,8 +213,8 @@ function Standings.FilterMenu(_, level)
                     :Sort()
                     :Copy()()
 
-        info = MSA_DropDownMenu_CreateInfo()
         for _, class in pairs(classes) do
+            info = MSA_DropDownMenu_CreateInfo()
             info.text = class
             info.colorCode = "|cff" .. UIUtil.GetClassColorRGB(class)
             info.keepShownOnClick = true
@@ -230,9 +230,9 @@ function Standings.FilterMenu(_, level)
         info.disabled = true
         MSA_DropDownMenu_AddButton(info, level)
 
-        info = MSA_DropDownMenu_CreateInfo()
         -- including GUILD doesn't make sense here, displayed rows are implicitly in the guild
         for _, what in pairs({_G.PARTY, _G.RAID}) do
+            info = MSA_DropDownMenu_CreateInfo()
             info.text = what
             info.keepShownOnClick = true
             info.func = function() setfilter('member_of', what) end

@@ -212,9 +212,9 @@ lib.frame:RegisterEvent("GUILD_ROSTER_UPDATE")
 
 function lib:CHAT_MSG_ADDON(prefix, msg, type, sender)
     -- only look at messages from this library and ignore ones from yourself
-    if prefix ~= LIB_MESSAGE_PREFIX or sender == UnitName("player") then return end
+    if prefix ~= LIB_MESSAGE_PREFIX or UnitIsUnit(Ambiguate(sender, "short"), "player") then return end
     Logging:Trace("CHAT_MSG_ADDON: %s, %s, %s, %s", prefix, msg, type, sender)
-    
+
     if msg == Messages.ChangesPending then
         SetState(States.PersistingChanges)
     elseif msg == Messages.ChangesWritten then
@@ -223,6 +223,7 @@ function lib:CHAT_MSG_ADDON(prefix, msg, type, sender)
 end
 
 function lib:PLAYER_GUILD_UPDATE()
+    -- Logging:Debug("PLAYER_GUILD_UPDATE(%d)", state)
     if IsInGuild() then
         lib.frame:Show()
     else
@@ -232,10 +233,12 @@ function lib:PLAYER_GUILD_UPDATE()
 end
 
 function lib:PLAYER_ENTERING_WORLD()
+    -- Logging:Debug("PLAYER_ENTERING_WORLD()")
     lib:PLAYER_GUILD_UPDATE()
 end
 
 function lib:GUILD_ROSTER_UPDATE(canRequestRosterUpdate)
+    -- Logging:Debug("GUILD_ROSTER_UPDATE(%s)", tostring(canRequestRosterUpdate))
     if canRequestRosterUpdate then
         SetState(States.PendingChanges)
     else
@@ -244,10 +247,24 @@ function lib:GUILD_ROSTER_UPDATE(canRequestRosterUpdate)
     end
 end
 
+-- Order of events and functions when first logging into game
+--  PLAYER_ENTERING_WORLD
+--  PLAYER_GUILD_UPDATE(2)
+--      OnUpdate(2)
+--      GuildRoster()
+--  GUILD_ROSTER_UPDATE(false)
+--      StaleAwaitingUpdate -> Stale
+--  GUILD_ROSTER_UPDATE(false)
+--      OnUpdate(1)
+--      bunch of GuildOfficerNoteChanged
+--      initialized
+--      Stale -> Current
+--
 local function OnUpdate()
     if state == States.Current then return end
     
     if state == States.StaleAwaitingUpdate then
+        -- Logging:Trace("Invoking GuildRoster()")
         GuildRoster()
         return
     end
@@ -355,6 +372,7 @@ local function OnUpdate()
             end
             initialized = true
             callbacks:Fire(lib.Events.Initialized)
+            Logging:Trace("initalized")
         end
         
         if state == States.Stale then
@@ -375,7 +393,7 @@ local function OnUpdate()
         end
     end
     
-    Logging:Trace("OnUpdate() : %d guild members, %d ms elapsed, current index %d", Util.Tables.Count(cache), debugprofilestop() - start, index and index or -1)
+    Logging:Trace("OnUpdate(%d) : %d guild members, %d ms elapsed, current index %d", state, Util.Tables.Count(cache), debugprofilestop() - start, index and index or -1)
 end
 
 lib.frame:SetScript("OnUpdate", OnUpdate)
