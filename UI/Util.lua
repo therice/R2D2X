@@ -197,6 +197,10 @@ function U.ResourceTypeDecorator(resourceType)
     return ColoredDecorator(U.GetResourceTypeColor(resourceType))
 end
 
+function U.ActionTypeDecorator(actionType)
+    return ColoredDecorator(U.GetActionTypeColor(actionType))
+end
+
 local Colors = {
     ResourceTypes = {
         [Award.ResourceType.Ep] = C.Colors.ItemArtifact,
@@ -207,6 +211,13 @@ local Colors = {
         [Award.SubjectType.Guild]     = C.Colors.ItemUncommon,
         [Award.SubjectType.Raid]      = C.Colors.ItemLegendary,
         [Award.SubjectType.Standby]   = C.Colors.ItemRare,
+    },
+    -- todo : move these to constants
+    ActionTypes = {
+        [Award.ActionType.Add]      = C.Colors.Evergreen,
+        [Award.ActionType.Subtract] = CreateColor(0.96, 0.55, 0.73, 1),
+        [Award.ActionType.Reset]    = CreateColor(1, 0.96, 0.41, 1),
+        [Award.ActionType.Decay]    = CreateColor(0.53, 0.53, 0.93, 1),
     }
 }
 
@@ -218,4 +229,9 @@ end
 function U.GetResourceTypeColor(resourceType)
     if Util.Objects.IsString(resourceType) then resourceType = Award.ResourceType[resourceType] end
     return Colors.ResourceTypes[resourceType]
+end
+
+function U.GetActionTypeColor(actionTYpe)
+    if Util.Objects.IsString(actionTYpe) then actionTYpe = Award.ActionType[actionTYpe] end
+    return Colors.ActionTypes[actionTYpe]
 end

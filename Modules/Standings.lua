@@ -50,7 +50,6 @@ end
 function Standings.Points(name)
     local e = Standings:GetEntry(name)
     if e then return e:Points() end
-
     -- todo : just nil?
     return 0, 0, 0
 end
@@ -90,6 +89,12 @@ function Standings:Update(forceUpdate)
     if not self:IsEnabled() then return end
     if not self.frame then return end
     self.frame.st:SortData()
+end
+
+function Standings:ShouldPersist()
+    -- don't apply to actual officer notes in test mode or if persistence mode is disabled
+    -- it will also fail if we cannot edit officer notes
+    return (not AddOn:TestModeEnabled() and AddOn:PersistenceModeEnabled()) and CanEditOfficerNote()
 end
 
 function Standings:Adjust(award)
@@ -149,19 +154,22 @@ function Standings:Adjust(award)
     -- todo
     -- AddOn:TrafficHistoryModule():CreateFromAward(award, lhEntry)
 
+    local shouldPersist = self:ShouldPersist()
     -- subject is a tuple of (name, class)
     for _, subject in pairs(award.subjects) do
         local target = self:GetEntry(subject[1])
         if target then
             -- Logging:Debug("Adjust() : Processing %s", Objects.ToString(target:toTable()))
             apply(target, award.actionType, award.resourceType, award.resourceQuantity)
-            -- don't apply to actual officer notes in test mode
-            -- it will also fail if we cannot edit officer notes
-            if (not AddOn:TestModeEnabled() and AddOn:PersistenceModeEnabled()) and CanEditOfficerNote() then
+            if shouldPersist then
                 -- todo : we probably need to see if this is successful, otherwise could be lost
+                error("Nope, shouldn't be happening yet in this version")
                 GuildStorage:SetOfficeNote(target.name, target:ToNote())
             else
-                Logging:Debug("Adjust() : Skipping adjustment of EP/GP for '%s'", target.name)
+                Logging:Warn(
+                    "Adjust(%d, %d, %.2f) : Skipping adjustment of EP/GP for '%s' ",
+                    award.actionType, award.resourceType, award.resourceQuantity, target.name
+                )
             end
         else
             Logging:Warn("Adjust() : Could not locate %s for applying %s. Possibly not in guild?",
@@ -179,4 +187,58 @@ function Standings:Adjust(award)
 
     -- todo : check for visible
     self:BuildData()
+end
+
+function Standings:BulkAdjust(...)
+    local awards = Util.Tables.New(...)
+    Logging:Debug("BulkAdjust(%d)", #awards)
+    if #awards == 0 then return end
+
+    local shouldPersist = self:ShouldPersist()
+
+    -- we do decay in multiple awards, one for EP and one for GP
+    -- if we try to do them too quickly, the updates to player's officer note won't
+    -- be written yet and could encounter a conflict
+    --
+    -- therefore, this function will manage that via performing adjustment
+    -- and waiting for callbacks to determine that all have been completed before
+    -- moving to next award
+    local function adjust(awards, index)
+        Logging:Trace("adjust() : %d / %d", #awards, index)
+
+        -- we make no checks on index vs award count in callback, so check here
+        if index <= #awards then
+            local award = awards[index]
+            Logging:Debug("adjust() : Processing %s", Util.Objects.ToString(award.resourceType))
+
+            local updated, expected = 0, Util.Tables.Count(award.subjects)
+            -- register callback with GuildStorage for notification when the officer note has been written
+            -- keep track of updates and then when it matches the expected count, de-register callback
+            -- and move on to next award
+            if shouldPersist then
+                GuildStorage.RegisterCallback(
+                        Standings,
+                        GuildStorage.Events.GuildOfficerNoteWritten,
+                        function(event, _)
+                            updated = updated + 1
+                            Logging:Debug("%s : %d/%d", tostring(event), tostring(updated), tostring(expected))
+                            if updated == expected then
+                                Logging:Trace("Unregistering GuildStorage.Events.GuildOfficerNoteWritten and moving to award %d", index + 1)
+                                GuildStorage.UnregisterCallback(Standings, GuildStorage.Events.GuildOfficerNoteWritten)
+                                adjust(awards, index + 1)
+                            end
+                        end
+                )
+            end
+
+            Standings:Adjust(award)
+            -- if we were not persisting, the callbacks wont happen
+            -- do it manually, could pass a function to Adjust() for callback, but seems excssive
+            if not shouldPersist then
+                adjust(awards, index + 1)
+            end
+        end
+    end
+
+    adjust(awards, 1)
 end

@@ -1,4 +1,6 @@
 local _, AddOn = ...
+local Util = LibStub("LibUtil-1.1")
+
 local instances = {}
 
 -- for defining new singleton instances
@@ -41,6 +43,12 @@ function AddOn.Require(name)
     local instance = instances[name]
     if not instance then error(format("Instance '%s' does not exist", name)) end
     return instance
+end
+
+-- returns a memoized function that will invoke Require() on first invocation
+-- and cache for subsequent invocations
+function AddOn.RequireOnUse(name)
+    return Util.Memoize.Memoize(function() return AddOn.Require(name) end)
 end
 
 if AddOn._IsTestContext('Instance') then

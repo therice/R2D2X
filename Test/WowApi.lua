@@ -383,14 +383,6 @@ function UnitFactionGroup(unit)
     return FACTION_ALLIANCE, FACTION_ALLIANCE
 end
 
-local function _errorhandler(msg)
-    print(format("_errorhandler() : %s", dump(msg)))
-end
-
-function geterrorhandler()
-    return _errorhandler
-end
-
 
 function ChatFrame_AddMessageEventFilter(event, fn)  end
 

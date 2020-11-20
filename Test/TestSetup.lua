@@ -5,6 +5,7 @@
 -- [4] - Table of post-hook functions (for addon loading)
 local params = {...}
 local pl = require('pl.path')
+local pretty = require('pl.pretty')
 local assert = require("luassert")
 local say = require("say")
 local addOnTestNs, testNs, loadAddon, logFileName, logFile, caller =
@@ -97,25 +98,48 @@ function ResetLogging()
     )
 end
 
-local function xpcall_patch()
-    -- there's an issue on lua5.1 with xpcall accepting function aruments, so patch it
-    -- xpcall(function() func(self, event, unpack(args)) end, errorhandler)
-    _G.xpcallo = _G.xpcall
-    _G.xpcall = function(fn, err, ...)
-        local success, result = _G.pcall(fn, ...)
-        if not success then
-            print('(xpcall_patch)' .. dump(result))
-            print('(xpcall_patch)' .. debug.traceback())
-        end
-        return success, result
+
+
+function geterrorhandler()
+    return function(msg)
+        print(format("ERROR : %s", dump(msg)))
     end
-
 end
 
-local function xpcall_restore()
-    _G.xpcall = _G.xpcallo
-    _G.xpcallo = nil
+-- It seems Wow doesn't follow the 5.1 spec for xpcall (no additional arguments),
+-- but instead the one from 5.2 where that's allowed.
+-- Try to recreate that here.
+local xpcall_orig = _G.xpcall
+
+function xpcall_patch()
+    --there's an issue on lua5.1 with xpcall accepting function aruments, so patch it
+    --_G.xpcall = function(fn, err, ...)  return Dispatchers[select("#", ...)](fn, ...) end
+    --_G.xpcall = function(f, err, ...)
+    --    return xpcall_orig(function() return f(...) end, err)
+    --end
+
+    _G.xpcall = function(f, err, ...)
+        local status, code = pcall(f, ...)
+        if not status then
+            --[[
+            ...sers/tedri/opt/r2d2/R2D2X/Models/History/Traffic.lua:30: The specified data was not of the correct type : table
+
+            stack traceback:
+                    ...sers/tedri/opt/r2d2/R2D2X/Models/History/Traffic.lua:30: in function 'initialize'
+                    ...ri/opt/r2d2/R2D2X/Libs/LibClass-1.0/LibClass-1.0.lua:159: in function <...ri/opt/r2d2/R2D2X/Libs/LibClass-1.0/LibClass-1.0.lua:156>
+                    (tail call): ?
+                    ./Models/History/Test/TrafficTest.lua:28: in function <./Models/History/Test/TrafficTest.lua:27>
+            --]]
+            --print(code)
+            --print(dump(debug.getinfo(1)))
+            geterrorhandler()(code)
+            return err(code)
+        else
+            return status, code
+        end
+    end
 end
+
 
 local LoadedAddOns = {}
 
@@ -155,6 +179,11 @@ function After()
     ResetLogging()
 end
 
+function NewAceDb()
+    local AceDB = LibStub('AceDB-3.0')
+    -- need to add random # to end or it will have the same data
+    return AceDB:New('TestDB' .. random(100000))
+end
 
 function GetSize(tbl, includeIndices, includeKeys)
     local size = 0;
@@ -182,12 +211,12 @@ function GetSize(tbl, includeIndices, includeKeys)
     return size;
 end
 
--- todo : determine why this needs patched at all
 xpcall_patch()
 Before()
 
 local thisDir = pl.abspath(debug.getinfo(1).source:match("@(.*)/.*.lua$"))
 local wowApi = thisDir .. '/WowApi.lua'
+print('Loading WowApi @ ' .. wowApi)
 loadfile(wowApi)()
 
 local True = function(...) return true end
@@ -207,5 +236,5 @@ else
     addon._IsTestContext = True
 end
 
---xpcall_restore()
+
 return name, addon

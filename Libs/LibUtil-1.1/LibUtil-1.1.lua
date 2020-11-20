@@ -13,6 +13,7 @@ local Modules = {
     ["function"] = "Functions",
     "Objects",
     "Compression",
+    "Memoize",
 }
 
 local Module = {

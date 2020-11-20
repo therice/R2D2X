@@ -9,7 +9,8 @@ local UI, UIUtil, MI, ST, DropDown =
 local Award, STColumnBuilder, STCellBuilder =
     AddOn.Package('Models').Award, AddOn.Package('UI.ScrollingTable').ColumnBuilder,
     AddOn.Package('UI.ScrollingTable').CellBuilder
-local AceUI = AddOn.Require('UI.Ace')
+local AceUI, Date, DateFormat = AddOn.Require('UI.Ace'),  AddOn.Package('Models').Date,
+    AddOn.Package('Models').DateFormat
 
 local Standings = AddOn:GetModule("Standings", true)
 local RightClickMenu, FilterMenu
@@ -51,9 +52,12 @@ function Standings:GetFrame()
                 end
                 return false
             end,
-            -- todo (maybe)
-            ["OnEnter"] = Util.Functions.Noop,
-            ["OnLeave"] = Util.Functions.Noop,
+            ["OnEnter"] = function(_, _, data, _, row, realrow, _, _, _, ...)
+                if row then
+                    MI.Update(frame, data, realrow)
+                end
+            end,
+            ["OnLeave"] = function() MI.Update(frame, nil, nil) end
         })
         st:SetFilter(Standings.FilterFunc)
         st:EnableSelection(true)
@@ -76,8 +80,7 @@ function Standings:GetFrame()
         decay:SetText(L["decay"])
         decay:SetPoint("RIGHT", frame.filter, "LEFT", -10, 0)
         if not (AddOn:DevModeEnabled() or CanEditOfficerNote()) then decay:Disable() end
-        -- todo : scripts
-        -- decay:SetScript("OnClick", function() self:UpdateDecayFrame() end)
+        decay:SetScript("OnClick", function() self:GetDecayFrame().Update() end)
         frame.decay = decay
 
         self.frame = frame
@@ -117,9 +120,8 @@ end
 
 function Standings:Update(force)
     if not self:IsEnabled() then return end
-    if self.frame then
-        self.frame.st:SortData()
-    end
+    if not self.frame then return end
+    self.frame.st:SortData()
 end
 
 function Standings.FilterFunc(table, row)
@@ -289,9 +291,25 @@ Standings.RightClickMenu = DropDown.RightClickMenu(
         Standings.RightClickEntries
 )
 
+local function EmbedErrorTooltip(f)
+    f.errorTooltip = UI:NewNamed('GameTooltip', f, 'ErrorTooltip')
+    f.UpdateErrorTooltip = function(errors)
+        local tip = f.errorTooltip
+        tip:SetOwner(f, "ANCHOR_LEFT")
+        tip:AddLine(UIUtil.ColoredDecorator(0.77, 0.12, 0.23):decorate(L["errors"]))
+        tip:AddLine(" ")
+        local errorDeco = UIUtil.ColoredDecorator(1, 0.96, 0.41)
+        for _, error in pairs(errors) do
+            tip:AddLine(errorDeco:decorate(error))
+        end
+        tip:Show()
+        tip:SetAnchorType("ANCHOR_LEFT", 0, -tip:GetHeight())
+    end
+end
+
 function Standings:GetAdjustFrame()
     if not self.adjustFrame then
-        local f = UI:NewNamed('Frame', UIParent, 'AdjustPoints', 'AdjustPoints', L['frame_adjust_points'], 230, 275)
+        local f = UI:NewNamed('Frame', UIParent, 'AdjustPoints', 'Standings', L['frame_adjust_points'], 230, 275)
         f:SetPoint("TOPRIGHT", self.frame, "TOPLEFT", -150)
 
         local name = f.content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -309,9 +327,7 @@ function Standings:GetAdjustFrame()
                 .SetPoint("TOPLEFT", f.rtLabel, "BOTTOMLEFT", 0, -5)
                 .SetParent(f)()
         local values = Util(Award.TypeIdToResource):Copy()()
-        values[0] = L["all"]
         resourceType:SetList(values)
-        resourceType:SetValue(0) -- default to 'All'
         f.resourceType = resourceType
 
         local atLabel = f.content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -319,12 +335,12 @@ function Standings:GetAdjustFrame()
         atLabel:SetText(L["action_type"])
         f.atLabel = atLabel
 
-        -- todo : remove decay and maybe reseet
         local actionType =
             AceUI('Dropdown')
                 .SetPoint("TOPLEFT", f.resourceType.frame, "BOTTOMLEFT", 0, -20)
                 .SetParent(f)()
         local actions = Util(Award.TypeIdToAction):Copy()()
+        tremove(actions, Award.ActionType.Decay)
         actionType:SetList(actions)
         f.actionType = actionType
 
@@ -380,22 +396,9 @@ function Standings:GetAdjustFrame()
         )
         f.adjust = adjust
 
-        f.errorTooltip = UI:NewNamed('GameTooltip', f, 'ErrorTooltip')
+        EmbedErrorTooltip(f)
+
         f.subjectTooltip = UI:NewNamed('GameTooltip', f, 'SubjectTooltip')
-
-        f.UpdateErrorTooltip = function(errors)
-            local tip = f.errorTooltip
-            tip:SetOwner(f, "ANCHOR_LEFT")
-            tip:AddLine(UIUtil.ColoredDecorator(0.77, 0.12, 0.23):decorate(L["errors"]))
-            tip:AddLine(" ")
-            local errorDeco = UIUtil.ColoredDecorator(1, 0.96, 0.41)
-            for _, error in pairs(errors) do
-                tip:AddLine(errorDeco:decorate(error))
-            end
-            tip:Show()
-            tip:SetAnchorType("ANCHOR_LEFT", 0, -tip:GetHeight())
-        end
-
         f.UpdateSubjectTooltip = function (subjects)
             local tip = f.subjectTooltip
             tip:SetOwner(f, "ANCHOR_LEFT")
@@ -552,12 +555,149 @@ function Standings.AdjustOnClickYes(_, award, ...)
     Standings:HideAdjust()
 end
 
+function Standings:GetDecayFrame()
+    if not self.decayFrame then
+        local f = UI:NewNamed('Frame', UIParent, 'DecayPoints', 'Standings', L['frame_decay_points'], 230, 275)
+        f:SetPoint("TOPRIGHT", self.frame, "TOPLEFT", -150)
+
+        local rtLabel = f.content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        rtLabel:SetPoint("TOPLEFT", f.content, "TOPLEFT", 15, -25)
+        rtLabel:SetText(L["resource_type"])
+        f.rtLabel = rtLabel
+
+        local resourceType =
+            AceUI('Dropdown')
+                    .SetPoint("TOPLEFT", f.rtLabel, "BOTTOMLEFT", 0, -5)
+                    .SetParent(f)()
+        local values = Util(Award.TypeIdToResource):Copy()()
+        values[0] = L["all"]
+        resourceType:SetList(values)
+        -- default to 'All'
+        resourceType:SetValue(0)
+        f.resourceType = resourceType
+
+        local pctLabel = f.content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        pctLabel:SetPoint("TOPLEFT", f.rtLabel, "TOPLEFT", 0, -50)
+        pctLabel:SetText(L["percent"])
+        f.pctLabel = pctLabel
+
+        local pct =
+            AceUI('Slider')
+                .SetSliderValues(0, 1, 0.01)
+                .SetIsPercent(true)
+                .SetValue(.10)
+                .SetPoint("TOPLEFT", f.pctLabel, "BOTTOMLEFT")
+                .SetParent(f)()
+        f.pct = pct
+
+        local descLabel = f.content:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        descLabel:SetPoint("TOPLEFT", f.pctLabel, "TOPLEFT", 0, -65)
+        descLabel:SetText(L["description"])
+        f.descLabel = descLabel
+
+        local desc = UI:New("EditBox", f.content)
+        desc:SetHeight(25)
+        desc:SetWidth(200)
+        desc:SetPoint("TOPLEFT", f.descLabel, "BOTTOMLEFT", 0, -15)
+        f.desc = desc
+
+        local close = UI:New('Button', f.content)
+        close:SetText(_G.CANCEL)
+        close:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -10, 7)
+        close:SetScript("OnClick", function() f:Hide() end)
+        f.close = close
+
+        local decay = UI:New('Button', f.content)
+        decay:SetText(L["decay"])
+        decay:SetPoint("RIGHT", f.close, "LEFT", -10, 0)
+        decay:SetScript("OnClick",
+                function()
+                    local awards, validationErrors = f.Validate()
+                    if Util.Tables.Count(validationErrors) ~= 0 then
+                        f.UpdateErrorTooltip(validationErrors)
+                    else
+                        f.errorTooltip:Hide()
+                        Dialog:Spawn(AddOn.Constants.Popups.ConfirmDecayPoints, awards)
+                    end
+                end
+        )
+        f.decay = decay
+
+        EmbedErrorTooltip(f)
+
+        f.Validate = function()
+            local validationErrors, decayAwards = {}, {}
+            local  resourceType, pct , description =
+                f.resourceType:GetValue(), f.pct:GetValue(), f.desc:GetText()
+            local resourceTypes = resourceType == 0 and Util(Award.TypeIdToResource):Keys():Copy()() or {resourceType}
+
+            if Util.Strings.IsEmpty(description) then
+                Util.Tables.Push(validationErrors, format(L["x_unspecified_or_incorrect_type"], L["description"]))
+            end
+
+            for _, type in pairs(resourceTypes) do
+                Logging:Debug("DecayFrame.Validate() : processing resourceType=%d", type)
+                local decay
+                if #decayAwards == 0 then
+                    decay = Award()
+                    decay:SetSubjects(Award.SubjectType.Guild)
+                    decay:SetAction(Award.ActionType.Decay)
+                    decay.description = description
+                else
+                    decay = Award:reconstitute(decayAwards[#decayAwards]:toTable())
+                end
+
+                decay:SetResource(type, pct)
+                Util.Tables.Push(decayAwards, decay)
+            end
+
+            Logging:Debug("DecayFrame.Validate() : decay entries %s", Util.Objects.ToString(decayAwards, 2))
+
+
+            return decayAwards, validationErrors
+        end
+
+        f.Update = function()
+            f.desc:SetText(format(L["decay_on_d"], DateFormat.Short:format(Date())))
+            if not f:IsVisible() then f:Show() end
+        end
+
+        self.decayFrame = f
+    end
+
+    return self.decayFrame
+end
+
+function Standings.DecayOnShow(frame, awards)
+    UIUtil.DecoratePopup(frame)
+
+    -- just grab one, they will both be the same except
+    -- one will be for EP and other for GP
+    local award = awards[1]
+    local decoratedText = UIUtil.SubjectTypeDecorator(award.subjectType):decorate("the " .. award:GetSubjectOriginText())
+
+    frame.text:SetText(
+            format(L["confirm_decay"],
+                    #awards == 1 and (award.resourceType == Award.ResourceType.Ep and L["ep_abbrev"] or L["gp_abbrev"]) or L["all_values"],
+                    award.resourceQuantity * 100,
+                    decoratedText
+            )
+    )
+end
+
+function Standings.DecayOnClickYes(_, awards)
+    Logging:Debug("DecayOnClickYes(%d)", #awards)
+    Standings:BulkAdjust(Util.Tables.Unpack(awards))
+    Standings:HideAdjust()
+end
+
 function Standings:Hide()
     if self.frame then
         self.frame:Hide()
     end
 
     self:HideAdjust()
+    self:HideDecay()
 end
 
 function Standings:HideAdjust()
@@ -565,6 +705,13 @@ function Standings:HideAdjust()
         self.adjustFrame:Hide()
         self.adjustFrame.errorTooltip:Hide()
         self.adjustFrame.subjectTooltip:Hide()
+    end
+end
+
+function Standings:HideDecay()
+    if self.decayFrame then
+        self.decayFrame:Hide()
+        self.decayFrame.errorTooltip:Hide()
     end
 end
 

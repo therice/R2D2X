@@ -70,6 +70,14 @@ function AddOn:RegisterChatCommands()
                 function() AddOn.ToggleConfig() end,
             },
             {
+                {'clearpc', 'cpc'},
+                L['clear_player_cache_desc'],
+                function()
+                    AddOn.Package('Models').Player.ClearCache()
+                    self:Print("Player cache cleared")
+                end,
+            },
+            {
                 {'dev'},
                 L['chat_commands_dev'],
                 function()

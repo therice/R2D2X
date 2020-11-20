@@ -2,10 +2,9 @@ local AddOnName, AddOn
 
 describe("Package", function()
     setup(function()
-        AddOnName, AddOn = loadfile("Test/TestSetup.lua")(false, 'Package')
-        loadfile("Test/WowXmlParser.lua")()
-        ParseXmlAndLoad('Libs/LibClass-1.0/LibClass-1.0.xml', AddOnName, AddOn)
-        ParseXmlAndLoad('Core/Oak/Oak.xml', AddOnName, AddOn)
+        AddOnName, AddOn = loadfile("Test/TestSetup.lua")(false, 'Instance')
+        loadfile("Core/Oak/Test/BaseTest.lua")()
+        LoadDependencies(AddOnName, AddOn)
     end)
     
     teardown(function()

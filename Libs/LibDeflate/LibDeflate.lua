@@ -93,9 +93,9 @@ do
 	local _MINOR = 2
 
 	local _COPYRIGHT =
-	"LibDeflate ".._VERSION
-	.." Copyright (C) 2018-2019 Haoqian He."
-	.." License LGPLv3+: GNU Lesser General Public License version 3 or later"
+		"LibDeflate ".._VERSION
+		.." Copyright (C) 2018-2019 Haoqian He."
+		.." License LGPLv3+: GNU Lesser General Public License version 3 or later"
 
 	-- Register in the World of Warcraft library "LibStub" if detected.
 	if LibStub then

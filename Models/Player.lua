@@ -153,6 +153,10 @@ function Player:Get(input)
     return Get(guid) or Player.Create(guid, info)
 end
 
+function Player.ClearCache()
+    AddOn.db.global.cache.player = {}
+end
+
 if AddOn._IsTestContext('Models_Player') then
     function Player.GetCache()
         return AddOn.db.global.cache.player

@@ -11,9 +11,12 @@ function filename(dir, file)
 end
 
 function Load(files, addOnName, addOnNamespace)
+    addOnName = addOnName or 'TestAddOn'
+    addOnNamespace = addOnNamespace or {}
+
     for _, toload in pairs(files) do
-        print('Loading File @ ' .. toload)
-        loadfile(toload)(addOnName or 'TestAddOn', addOnNamespace or {})
+        print('Loading File @ ' .. toload .. format(' (%s => %s)', tostring(addOnName), dump(addOnNamespace)))
+        loadfile(toload)(addOnName, addOnNamespace)
     end
 end
 
@@ -41,5 +44,6 @@ function ParseXmlAndLoad(file, addOnName, addOnNamespace)
         toload = filename(rootDir, toload)
         parsed[i] = toload
     end
+
     Load(parsed, addOnName, addOnNamespace)
 end

@@ -27,7 +27,6 @@ function Encoder:decode(value)
     return self.decodeFn(value)
 end
 
-
 -- LibDeflate
 function LibDeflateEncoder:initialize()
     Encoder.initialize(
@@ -67,7 +66,7 @@ end
 function Compressor:compress(value, encode)
     if encode == nil or type(encode) ~= 'boolean' then encode = false end
 
-    Logging:Trace("%s(%s) : length=%d", self:LogPrefix("compress"), tostring(encode), #value)
+    -- Logging:Trace("%s(%s) : length=%d", self:LogPrefix("compress"), tostring(encode), #value)
     local compressed, err = self.compressFn(value)
     if not compressed then
         Logging:Error("%s(%s) : Error encountered during compression - '%s'", self:LogPrefix("compress"), tostring(encode), tostring(err))

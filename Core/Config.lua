@@ -29,6 +29,8 @@ local function BuildConfigOptions()
                             :set('func', function () end)
                         :execute('sync', L["sync"]):desc(L["sync_desc"]):order(6)
                             :set('func', function () end)
+                        :execute('clearPCache', L["clear_player_cache"]):desc(L["clear_player_cache_desc"]):order(7)
+                            :set('func', function () AddOn.Package('Models').Player.ClearCache() end)
 
     -- set point to location where to add subsequent options
     ConfigBuilder:SetPath('args')

@@ -6,7 +6,7 @@ local Logging = AddOn:GetModule("Logging", true)
 
 function Logging:BuildFrame()
     if not self.frame then
-        local frame = UI:NewNamed('Frame', UIParent, 'LoggingWindow', 'Logging', L['frame_logging'], 750, 400, false)
+        local frame = UI:NewNamed('Frame', UIParent, 'Console', 'Logging', L['frame_logging'], 750, 400, false)
         frame:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", 0, 0)
 
         local msg = UI:NewNamed('ScrollingMessageFrame', frame.content, 'Messages')

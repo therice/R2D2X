@@ -10,7 +10,7 @@ local Frame = AddOn.Package('UI.Widgets'):Class('Frame', BaseWidget)
 --		Minimizing is done by double clicking the title, but the returned frame and frame.title is NOT hidden
 --      Only frame.content is minimized, so put children there for minimize support
 --
--- @param name global name of the frame (will be prefixed with addon name)
+-- @param name global name of the frame
 -- @param module name of the module (used for lib-window-1.1 config in DB).
 -- @param title the title text.
 -- @param width width of the frame, defaults to 450
@@ -30,9 +30,10 @@ function Frame:Create()
     local hookIt = Util.Objects.IsNil(self.hookConfig) and true or self.hookConfig
     local storage = { }
     if self.module and AddOn.db then
-        storage = Util.Tables.Get(AddOn.db, 'profile.ui.' .. self.module) or {}
+        local path = 'ui.'  .. (self.name and (self.module .. '_' .. self.name) or self.module)
+        storage = Util.Tables.Get(AddOn.db.profile, path) or {}
+        Logging:Debug('Create() : storage at %s is %s', path, Util.Objects.ToString(storage))
     end
-
 
     f:Hide()
     f:SetFrameStrata("DIALOG")
@@ -45,19 +46,15 @@ function Frame:Create()
     f:RestorePosition()
     f:MakeDraggable()
     f:SetScript("OnMouseWheel", function(f,delta) if IsControlKeyDown() then Window.OnMouseWheel(f,delta) end end)
-    --f:HookScript("OnShow",
-    --             function()
-    --                 f.restoreConfig = hookIt and AddOn.HideConfig()
-    --             end
-    --)
-    --f:HookScript("OnHide",
-    --             function()
-    --                 if f.restoreConfig then
-    --                     AddOn.ShowConfig()
-    --                     f.restoreConfig = false
-    --                 end
-    --             end
-    --)
+    f:HookScript("OnShow", function() f.restoreConfig = hookIt and AddOn.HideConfig() end)
+    f:HookScript("OnHide",
+                 function()
+                     if f.restoreConfig then
+                         AddOn.ShowConfig()
+                         f.restoreConfig = false
+                     end
+                 end
+    )
 
     f:SetScript("OnKeyDown",
             function(self, key)
