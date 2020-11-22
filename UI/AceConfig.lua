@@ -79,7 +79,7 @@ function ConfigBuilder:close()
         if not Util.Strings.EndsWith(self.path, 'args') then
             error(format("the current path '%s', does not correspond to arguments, cannot close", self.path))
         end
-        local parts = Util.Strings.Split(self.path, '.'), false
+        local parts = Util.Strings.Split(self.path, '.')
         if #parts == 2 then
             error(format("the current path '%s' represents the top level group, it cannot be closed", self.path))
         end
