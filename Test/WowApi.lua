@@ -600,7 +600,6 @@ _G.LE_ITEM_ARMOR_IDOL = 8
 _G.LE_ITEM_ARMOR_TOTEM = 9
 _G.LE_ITEM_ARMOR_SIGIL = 10
 _G.LE_ITEM_ARMOR_RELIC = 11
-
 _G.LE_ITEM_CLASS_WEAPON = 2
 _G.LE_ITEM_CLASS_ARMOR = 4
 
@@ -619,7 +618,7 @@ _G.TOOLTIP_DEFAULT_COLOR = {
 
 _G.AUTO_LOOT_DEFAULT_TEXT = "Auto Loot"
 
-
+_G.GENERAL = "General"
 _G.UNKNOWNOBJECT = "Unknown"
 _G.StaticPopup_DisplayedFrames = {}
 
@@ -628,5 +627,33 @@ _G.PlaySound = function(...) end
 _G.FauxScrollFrame_Update = function() end
 _G.FauxScrollFrame_GetOffset = function() return 0 end
 _G.CLASS_ICON_TCOORDS = {}
+_G.ENABLE = "Enable"
 
+-- https://wow.gamepedia.com/API_GetItemSubClassInfo
+function GetItemSubClassInfo(classId, subClassId)
+    if classId == LE_ITEM_CLASS_WEAPON then
+        if subClassId == LE_ITEM_WEAPON_BOWS then
+            return "Bows"
+        elseif subClassId == LE_ITEM_WEAPON_CROSSBOW then
+            return "Crossbows"
+        elseif subClassId == LE_ITEM_WEAPON_GUNS then
+            return "Guns"
+        elseif subClassId == LE_ITEM_WEAPON_WAND then
+            return "Wands"
+        elseif subClassId == LE_ITEM_WEAPON_THROWN then
+            return "Thrown"
+        end
+    elseif classId == LE_ITEM_CLASS_ARMOR then
+        if subClassId == LE_ITEM_ARMOR_LIBRAM then
+            return "Libram"
+        elseif subClassId == LE_ITEM_ARMOR_IDOL then
+            return "Idol"
+        elseif subClassId == LE_ITEM_ARMOR_TOTEM then
+            return "Totem"
+        end
+    end
+    return ""
+end
+
+loadfile('Test/WowItemInfo.lua')()
 loadfile('Test/WowApiUI.lua')()

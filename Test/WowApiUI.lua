@@ -11,7 +11,6 @@ end
 function FrameClass:New(name)
     if name then
         assert(name and type(name) == 'string')
-        print(name)
     end
 
     local self = setmetatable({}, FrameClass)
@@ -91,6 +90,18 @@ function FrameClass:UnregisterAllEvents(frame)
         self.events[event] = nil
     end
 end
+
+function FrameClass:SetPropagateKeyboardInput(val) end
+
+function FrameClass:StopMovingOrSizing() end
+
+function FrameClass:GetLeft() end
+
+function FrameClass:GetRight() end
+
+function FrameClass:GetTop() end
+
+function FrameClass:GetBottom() end
 
 function FrameClass:Show()
     self.isShow = true
@@ -344,6 +355,10 @@ function FrameClass:LockHighlight() end
 
 function FrameClass:UnlockHighlight() end
 
+function FrameClass:SetResizable() end
+
+function FrameClass:SetMinResize() end
+
 function CreateFrame(kind, name, parent, template)
     local frame = FrameClass:New(name)
     frame.type = kind
@@ -358,6 +373,8 @@ function CreateFrame(kind, name, parent, template)
             frame.text = CreateFrame("Frame", name .. "Text", frame)
         elseif template == 'UIPanelScrollFrameTemplate' then
             frame.scrollBar = CreateFrame("Frame", name .. "ScrollBar", frame)
+        elseif template == "OptionsFrameTabButtonTemplate" then
+            frame.text = CreateFrame("Frame", name .. "Text", frame)
         end
     end
 
@@ -428,6 +445,7 @@ function TextureClass:GetParent() return self.parent end
 
 function TextureClass:ClearAllPoints() end
 
+function TextureClass:GetTexture() end
 
 function CreateTexture(name, texture, texturePath, parent)
     local tex = TextureClass:New(name)
@@ -538,3 +556,8 @@ function SendAddonMessage(prefix, message, distribution, target)
         WoWAPI_FireEvent("CHAT_MSG_ADDON", prefix, message, distribution, "Sender")
     end
 end
+
+function PanelTemplates_TabResize() end
+function PanelTemplates_DeselectTab() end
+function PanelTemplates_SelectTab() end
+function SetDesaturation() end

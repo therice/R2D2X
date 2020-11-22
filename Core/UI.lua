@@ -3,7 +3,8 @@ local Logging, L, C, Util = AddOn:GetLibrary('Logging'), AddOn.Locale, AddOn.Con
 local UIUtil = AddOn.Require('UI.Util')
 
 function AddOn.UpdateMoreInfo(enabled, frame, data, row)
-    Logging:Debug('UpdateMoreInfo(%s) : %s, %d', tostring(enabled), frame.moreInfo:GetName())
+    if not frame and frame.moreInfo then return end
+    Logging:Debug('UpdateMoreInfo(%s) : %s', tostring(enabled), tostring(frame.moreInfo:GetName()))
 
     local name
     if data and row then

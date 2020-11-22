@@ -3,7 +3,7 @@ local AddOnName, AddOn, Util, Award
 
 describe("Standings", function()
     setup(function()
-        AddOnName, AddOn = loadfile("Test/TestSetup.lua")(true, 'Core_SlashCommands')
+        AddOnName, AddOn = loadfile("Test/TestSetup.lua")(true, 'Modules_Standings')
         Util, Award = AddOn:GetLibrary('Util'), AddOn.Package('Models').Award
         AddOnLoaded(AddOnName, true)
     end)
@@ -105,7 +105,12 @@ describe("Standings", function()
         local function Popup()
             local p = CreateFrame("Frame")
             p.text = {value = ''}
-            p.text.SetText = function(v) p.text.value = v end
+            p.text.SetText = function(self, v)
+                self.value = v
+            end
+            p.text.GetText = function(self)
+                return self.value
+            end
             return p
         end
 
@@ -128,18 +133,28 @@ describe("Standings", function()
         it("builds adjust frame", function()
             local f = standings:GetAdjustFrame()
             assert(standings.adjustFrame)
-            f.Validate()
+            local award, errors = f.Validate()
+            assert(award)
+            assert(#errors > 0)
             f.UpdateSubjectTooltip({{'Player101-Realm1', 'ROGUE'}})
             f.Update(Award.SubjectType.Character, Award.ResourceType.Ep, 'Player101-Realm1')
+            assert(f:IsVisible())
             standings.AdjustOnShow(Popup(), NewAward())
+            assert(f:IsVisible())
             standings:AdjustAction(Award.SubjectType.Character, Award.ResourceType.Ep, {name='Player101-Realm1'})
+            assert(f:IsVisible())
         end)
         it("builds decay frame", function()
             local f = standings:GetDecayFrame()
             assert(standings.decayFrame)
-            f.Validate()
+            local award, errors = f.Validate()
+            assert(award)
+            assert(#errors > 0)
             f.Update()
-            standings.DecayOnShow(Popup(), {NewAward()})
+            assert(f:IsVisible())
+            local p = Popup()
+            standings.DecayOnShow(p, {NewAward()})
+            assert(p.text:GetText() == "Are you certain you want to decay |cFF87CEFAGP|r by |cff33ff991000|r percent for |cffff0000the Character|r?")
         end)
     end)
 end)

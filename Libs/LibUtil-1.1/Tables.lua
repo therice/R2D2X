@@ -36,10 +36,14 @@ end
 ---@return table
 ---@return any
 function Self.Set(t, ...)
+    -- number of parameters and the parameters
     local n, path = select("#", ...), ...
     local val = select(n, ...)
 
     if n == 2 and type(path) == "string" and path:find("%.") then
+        -- if a compound path, such as 'group_param1.args.compound.select'
+        -- split it into an array of parts
+        -- e.g. => {group_param1, args, compound, select}
         path = Self.Tmp(("."):split((...)))
     elseif type(path) ~= "table" then
         path = Self.Tmp(...)
@@ -65,7 +69,7 @@ end
 
 -- Get a random key from the table
 function Self.RandomKey(t)
-    if not next(t) then
+    if not t or not next(t) then
         return
     else
         local n = random(Self.Count(t))

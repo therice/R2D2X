@@ -3,7 +3,7 @@ local NativeUI = AddOn.Require('UI.Native')
 local BaseWidget = AddOn.ImportPackage('UI.Native').Widget
 local IconBordered = AddOn.Package('UI.Widgets'):Class('IconBordered', BaseWidget)
 
-function IconBordered:initalize(parent, name, texture)
+function IconBordered:initialize(parent, name, texture)
     BaseWidget.initialize(self, parent, name)
     self.texture = texture
 end

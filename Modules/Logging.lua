@@ -2,7 +2,7 @@ local _, AddOn = ...
 local L, Log, Util = AddOn.Locale, AddOn:GetLibrary("Logging"), AddOn:GetLibrary("Util")
 local Logging = AddOn:NewModule("Logging")
 local AceUI = AddOn.Require('UI.Ace')
-local accum, configOptions
+local accum
 
 if not AddOn._IsTestContext() then
     accum = {}
@@ -52,12 +52,10 @@ function Logging:SetLoggingThreshold(threshold)
     Log:SetRootThreshold(threshold)
 end
 
-function Logging:BuildConfigOptions()
-    if not configOptions then
-        configOptions =
-            AceUI.ConfigBuilder()
-                :group(Logging:GetName(), L['logging']):desc(L['logging_desc'])
-                :args()
+local Options = Util.Memoize.Memoize(function ()
+    return AceUI.ConfigBuilder()
+                 :group(Logging:GetName(), L['logging']):desc(L['logging_desc'])
+                 :args()
                     :description('help', L['logging_help']):order(1)
                     :select('logThreshold', L['logging_threshold']):desc(L['logging_threshold_desc']):order(2)
                         :set('values', Logging.GetLoggingLevels())
@@ -66,9 +64,11 @@ function Logging:BuildConfigOptions()
                     :description('spacer', ""):order(3)
                     :execute('toggleWindow', L['logging_window_toggle']):desc(L['logging_window_toggle_desc']):order(4)
                     :set('func', function() Logging:Toggle() end)
-                :build()
-    end
+                 :build()
+end)
 
-    return configOptions[self:GetName()], false
+function Logging:BuildConfigOptions()
+   local options = Options()
+    return options[self:GetName()], false
 end
 

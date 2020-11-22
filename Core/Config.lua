@@ -5,7 +5,6 @@ local AceUI = AddOn.Require('UI.Ace')
 
 ACD:SetDefaultSize(AddOn.Constants.name, 850, 700)
 
--- todo : memoize
 local function BuildConfigOptions()
     local ConfigOptions = Util.Tables.Copy(AddOn.BaseConfigOptions)
     local ConfigBuilder = AceUI.ConfigBuilder(ConfigOptions)
@@ -51,7 +50,7 @@ local function BuildConfigOptions()
         if options then
             if options.args and embedEnableDisable then
                 for n, option in pairs(options.args) do
-                    Logging:Trace("BuildConfigOptions() : modifying 'disabled' property for option argument %s.%s", n, option)
+                    Logging:Trace("BuildConfigOptions() : modifying 'disabled' property for option argument %s in %s", n, name)
                     if option.disabled then
                         local oldDisabled = option.disabled
                         option.disabled = function(i)
@@ -62,7 +61,7 @@ local function BuildConfigOptions()
                     end
                 end
 
-                Logging:Trace("BuildConfigOptions() : adding 'enable' option argument for %s", name)
+                Logging:Trace("BuildConfigOptions() : adding 'enable' option argument for %s", tostring(name))
                 options.args['enabled'] = {
                     order = 0,
                     type = "toggle",
@@ -88,12 +87,14 @@ local function BuildConfigOptions()
     return ConfigBuilder:build()
 end
 
+local ConfigOptions = Util.Memoize.Memoize(BuildConfigOptions)
+
 function AddOn:RegisterConfig()
     AceConfig:RegisterOptionsTable(
             AddOn.Constants.name,
             function (uiType, uiName, appName)
                 Logging:Trace("RegisterConfig() : Building configuration for '%s', '%s', '%s'", tostring(uiType), tostring(uiName), tostring(appName))
-                return BuildConfigOptions()
+                return ConfigOptions()
             end
     )
 end
@@ -122,4 +123,9 @@ function AddOn.HideConfig()
     end
 
     return false
+end
+
+if AddOn._IsTestContext('Core_Config') then
+    AddOn.BuildConfigOptions = BuildConfigOptions
+    AddOn.ConfigOptions = ConfigOptions
 end
