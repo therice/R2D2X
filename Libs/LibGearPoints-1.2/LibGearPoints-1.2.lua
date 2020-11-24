@@ -1,6 +1,7 @@
 local MAJOR_VERSION = "LibGearPoints-1.2"
 local MINOR_VERSION = 11305
 
+--- @class LibGearPoints
 local lib, _ = LibStub:NewLibrary(MAJOR_VERSION, MINOR_VERSION)
 if not lib then return end
 
@@ -69,7 +70,7 @@ lib:ResetFormulaInputs()
 --[[
 Format as follows, with ordering of tuples after equipment location dictating order (1, 2, 3, ..., N)
 Comment does not need to be provided
-A minimum of 1 entry per equipLoc are not required
+A minimum of 1 entry per equipLoc is required
 
 {
     equipLoc1 = {
@@ -120,11 +121,15 @@ function lib:SetScalingConfig(config)
         -- this would be necessary if setting configuration from AceDB
         local parts = {strsplit('_', equipLoc)}
         if #parts == 1 then
-            if type(scaling) == 'number' or type(scaling) == 'table' then
+            local entryType = type(scaling)
+            if entryType == 'number' or entryType == 'table' then
+                -- blech, this is assuming that if value is a number it is the only entry
+                -- and it's the scale value w/ no comment
+                if entryType == 'number' then scaling = {{scaling, nil}} end
                 Logging:Trace("SetScalingConfig(SET) : equipLoc=%s scaling=%s", equipLoc, ToStringFn(scaling))
                 ScalingConfig[equipLoc] = scaling
             else
-                Logging:Trace("SetScalingConfig(IGNORE_1) : ignoring equipLoc=%s scaling=%s type=%s", equipLoc,  ToStringFn(scaling), type(scaling))
+                Logging:Warn("SetScalingConfig(IGNORE_1) : ignoring equipLoc=%s scaling=%s type=%s", equipLoc,  ToStringFn(scaling), type(scaling))
             end
         elseif #parts == 3 then
             -- index #1 is the equipment location
@@ -140,7 +145,7 @@ function lib:SetScalingConfig(config)
             end
 
             if tupleIndex > 0 then
-                -- index #3 is the order of the tuple in table (e.g. 1 = first prioriy, 2 = second priority)
+                -- index #3 is the order of the tuple in table (e.g. 1 = first priority, 2 = second priority)
                 local priority = tonumber(parts[3])
                 -- table of all tuples associated with equipment location
                 scaling = ScalingConfig[equipLoc] or {}
@@ -156,7 +161,6 @@ function lib:SetScalingConfig(config)
         else
             Logging:Warn("SetScalingConfig(IGNORE_%s) : ignoring equipLoc=%s", #parts, equipLoc)
         end
-        --end
     end
 end
 
@@ -212,22 +216,28 @@ function lib:GetScaleKey(equipLoc, subClass)
     if name then
         return string.lower(name)
     end
-    return
 end
 
 -- the arguments here should be itemEquipLoc (Non-localized token) and itemSubType (Localized name) from GetItemInfo()
 function lib:GetScale(equipLoc, subClass)
     local name = self:GetScaleKey(equipLoc, subClass)
-    Logging:Trace("GearPoints.GetScale(%s, %s) -> %s", equipLoc or 'nil', subClass or 'nil', name or 'nil')
+    Logging:Trace("GearPoints.GetScale(%s, %s) -> %s",
+                  tostring(equipLoc), tostring(subClass), tostring(name)
+    )
     if name then
-        -- configuration supports multiple scaling factors, but currently implementation only uses one
+        -- configuration supports multiple scaling entries (factors), but current implementation only uses one
+        -- that one being the first index
         local scale_config = ScalingConfig[name]
-        if scale_config then
+
+        Logging:Trace("GearPoints.GetScale(%s, %s, %s) -> %s",
+                      tostring(equipLoc), tostring(subClass), tostring(name), ToStringFn(scale_config))
+
+        if type(scale_config) == 'table' then
             return scale_config[1][1], scale_config[1][2]
+        elseif type(scale_config) == 'number' then
+            return scale_config, nil
         end
     end
-
-    return
 end
 
 -- calculate GP from scale, item level, and rarity
@@ -281,8 +291,9 @@ function lib:GetValue(item)
     end
 
     -- Is the item above our minimum threshold?
-    -- todo : should this apply to custom items as well?
-    if not rarity or rarity < QualityThreshold then return end
+    if not rarity or rarity < QualityThreshold then
+        return nil, "Rarity below threshold", ilvl
+    end
 
     if equipLoc == "CUSTOM_SCALE" then
         return self:CalculateFromScale(customItem.scale, ilvl, rarity), "Custom Scale", ilvl

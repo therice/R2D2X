@@ -141,6 +141,7 @@ end
 --
 -- CompressionSettingsKey not used currently, but reserved for future need
 local CompressionSettingsKey = '__CompressionSettings'
+--- @class Models.CompressedDb
 local CompressedDb = AddOn.Package('Models'):Class('CompressedDb')
 function CompressedDb:initialize(db)
     -- todo : we could axe this since regression that introduced need not present in new version

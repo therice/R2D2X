@@ -2,6 +2,7 @@ local _, AddOn = ...
 local Logging, Util, AceGUI = AddOn:GetLibrary('Logging'), AddOn:GetLibrary('Util'), AddOn:GetLibrary('AceGUI')
 local AceConfigBuilder = AddOn.ImportPackage('UI.AceConfig').ConfigBuilder
 
+--- @class UI.Ace
 local Ace = AddOn.Instance(
         'UI.Ace',
         function()
@@ -14,6 +15,7 @@ local Ace = AddOn.Instance(
         end
 )
 
+--- @return UI.AceConfig.ConfigBuilder
 function Ace.ConfigBuilder(options, ...)
     return AceConfigBuilder(options, ...)
 end

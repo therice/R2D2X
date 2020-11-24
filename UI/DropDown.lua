@@ -10,6 +10,7 @@ function Entry:arrow(val) return self:set('hasArrow',val) end
 function Entry:value(val) return self:set('value',val) end
 function Entry:fn(fn) return self:set('func', fn)  end
 
+--- @class UI.AceConfig.EntryBuilder
 local EntryBuilder = AddOn.Package('UI.DropDown'):Class('EntryBuilder', Builder)
 function EntryBuilder:initialize(entries)
     Builder.initialize(self, entries or {})
@@ -57,6 +58,7 @@ local DropDown = AddOn.Instance(
         end
 )
 
+--- @return UI.AceConfig.EntryBuilder
 function DropDown.EntryBuilder()
     return EntryBuilder()
 end

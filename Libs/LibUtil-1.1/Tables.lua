@@ -5,6 +5,7 @@ local lib, minor = LibStub(MAJOR_VERSION, true)
 if not lib or next(lib.Tables) or (minor or 0) > MINOR_VERSION then return end
 
 local Util = lib
+--- @class LibUtil.Tables
 local Self = Util.Tables
 
 -- GET/SET

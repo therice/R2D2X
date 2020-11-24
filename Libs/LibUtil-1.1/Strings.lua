@@ -5,6 +5,7 @@ local lib, minor = LibStub(MAJOR_VERSION, true)
 if not lib or next(lib.Strings) or (minor or 0) > MINOR_VERSION then return end
 
 local Util = lib
+--- @class LibUtil.Strings
 local Self = Util.Strings
 
 function Self.IsSet(str)
@@ -105,11 +106,28 @@ end
 
 -- this replaces 'len' characters starting at 'from' in a string with 'sub
 -- it does not replace an occurrence of a string in another
--- use string::gsub(replace, replace_with) for that
+-- use string:gsub(replace, replace_with) for that
 function Self.Replace(str, from, len, sub)
     from, len, sub = from or 1, len or str:len(), sub or ""
     local to = from < 0 and str:len() + from + len + 1 or from + len
     return str:sub(1, from - 1) .. sub .. str:sub(to)
+end
+
+---@param str string
+---@param del string
+function Self.ToCamelCase(str, del)
+    local s = ""
+    for v in str:gmatch("[^" .. (del or "%p%s") .. "]+") do
+        s = s .. Self.UcFirst(v:lower())
+    end
+    return Self.LcFirst(s)
+end
+
+---@param str string
+---@param del string
+function Self.FromCamelCase(str, del, case)
+    local s = str:gsub("%u", (del or " ") .. "%1")
+    return case == true and s:upper() or case == false and s:lower() or s
 end
 
 function Self.ToString(val, depth)

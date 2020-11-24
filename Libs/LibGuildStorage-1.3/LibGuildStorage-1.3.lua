@@ -2,6 +2,7 @@ local MAJOR_VERSION = "LibGuildStorage-1.3"
 local MINOR_VERSION = 11305
 local LIB_MESSAGE_PREFIX = "GuildStorage13"
 
+--- @class LibGuildStorage
 local lib, _ = LibStub:NewLibrary(MAJOR_VERSION, MINOR_VERSION)
 if not lib then return end
 

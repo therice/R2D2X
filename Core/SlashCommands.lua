@@ -1,7 +1,12 @@
 local _, AddOn = ...
 local L, C, Logging, Util, Rx = AddOn.Locale, AddOn.Constants, AddOn:GetLibrary('Logging'), AddOn:GetLibrary('Util'), AddOn:GetLibrary('Rx')
-local Subject, SlashCommandsInternal = Rx.rx.Subject, AddOn.Package('Core'):Class('SlashCommandsInternal')
+local Subject = Rx.rx.Subject
 
+--- @class Core.SlashCommandsInternal
+--- @field public subjects Core.SlashCommandsInternal
+--- @field public commands Core.SlashCommandsInternal
+--- @field public AceConsole Core.SlashCommandsInternal
+local SlashCommandsInternal = AddOn.Package('Core'):Class('SlashCommandsInternal')
 function SlashCommandsInternal:initialize()
     self.subjects = {}
     self.commands = {}

@@ -10,6 +10,7 @@ local function counterGetAndIncr()
     return value
 end
 
+--- @class Models.History.History
 local History = AddOn.Package('Models.History'):Class('History')
 function History:initialize(instant)
     -- all timestamps will be in UTC/GMT and require use cases to convert to local TZ

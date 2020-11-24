@@ -7,14 +7,17 @@ local function ModeToggle(self, flag)
     if self.mode:Enabled(flag) then self.mode:Disable(flag) else self.mode:Enable(flag) end
 end
 
+--- @return boolean
 function AddOn:TestModeEnabled()
     return self.mode:Enabled(C.Modes.Test)
 end
 
+--- @return boolean
 function AddOn:DevModeEnabled()
     return self.mode:Enabled(C.Modes.Develop)
 end
 
+--- @return boolean
 function AddOn:PersistenceModeEnabled()
     return self.mode:Enabled(C.Modes.Persistence)
 end
@@ -49,14 +52,27 @@ function AddOn:ToggleModule(module)
     end
 end
 
+--- @return Logging
 function AddOn:LoggingModule()
     return self:GetModule("Logging")
 end
 
+--- @return EffortPoints
+function AddOn:EffortPointsModule()
+    return self:GetModule("EffortPoints")
+end
+
+--- @return GearPoints
 function AddOn:GearPointsModule()
     return self:GetModule("GearPoints")
 end
 
+--- @return GearPointsCustom
+function AddOn:GearPointsCustomModule()
+    return self:GetModule("GearPointsCustom")
+end
+
+--- @return Standings
 function AddOn:StandingsModule()
     return self:GetModule("Standings")
 end

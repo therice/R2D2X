@@ -2,6 +2,8 @@ local _, AddOn = ...
 local L, Log, Util = AddOn.Locale, AddOn:GetLibrary("Logging"), AddOn:GetLibrary("Util")
 local UI = AddOn.Require('UI.Native')
 local AceUI = AddOn.Require('UI.Ace')
+
+--- @type Logging
 local Logging = AddOn:GetModule("Logging", true)
 
 function Logging:BuildFrame()

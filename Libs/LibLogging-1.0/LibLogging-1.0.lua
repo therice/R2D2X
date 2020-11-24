@@ -1,6 +1,7 @@
 local MAJOR_VERSION = "LibLogging-1.0"
 local MINOR_VERSION = 11305
 
+---@class LibLogging
 local lib, _ = LibStub:NewLibrary(MAJOR_VERSION, MINOR_VERSION)
 if not lib then return end
 

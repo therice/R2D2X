@@ -1,7 +1,14 @@
 local _, AddOn = ...
-local L, Log, Util = AddOn.Locale, AddOn:GetLibrary("Logging"), AddOn:GetLibrary("Util")
-local Logging = AddOn:NewModule("Logging")
+local L, C = AddOn.Locale, AddOn.Constants
+--- @type LibLogging
+local Log =  AddOn:GetLibrary("Logging")
+--- @type LibUtil
+local Util =  AddOn:GetLibrary("Util")
+--- @type UI.Ace
 local AceUI = AddOn.Require('UI.Ace')
+
+--- @class Logging
+local Logging = AddOn:NewModule("Logging")
 local accum
 
 if not AddOn._IsTestContext() then
@@ -55,15 +62,17 @@ end
 local Options = Util.Memoize.Memoize(function ()
     return AceUI.ConfigBuilder()
                  :group(Logging:GetName(), L['logging']):desc(L['logging_desc'])
-                 :args()
-                    :description('help', L['logging_help']):order(1)
-                    :select('logThreshold', L['logging_threshold']):desc(L['logging_threshold_desc']):order(2)
-                        :set('values', Logging.GetLoggingLevels())
-                        :set('get', function() return Log:GetRootThreshold() end)
-                        :set('set', function(_, logThreshold) Logging:SetLoggingThreshold(logThreshold) end)
-                    :description('spacer', ""):order(3)
-                    :execute('toggleWindow', L['logging_window_toggle']):desc(L['logging_window_toggle_desc']):order(4)
-                    :set('func', function() Logging:Toggle() end)
+                     :args()
+                        :header("spacer1", ""):order(1)
+                        :description('help', L['logging_help']):order(2)
+                        :header("spacer2", ""):order(3)
+                        :select('logThreshold', L['logging_threshold']):desc(L['logging_threshold_desc']):order(4)
+                            :set('values', Logging.GetLoggingLevels())
+                            :set('get', function() return Log:GetRootThreshold() end)
+                            :set('set', function(_, logThreshold) Logging:SetLoggingThreshold(logThreshold) end)
+                        :header('spacer3', ""):order(5)
+                        :execute('toggleWindow', L['logging_window_toggle']):desc(L['logging_window_toggle_desc']):order(6)
+                            :set('func', function() Logging:Toggle() end)
                  :build()
 end)
 

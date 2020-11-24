@@ -5,6 +5,7 @@ local lib, minor = LibStub(MAJOR_VERSION, true)
 if not lib or next(lib.Memoize) or (minor or 0) > MINOR_VERSION then return end
 
 local Util = lib
+--- @class LibUtil.Memoize
 local Self = Util.Memoize
 
 -- Adapated from https://github.com/kikito/memoize.lua/blob/master/memoize.lua

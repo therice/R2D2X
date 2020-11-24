@@ -1,8 +1,13 @@
 local _, AddOn = ...
 local L, Logging, Util, Rx = AddOn.Locale, AddOn:GetLibrary('Logging'), AddOn:GetLibrary('Util'), AddOn:GetLibrary('Rx')
-local C, Subject, Events = AddOn.Constants, Rx.rx.Subject, AddOn.Package('Core'):Class('Events')
+local C, Subject = AddOn.Constants, Rx.rx.Subject
 
 -- private stuff only for use within this scope
+--- @class Core.Events
+--- @field public registered Core.Events
+--- @field public subjects Core.Events
+--- @field public AceEvent Core.Events
+local Events = AddOn.Package('Core'):Class('Events')
 function Events:initialize()
     self.registered = {}
     self.subjects = {}

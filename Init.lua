@@ -1,7 +1,7 @@
 local AceAddon, AceAddonMinor = LibStub('AceAddon-3.0')
 local AddOnName, AddOn = ...
 
-AddOn = AceAddon:NewAddon(AddOn, AddOnName, 'AceConsole-3.0', 'AceEvent-3.0', "AceHook-3.0", "AceTimer-3.0", "AceBucket-3.0")
+AddOn = AceAddon:NewAddon(AddOn, AddOnName, 'AceConsole-3.0', 'AceEvent-3.0', "AceSerializer-3.0", "AceHook-3.0", "AceTimer-3.0", "AceBucket-3.0")
 AddOn:SetDefaultModuleState(false)
 _G.R2D2X = AddOn
 
@@ -45,6 +45,7 @@ do
     AddOn:AddLibrary('DataBroker', 'LibDataBroker-1.1')
     AddOn:AddLibrary('DbIcon', 'LibDBIcon-1.0')
     AddOn:AddLibrary('GuildStorage', 'LibGuildStorage-1.3')
+    AddOn:AddLibrary('Encounter', 'LibEncounter-1.0')
     AddOn:AddLibrary('JSON', 'LibJSON-1.0')
 end
 
@@ -63,7 +64,7 @@ end
 local function SetDbValue(self, i, v)
     Logging:Debug("SetDbValue(%s, %s, %s)", self:GetName(), tostring(i[#i]), tostring(v or 'nil'))
     Util.Tables.Set(self.db.profile, tostring(i[#i]), v)
-    -- AddOn:ConfigTableChanged(self:GetName(), i[#i])
+    AddOn:ConfigChanged(self:GetName(), i[#i])
 end
 
 AddOn.GetDbValue = GetDbValue
@@ -104,6 +105,10 @@ local ModulePrototype = {
     -- implement to provide data import functionality for a module
     ImportData = function(self, data)
 
+        -- fire message that the configuration table has changed (this is handled on per module basis, as necessary)
+        -- AddOn:ConfigTableChanged(self:GetName())
+        -- notify config registry of change as well, this updates configuration UI if displayed
+        -- AddOn:GetLibrary('AceConfigRegistry'):NotifyChange(AddOnName)
     end,
 
     ModuleSettings = function(self)

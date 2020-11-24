@@ -1,6 +1,9 @@
 local _, AddOn = ...
 local Util, Logging, GuildStorage = AddOn:GetLibrary("Util"), AddOn:GetLibrary("Logging"), AddOn:GetLibrary("GuildStorage")
+
+--- @class Models.Player
 local Player = AddOn.Package('Models'):Class('Player')
+
 local GuidPatternPremable, GuidPatternRemainder = "Player%-", "%d?%d?%d?%d%-%x%x%x%x%x%x%x%x"
 local GuidPattern = GuidPatternPremable .. GuidPatternRemainder
 local cache

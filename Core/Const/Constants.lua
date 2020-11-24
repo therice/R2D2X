@@ -6,6 +6,7 @@ if not AddOn._IsTestContext then AddOn._IsTestContext = function() return false 
 
 AddOn.Constants = {
     name    =   name,
+    name_c  =   "|CFF87CEFA" .. name .. "|r",
     chat    =   "chat",
     group   =   "group",
     guild   =   "guild",
@@ -113,8 +114,18 @@ AddOn.Constants = {
         Wrist           =   _G.INVTYPE_WRIST,
     },
 
-    Messages = {
+    ItemQualityDescriptions = {
+        [0] = ITEM_QUALITY0_DESC, -- Poor
+        [1] = ITEM_QUALITY1_DESC, -- Common
+        [2] = ITEM_QUALITY2_DESC, -- Uncommon
+        [3] = ITEM_QUALITY3_DESC, -- Rare
+        [4] = ITEM_QUALITY4_DESC, -- Epic
+        [5] = ITEM_QUALITY5_DESC, -- Legendary
+        [6] = ITEM_QUALITY6_DESC, -- Artifact
+    },
 
+    Messages = {
+        ConfigTableChanged      =   name .. "_ConfigTableChanged",
     },
 
     Modes = {
@@ -127,6 +138,7 @@ AddOn.Constants = {
     Popups = {
         ConfirmAdjustPoints     =   name .. "_ConfirmAdjustPoints",
         ConfirmDecayPoints      =   name .. "_ConfirmDecayPoints",
+        ConfirmDeleteItem       =   name .. "_ConfirmDeleteItem",
     },
 
     Responses = {

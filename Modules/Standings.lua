@@ -1,9 +1,18 @@
 local _, AddOn = ...
-local Standings = AddOn:NewModule('Standings',  "AceTimer-3.0")
-local L, Logging, Util, GuildStorage =
-    AddOn.Locale, AddOn:GetLibrary("Logging"), AddOn:GetLibrary("Util"), AddOn:GetLibrary("GuildStorage")
-local Award, Subject = AddOn.Package('Models').Award, AddOn.Package('Models').Subject
+local L, C = AddOn.Locale, AddOn.Constants
+--- @type LibLogging
+local Logging =  AddOn:GetLibrary("Logging")
+--- @type LibUtil
+local Util =  AddOn:GetLibrary("Util")
+--- @type LibGuildStorage
+local GuildStorage  = AddOn:GetLibrary("GuildStorage")
+-- @type Models.Award
+local Award = AddOn.Package('Models').Award
+-- @type Models.Subject
+local Subject = AddOn.Package('Models').Subject
 
+--- @class Standings
+local Standings = AddOn:NewModule('Standings',  "AceTimer-3.0")
 function Standings:OnInitialize()
     Logging:Debug("OnInitialize(%s)", self:GetName())
 

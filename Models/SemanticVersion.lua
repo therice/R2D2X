@@ -3,6 +3,7 @@
 
 local _, AddOn = ...
 local Util, Logging = AddOn:GetLibrary("Util"), AddOn:GetLibrary("Logging")
+--- @class Models.SemanticVersion
 local SemanticVersion = AddOn.Package('Models'):Class('SemanticVersion')
 
 
@@ -103,6 +104,11 @@ local function smallerPrerelease(mine, other)
     return smallerIdList(Util.Strings.Split(mine, '.'), Util.Strings.Split(other, '.'))
 end
 
+--- @field public major Models.SemanticVersion
+--- @field public minor Models.SemanticVersion
+--- @field public patch Models.SemanticVersion
+--- @field public prerelease Models.SemanticVersion
+--- @field public build Models.SemanticVersion
 function SemanticVersion:initialize(major, minor, patch, prerelease, build)
     assert(major, "At least one parameter is needed")
     

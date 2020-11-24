@@ -11,6 +11,7 @@ local ResponseOrigin = {
     AwardReason         = 2,
 }
 
+--- @class Models.History.Loot
 local Loot = HistoryPkg:Class('Loot', History)
 Loot.ResponseOrigin = ResponseOrigin
 
@@ -71,7 +72,9 @@ function Loot:Description()
     )
 end
 
+--- @class Models.History.LootStatistics
 local LootStatistics = HistoryPkg:Class('LootStatistics')
+--- @class Models.History.LootStatisticsEntry
 local LootStatisticsEntry = HistoryPkg:Class('LootStatisticsEntry')
 -- Loot Statistics
 function LootStatistics:initialize()

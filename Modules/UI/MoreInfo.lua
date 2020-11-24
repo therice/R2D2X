@@ -2,6 +2,7 @@ local _, AddOn = ...
 local L, C, Logging, Util = AddOn.Locale, AddOn.Constants, AddOn:GetLibrary("Logging"), AddOn:GetLibrary("Util")
 local UI, UIUtil = AddOn.Require('UI.Native'), AddOn.Require('UI.Util')
 
+--- @class UI.MoreInfo
 local MI = AddOn.Instance(
         'UI.MoreInfo',
         function()
@@ -72,17 +73,3 @@ function MI.Update(frame, ...)
         frame.moreInfo.Update(...)
     end
 end
-
---function MI.Update2(enabled, frame, ...)
---    -- no more information widget, cannot update
---    if not frame.moreInfo then return end
---    -- not enabled, just hide and return
---    if not enabled then return frame.moreInfo:Hide() end
---
---    local tip = frame.moreInfo
---    tip:SetOwner(frame, "ANCHOR_RIGHT")
---    tip:AddLine(L["no_entries_in_loot_history"])
---    --tip:AddLine('a long line line line long line line line long line line line long line line line ')
---    tip:Show()
---    tip:SetAnchorType("ANCHOR_RIGHT", 0, -tip:GetHeight())
---end

@@ -21,11 +21,16 @@ function FrameClass:New(name)
     self.isShow = true
     self.parent = nil
     self.text = nil
+    self.type = nil
     self.textures = {}
     self.id = nextid()
     self[0] = "(userdata)"
     return self
 
+end
+
+function FrameClass:IsObjectType(type)
+    return self.type == type
 end
 
 function FrameClass:SetID(id)
@@ -39,6 +44,7 @@ end
 function FrameClass:SetToplevel(top)
 
 end
+
 
 function FrameClass:GetObjectType()
     return "Frame"
@@ -64,13 +70,17 @@ function FrameClass:SetTextColor()
 
 end
 
+function FrameClass:HasScript(script)
+    return self.scripts[script] ~= nil
+end
 
 function FrameClass:SetScript(script,handler)
+    -- print('SetScript -> ' .. tostring(script) .. ',' .. tostring(handler))
     self.scripts[script] = handler
 end
 
-function FrameClass:HookScript()
-
+function FrameClass:HookScript(scriptType, handler)
+    -- print('HookScript -> ' .. tostring(scriptType) .. ',' .. tostring(handler))
 end
 
 function FrameClass:GetScript(script)
@@ -206,7 +216,9 @@ end
 
 function FrameClass:AddLine() end
 
-function FrameClass:GetText() end
+function FrameClass:GetText()
+    return  self.text
+end
 
 function FrameClass:SetFormattedText() end
 
@@ -379,6 +391,7 @@ function CreateFrame(kind, name, parent, template)
     end
 
     tinsert(frames, frame)
+    frame.index = #frames
     if name then _G[name] = frame end
     return frame
 end
@@ -561,3 +574,13 @@ function PanelTemplates_TabResize() end
 function PanelTemplates_DeselectTab() end
 function PanelTemplates_SelectTab() end
 function SetDesaturation() end
+function EnumerateFrames(f)
+    if not f then return frames[1] end
+
+    local nextIdx = f.index + 1
+    if nextIdx > #frames then
+        return nil
+    else
+        return frames[nextIdx]
+    end
+end

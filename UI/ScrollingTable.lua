@@ -16,6 +16,7 @@ function Column:sortnext(next) return self:set('sortnext', next) end
 function Column:comparesort(fn) return self:set('comparesort', fn) end
 
 -- ST column builder, for creating ST columns
+--- @class UI.ScrollingTable.ColumnBuilder
 local ColumnBuilder = Package:Class('ColumnBuilder', Builder)
 ColumnBuilder.Ascending = ST.SORT_ASC
 ColumnBuilder.Descending = ST.SORT_DSC
@@ -57,6 +58,7 @@ function ClassColoredCell:initialize(value, class)
     self:color(UIUtil.GetClassColor(class))
 end
 
+--- @class UI.ScrollingTable.CellBuilder
 local CellBuilder = Package:Class('CellBuilder', Builder)
 function CellBuilder:initialize()
     Builder.initialize(self, {})

@@ -1,7 +1,11 @@
 local _, AddOn = ...
 local Util, Logging, ItemUtil, GuildStorage =
     AddOn:GetLibrary("Util"), AddOn:GetLibrary("Logging"), AddOn:GetLibrary("ItemUtil"), AddOn:GetLibrary("GuildStorage")
-local Subject, Award = AddOn.Package('Models'):Class('Subject'), AddOn.Package('Models'):Class('Award')
+
+--- @class Models.Subject
+local Subject = AddOn.Package('Models'):Class('Subject')
+--- @class Models.Award
+local Award = AddOn.Package('Models'):Class('Award')
 
 local function MinimumGp()
     local GP = AddOn:GearPointsModule()

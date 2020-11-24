@@ -21,6 +21,7 @@ function Option:order(order) return self:set('order', order or 0) end
 function Option:fontSize(size) return self:set('fontSize', size) end
 function Option:desc(desc) return self:set('desc', desc) end
 
+--- @class UI.AceConfig.ConfigBuilder
 local ConfigBuilder = AddOn.Package('UI.AceConfig'):Class('ConfigBuilder', Builder)
 function ConfigBuilder:initialize(options, path)
     Builder.initialize(self, options or {})

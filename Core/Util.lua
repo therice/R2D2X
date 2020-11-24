@@ -1,12 +1,15 @@
 local _, AddOn = ...
 local L, Logging, Util = AddOn.Locale, AddOn:GetLibrary('Logging'), AddOn:GetLibrary('Util')
-local Mode, Player = AddOn.Package('Core'):Class('Mode'), AddOn.ImportPackage('Models').Player
+local Player = AddOn.ImportPackage('Models').Player
 
 local function bbit(p) return 2 ^ (p - 1) end
 local function hasbit(x, p) return x % (p + p) >= p end
 local function setbit(x, p) return hasbit(x, p) and x or x + p end
 local function clearbit(x, p) return hasbit(x, p) and x - p or x end
 
+--- @class Core.Mode
+--- @field public bitfield Core.Mode
+local Mode = AddOn.Package('Core'):Class('Mode')
 function Mode:initialize()
     self.bitfield = bbit(AddOn.Constants.Modes.Standard)
 end

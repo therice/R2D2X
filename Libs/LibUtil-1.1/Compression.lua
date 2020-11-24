@@ -5,6 +5,7 @@ local lib, minor = LibStub(MAJOR_VERSION, true)
 if not lib or next(lib.Compression) or (minor or 0) > MINOR_VERSION then return end
 
 local Util = lib
+--- @class LibUtil.Compression
 local Self = Util.Compression
 local Class = LibStub("LibClass-1.0")
 local Logging = LibStub("LibLogging-1.0")

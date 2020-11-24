@@ -22,8 +22,7 @@ function AddOn.UpdateMoreInfo(enabled, frame, data, row)
     end
 
     local class = AddOn:UnitClass(name)
-    Logging:Debug('UpdateMoreInfo(%s) : %s', name, class)
-
+    --Logging:Debug('UpdateMoreInfo(%s) : %s', tostring(name), tostring(class))
     local c = UIUtil.GetClassColor(class)
     local tip = frame.moreInfo
     tip:SetOwner(frame, "ANCHOR_RIGHT")

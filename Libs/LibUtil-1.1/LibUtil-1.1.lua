@@ -1,6 +1,14 @@
 local MAJOR_VERSION = "LibUtil-1.1"
 local MINOR_VERSION = 11305
 
+--- @class LibUtil
+--- @field public Tables LibUtil.Tables
+--- @field public Strings LibUtil.Strings
+--- @field public Numbers LibUtil.Numbers
+--- @field public Functions LibUtil.Functions
+--- @field public Objects LibUtil.Objects
+--- @field public Compression LibUtil.Compression
+--- @field public Memoize LibUtil.Memoize
 local lib = LibStub:NewLibrary(MAJOR_VERSION, MINOR_VERSION)
 if not lib then return end
 

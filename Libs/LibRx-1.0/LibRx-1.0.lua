@@ -1,10 +1,11 @@
 local MAJOR_VERSION = "LibRx-1.0"
 local MINOR_VERSION = 11305
 
+--- @class LibRx
 local Lib = LibStub:NewLibrary(MAJOR_VERSION, MINOR_VERSION)
 if not Lib then return end
 
-local Class, Util = LibStub("LibClass-1.0"), LibStub('LibUtil-1.1')
+local Util = LibStub('LibUtil-1.1')
 
 local classes = {}
 local function ClassesIndex(_, name, resolved)

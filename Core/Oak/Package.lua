@@ -8,6 +8,7 @@ local pkgs = {}
 
 -- for defining a package that can be later imported
 -- classes can the be attached to packages for namespacing
+--- @class Package
 local Package = Class('Package')
 function Package:initialize(name)
     self.name = name
@@ -40,6 +41,7 @@ function AddOn.Class(name, super)
 end
 
 -- get existing or define new package
+--- @return Package
 function AddOn.Package(name)
     assert(type(name) == 'string')
     local pkg = pkgs[name]
@@ -51,6 +53,7 @@ function AddOn.Package(name)
 end
 
 -- get an existing package, fails if not defined
+--- @return Package
 function AddOn.ImportPackage(name)
     assert(type(name) == "string")
     local pkg = pkgs[name]

@@ -41,8 +41,9 @@ TestScalingConfig =  {
         {0.3, 'Non-Hunter Ranged'},
     },
     shield = {
-        {0.5}
-    }
+        { 0.5 }
+    },
+    wand = 0.33,
 }
 
 -- Stub defaults for AceDB
@@ -60,13 +61,18 @@ do
 
     for slot, config in pairs(TestScalingConfig) do
         local index = 1
-        for _, config_entry in pairs(config) do
-            for i=1, #config_entry do
-                local profileEntryKey = slot .. '_' .. ConfigIndexMappings[i] .. '_' .. index
-                DbScalingDefaults.profile[profileEntryKey] = config_entry[i]
+        if type(config) == 'table' then
+            for _, entry in pairs(config) do
+                for i=1, #entry do
+                    local profileEntryKey = slot .. '_' .. ConfigIndexMappings[i] .. '_' .. index
+                    DbScalingDefaults.profile[profileEntryKey] = entry[i]
+                end
+                index = index +1
             end
-            index = index +1
+        elseif type(config) == 'number' then
+            DbScalingDefaults.profile[slot] = config
+        else
+            error("don't know how to add scaling configuration entry to test data")
         end
     end
-
 end

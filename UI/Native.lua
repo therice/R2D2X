@@ -2,6 +2,7 @@ local _, AddOn = ...
 local Logging = AddOn:GetLibrary('Logging')
 local pkg = AddOn.Package('UI.Native')
 
+--- @class UI.AceConfig.Widget
 local Widget = pkg:Class('Widget')
 function Widget:initialize(parent, name)
     self.parent = parent
@@ -11,6 +12,7 @@ end
 function Widget:Create() error("Create() not implemented")end
 
 -- Class UI.Natives
+--- @class UI.AceConfig.Natives
 local Natives = AddOn.Class('Natives')
 function Natives:initialize()
     self.widgets = {}   -- mapping of widget type to widget class

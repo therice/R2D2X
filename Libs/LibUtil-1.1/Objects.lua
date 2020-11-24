@@ -5,6 +5,7 @@ local lib, minor = LibStub(MAJOR_VERSION, true)
 if not lib or next(lib.Objects) or (minor or 0) > MINOR_VERSION then return end
 
 local Util = lib
+--- @class LibUtil.Objects
 local Self = Util.Objects
 
 function Self.IsEmpty(obj)

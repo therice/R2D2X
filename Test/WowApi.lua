@@ -196,7 +196,7 @@ function GuildRoster ()
     end
 end
 
-function IsInGuild() return 1  end
+function IsInGuild() return 1 end
 
 function IsInRaid() return _G.IsInRaidVal end
 
@@ -545,6 +545,10 @@ _G.ITEM_QUALITY_COLORS = {
 }
 _G.ITEM_QUALITY_COLORS[0] = {color = Color:New(0, 0, 0, 0)}
 
+function GetItemQualityColor(rarity)
+    return _G.ITEM_QUALITY_COLORS[rarity].color
+end
+
 _G.RAID_CLASS_COLORS = {}
 
 -- https://github.com/Gethe/wow-ui-source/tree/classic
@@ -602,6 +606,15 @@ _G.LE_ITEM_ARMOR_SIGIL = 10
 _G.LE_ITEM_ARMOR_RELIC = 11
 _G.LE_ITEM_CLASS_WEAPON = 2
 _G.LE_ITEM_CLASS_ARMOR = 4
+
+-- not colored
+_G.ITEM_QUALITY0_DESC = 'Poor'
+_G.ITEM_QUALITY1_DESC = 'Common'
+_G.ITEM_QUALITY2_DESC = 'Uncommon'
+_G.ITEM_QUALITY3_DESC = 'Rare'
+_G.ITEM_QUALITY4_DESC = 'Epic'
+_G.ITEM_QUALITY5_DESC = 'Legendary'
+_G.ITEM_QUALITY6_DESC = 'Artifact'
 
 _G.RANDOM_ROLL_RESULT = "%s rolls %d (%d-%d)"
 

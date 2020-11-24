@@ -6,8 +6,11 @@ local _, AddOn = ...
 local Util, Logging = AddOn:GetLibrary("Util"), AddOn:GetLibrary("Logging")
 local os_time, os_date = time, date
 
+--- @class Models.Date
 local Date = AddOn.Package('Models'):Class('Date')
+--- @class Models.DateInterval
 local DateInterval = AddOn.Package('Models'):Class('DateInterval', Date)
+--- @class Models.DateFormat
 local DateFormat = AddOn.Package('Models'):Class('DateFormat')
 
 function Date:initialize(t, ...)

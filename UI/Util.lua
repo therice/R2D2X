@@ -3,9 +3,12 @@ local L, C, Logging, Util =
     AddOn.Locale, AddOn.Constants, AddOn:GetLibrary('Logging'), AddOn:GetLibrary('Util')
 local UIPackage, UIUtilPackage, UI =
     AddOn.Package('UI'), AddOn.Package('UI.Util'), AddOn.Require('UI.Native')
+
+--- @type Models.Award
 local Award = AddOn.Package('Models').Award
 
 -- generic build entry attributes
+--- @class UI.Util.Attributes
 local Attributes = UIUtilPackage:Class('Attributes')
 function Attributes:initialize(attrs) self.attrs = attrs end
 function Attributes:set(attr, value)
@@ -14,6 +17,7 @@ function Attributes:set(attr, value)
 end
 
 -- generic builder which handles entries of attributes
+--- @class UI.Util.Builder
 local Builder =  UIUtilPackage:Class('Builder')
 function Builder:initialize(entries)
     self.entries = entries
@@ -55,6 +59,7 @@ function Builder:build()
 end
 
 
+--- @class UI.Utils
 local Private = UIPackage:Class('Utils')
 function Private:initialize()
     self.hypertip = nil
@@ -67,6 +72,7 @@ function Private:GetHypertip(creator)
     return self.hypertip
 end
 
+--- @class UI.Util
 local U = AddOn.Instance(
         'UI.Util',
         function()
@@ -76,10 +82,12 @@ local U = AddOn.Instance(
         end
 )
 
+--- @class UI.Decorator
 local Decorator = UIPackage:Class('Decorator')
 function Decorator:initialize() end
 function Decorator:decorate(...) return Util.Strings.Join('', ...) end
 
+--- @class UI.ColoredDecorator
 local ColoredDecorator = UIPackage:Class('ColoredDecorator', Decorator)
 function ColoredDecorator:initialize(r, g, b)
     Decorator.initialize(self)
@@ -136,13 +144,13 @@ function U:CreateHypertip(link)
     if Util.Strings.IsEmpty(link) then return end
     -- this is to support shift click comparison on all tooltips
     local function hypertip()
-        local tip = UI:NewNamed("GameTooltip", AddOn:Qualify("TooltipEventHandler"))
+        local tip = UI:NewNamed("GameTooltip", UIParent, AddOn:Qualify("TooltipEventHandler"))
         tip:RegisterEvent("MODIFIER_STATE_CHANGED")
         tip:SetScript("OnEvent",
                 function(_, event, arg)
-                    local tip = self.private:GetHypertip()
-                    if tip.showing and event == "MODIFIER_STATE_CHANGED" and (arg == "LSHIFT" or arg == "RSHIFT") and tip.link then
-                        self:CreateHypertip(tip.link)
+                    local ht = self.private:GetHypertip()
+                    if ht.showing and event == "MODIFIER_STATE_CHANGED" and (arg == "LSHIFT" or arg == "RSHIFT") and ht.link then
+                        self:CreateHypertip(ht.link)
                     end
                 end
         )
@@ -207,6 +215,10 @@ function U.ActionTypeDecorator(actionType)
     return ColoredDecorator(U.GetActionTypeColor(actionType))
 end
 
+function U.ItemQualityDecorator(rarity)
+    return ColoredDecorator(GetItemQualityColor(rarity))
+end
+
 local Colors = {
     ResourceTypes = {
         [Award.ResourceType.Ep] = C.Colors.ItemArtifact,
@@ -218,12 +230,11 @@ local Colors = {
         [Award.SubjectType.Raid]      = C.Colors.ItemLegendary,
         [Award.SubjectType.Standby]   = C.Colors.ItemRare,
     },
-    -- todo : move these to constants
     ActionTypes = {
         [Award.ActionType.Add]      = C.Colors.Evergreen,
-        [Award.ActionType.Subtract] = CreateColor(0.96, 0.55, 0.73, 1),
-        [Award.ActionType.Reset]    = CreateColor(1, 0.96, 0.41, 1),
-        [Award.ActionType.Decay]    = CreateColor(0.53, 0.53, 0.93, 1),
+        [Award.ActionType.Subtract] = C.Colors.PaladinPink,
+        [Award.ActionType.Reset]    = C.Colors.RogueYellow,
+        [Award.ActionType.Decay]    = C.Colors.Purple,
     }
 }
 

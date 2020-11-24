@@ -1,7 +1,7 @@
 -- adapted from https://github.com/kikito/middleclass/blob/master/middleclass.lua
 local MAJOR_VERSION = "LibClass-1.0"
 local MINOR_VERSION = 11305
-
+--- @class LibClass
 local lib, _ = LibStub:NewLibrary(MAJOR_VERSION, MINOR_VERSION)
 if not lib then return end
 

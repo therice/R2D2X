@@ -1,9 +1,10 @@
 local _, AddOn = ...
-local L, Logging, Util, AceConfig, ACD =
-    AddOn.Locale, AddOn:GetLibrary('Logging'), AddOn:GetLibrary('Util'), AddOn:GetLibrary('AceConfig'), AddOn:GetLibrary('AceConfigDialog')
+local L, C, Logging, Util, AceConfig, ACD =
+    AddOn.Locale, AddOn.Constants, AddOn:GetLibrary('Logging'), AddOn:GetLibrary('Util'),
+    AddOn:GetLibrary('AceConfig'), AddOn:GetLibrary('AceConfigDialog')
 local AceUI = AddOn.Require('UI.Ace')
 
-ACD:SetDefaultSize(AddOn.Constants.name, 850, 700)
+ACD:SetDefaultSize(AddOn.Constants.name, 850, 750)
 
 local function BuildConfigOptions()
     local ConfigOptions = Util.Tables.Copy(AddOn.BaseConfigOptions)
@@ -13,7 +14,7 @@ local function BuildConfigOptions()
     ConfigBuilder:args()
         :header('header', L["version"] .. format(": |cff99ff33%s|r", tostring(AddOn.version)))
             :order(0):set('width', 'full')
-        :group('general', _G.GENERAL):order(1)
+        :group('general', _G.GENERAL)
             :args()
                 :group('generalOptions', L["general_options"]):order(0):set('inline', true)
                     :args()
@@ -23,19 +24,28 @@ local function BuildConfigOptions()
                         :toggle('minimizeInCombat', L["minimize_in_combat"]):desc(L["minimize_in_combat_desc"]):order(2)
                         :header('spacer', ""):order(3)
                         :execute('test', L["Test"]):desc(L["test_desc"]):order(4)
-                            :set('func', function () end)
+                            :set('func',
+                                    function ()
+
+                                    end
+                            )
                         :execute('verCheck', L["version_check"]):desc(L["version_check_desc"]):order(5)
                             :set('func', function () end)
                         :execute('sync', L["sync"]):desc(L["sync_desc"]):order(6)
                             :set('func', function () end)
                         :execute('clearPCache', L["clear_player_cache"]):desc(L["clear_player_cache_desc"]):order(7)
-                            :set('func', function () AddOn.Package('Models').Player.ClearCache() end)
+                            :set('func',
+                                    function ()
+                                        AddOn.Package('Models').Player.ClearCache()
+                                        AddOn:Print("Player cache cleared")
+                                    end
+                            )
 
     -- set point to location where to add subsequent options
     ConfigBuilder:SetPath('args')
 
     -- per module configuration options
-    local order, options, embedEnableDisable = 100, nil, false
+    local options, embedEnableDisable = nil, false
     for name, module in AddOn:IterateModules() do
         Logging:Trace("BuildConfigOptions() : examining Module '%s'", name)
 
@@ -73,14 +83,16 @@ local function BuildConfigOptions()
             end
 
             Logging:Trace("BuildConfigOptions() : registering options for module %s -> %s", name, Util.Objects.ToString(options))
+            -- these are added without order, meaning they will be displayed alphabetically based upon top level group names
+            -- if you want a specific order, will need to establish either in individual modules (prone to conflicts)
+            -- or establish it above and index by module name
             ConfigBuilder
-                :group(name, options.name):desc(options.desc):order(order)
+                :group(name, options.name):desc(options.desc) --:order(order)
                     :set('handler', module)
                     :set('childGroups', options.childGroups and options.childGroups or 'tree')
                     :set('args', options.args)
                     :set('set', 'SetDbValue')
                     :set('get', 'GetDbValue')
-            order = order + 1
         end
     end
 
@@ -88,7 +100,6 @@ local function BuildConfigOptions()
 end
 
 local ConfigOptions = Util.Memoize.Memoize(BuildConfigOptions)
-
 function AddOn:RegisterConfig()
     AceConfig:RegisterOptionsTable(
             AddOn.Constants.name,
@@ -97,6 +108,15 @@ function AddOn:RegisterConfig()
                 return ConfigOptions()
             end
     )
+end
+
+-- this is hooked primarily through the Module Prototype (SetDbValue) in Init.lua
+-- but can be invoked directly as needed (for instance if you don't use the standard set definition
+-- for an option)
+function AddOn:ConfigChanged(moduleName, val)
+    Logging:Debug("ConfigChanged(%s) : %s", moduleName, Util.Objects.ToString(val))
+    -- need to serialize the values, as AceBucket (if used on other end) only groups by a single value
+    self:SendMessage(C.Messages.ConfigTableChanged, AddOn:Serialize(moduleName, val))
 end
 
 local function ConfigFrame()

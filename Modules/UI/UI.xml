@@ -2,4 +2,5 @@
     <Script file="MoreInfo.lua" />
     <Script file="Logging.lua" />
     <Script file="Standings.lua" />
+    <Script file="GearPointsCustom.lua" />
 </Ui>

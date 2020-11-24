@@ -42,6 +42,18 @@ local IdToInfo = {
     [17069] = {
         'Striker\'s Mark',
         '|cff9d9d9d|Hitem:17069:0:0:0:0:0:0:0:80:0:0:0:0|h[Striker\'s Mark]|h|r',
+    },
+    [22356] = {
+        'Desecrated Waistguard',
+        '|cff9d9d9d|Hitem:22356:0:0:0:0:0:0:0:80:0:0:0:0|h[Desecrated Waistguard]|h|r',
+        nil,
+        nil,
+        nil,
+        nil,
+        nil,
+        nil,
+        nil,
+        133828
     }
 }
 
@@ -52,13 +64,14 @@ local IdToInfo = {
 --  The full itemLink (e.g. |cff9d9d9d|Hitem:7073:0:0:0:0:0:0:0:80:0|h[Broken Fang]|h|r )
 local function ItemInfo(item)
     -- Numeric ID of the item. e.g. 30234
-    if type(item) == 'number' then
-        return item, IdToInfo[item] or {}
+    if type(item) == 'number' or tonumber(item) ~= nil then
+        return item, IdToInfo[tonumber(item)] or {}
     end
 
     if type(item) == 'string' then
         -- Check if item string or full link
         local id = strmatch(item or "", "item:(%d+):")
+        -- print(item .. ' -> ' .. tostring(id))
         if id and id ~= "" then
             return tonumber(id), IdToInfo[tonumber(id)]
             -- it's an item name
@@ -68,6 +81,7 @@ local function ItemInfo(item)
                     return id, info or {}
                 end
             end
+
         end
     end
 

@@ -3,7 +3,7 @@
 ## Notes: R2D2X - EPGP AddOn for World of Warcraft
 ## Author: Gnomechómsky-Atiesh
 ## Version: @project-version@
-## SavedVariables: R2D2X_DB
+## SavedVariables: R2D2X_DB, R2D2X_CustomItems
 ## X-AddonName: R2D2X
 ## X-InterfaceName: R2D2X Classic
 

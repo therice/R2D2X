@@ -4,6 +4,7 @@
     <Script file="Db.lua"/>
     <Script file="Player.lua"/>
     <Script file="Point.lua"/>
+    <Script file="Encounter.lua"/>
     <Script file="History\History.lua"/>
     <Script file="History\Traffic.lua"/>
     <Script file="History\Loot.lua"/>

@@ -36,3 +36,20 @@ Dialog:Register(AddOn.Constants.Popups.ConfirmDecayPoints, {
     hide_on_escape = true,
     show_while_dead = true,
 })
+
+Dialog:Register(AddOn.Constants.Popups.ConfirmDeleteItem, {
+    text = MachuPicchu,
+    on_show = AddOn:GearPointsCustomModule().DeleteItemOnShow,
+    buttons = {
+        {
+            text = _G.YES,
+            on_click = AddOn:GearPointsCustomModule().DeleteItemOnClickYes,
+        },
+        {
+            text = _G.NO,
+            on_click = Util.Functions.Noop
+        },
+    },
+    hide_on_escape = true,
+    show_while_dead = true,
+})

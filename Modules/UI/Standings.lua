@@ -12,6 +12,7 @@ local Award, STColumnBuilder, STCellBuilder =
 local AceUI, Date, DateFormat = AddOn.Require('UI.Ace'),  AddOn.Package('Models').Date,
     AddOn.Package('Models').DateFormat
 
+--- @type Standings
 local Standings = AddOn:GetModule("Standings", true)
 local RightClickMenu, FilterMenu
 local ScrollColumns =
@@ -439,7 +440,9 @@ function Standings:GetAdjustFrame()
                 Util.Tables.Push(validationErrors, format(L["x_unspecified_or_incorrect_type"], L["name"]))
             else
                 local subjectType = tonumber(f.subjectType)
-                if subjectType== Award.SubjectType.Character then
+                if Util.Strings.IsEmpty(subjectType) then
+                    Util.Tables.Push(validationErrors, format(L["x_unspecified_or_incorrect_type"], L["subject"]))
+                elseif subjectType== Award.SubjectType.Character then
                     award:SetSubjects(subjectType, subject)
                 else
                     if f.subjects and Util.Tables.Count(f.subjects) ~= 0 then

@@ -1,6 +1,7 @@
 local MAJOR_VERSION = "LibItemUtil-1.1"
 local MINOR_VERSION = 11305
 
+--- @class LibItemUtil
 local lib, _ = LibStub:NewLibrary(MAJOR_VERSION, MINOR_VERSION)
 if not lib then return end
 
@@ -338,18 +339,33 @@ function lib:ItemLinkToId(link)
     return tonumber(strmatch(link or "", "item:(%d+):"))
 end
 
+-- returns the 'itemString' from an item link
+-- https://wowwiki.fandom.com/wiki/ItemString
+-- e.g. 'item:22356:0:0:0:0:0:0:0:60'
+-- item:6098::::::::2 OR item:6098:0:0:0:0:0:0:0:2
+-- 9 indexes in classic wow
 function lib:ItemLinkToItemString(link)
     return strmatch(strmatch(link or "", "item:[%d:-]+") or "", "(item:.-):*$")
 end
 
+-- returns an item name from the item link
+-- e.g. '|cff9d9d9d|Hitem:22356:0:0:0:0:0:0::|h[Desecrated Waistguard]|h|r' -> 'Desecrated Waistguard'
 function lib:ItemLinkToItemName(link)
     return strmatch(link or "", "%[(.+)%]")
 end
 
+-- returns the hex color code from an item link
+-- e.g. '|cff9d9d9d|Hitem:22356:0:0:0:0:0:0::|h[Desecrated Waistguard]|h|r' -> '|cff9d9d9d'
+function lib:ItemLinkToColor(link)
+    return strmatch(link or "", "(|c[A-Za-z0-9]*)|")
+end
+-- itemId (1), enchantId (2), gemId1 (3), gemId2 (4), gemId3(5), gemId4(6), suffixId(7), uniqueId(8), linkLevel(9)
+-- neutralization removes uniqueId and linkLevel, leaving rest unchanged
+local NEUTRALIZE_ITEM_PATTERN = "item:(%d*):(%d*):(%d*):(%d*):(%d*):(%d*):(%d*):%d*:%d*"
+local NEUTRALIZE_ITEM_REPLACEMENT = "item:%1:%2:%3:%4:%5:%6:%7::"
 
-local NEUTRALIZE_ITEM_PATTERN = "item:(%d*):(%d*):(%d*):(%d*):(%d*):(%d*):(%d*):%d*:%d*:%d*"
-local NEUTRALIZE_ITEM_REPLACEMENT = "item:%1:%2:%3:%4:%5:%6:%7:::"
-
+-- 'item:22356:0:0:0:0:0:0:0:60' -> 'item:22356:0:0:0:0:0:0::'
+-- input can be an item link or item string, in each case the item string is neutralized
 function lib:NeutralizeItem(item)
     return item:gsub(NEUTRALIZE_ITEM_PATTERN, NEUTRALIZE_ITEM_REPLACEMENT)
 end

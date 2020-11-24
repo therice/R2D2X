@@ -1,6 +1,6 @@
 local _, AddOn = ...
 local L, Logging, Util, Rx = AddOn.Locale, AddOn:GetLibrary('Logging'), AddOn:GetLibrary('Util'), AddOn:GetLibrary('Rx')
-local Subject, Comms, Compression = Rx.rx.Subject, AddOn.Package('Core'):Class('Comms'), Util.Compression
+local Subject, Compression = Rx.rx.Subject, Util.Compression
 local C, Compressor = AddOn.Constants, Compression.GetCompressors(Compression.CompressorType.LibDeflate)[1]
 
 --- scrubs passed value for transmission over the wire
@@ -36,12 +36,16 @@ local function ScrubData(...)
 end
 
 -- private stuff only for use within this scope
+--- @class Core.Comms
+--- @field public subjects Core.Comms
+--- @field public registered Core.Comms
+--- @field public AceComm Core.Comms
+local Comms = AddOn.Package('Core'):Class('Comms')
 function Comms:initialize()
     self.subjects = {}
     self.registered = {}
     self.AceComm = {}
 end
-
 
 function Comms:Subject(prefix, command)
     local name = prefix .. (command or "")
@@ -122,7 +126,6 @@ end
 
 function Comms:SendComm(prefix, target, prio, callback, callbackarg, command, ...)
     local toSend = self:PrepareForSend(command, ...)
-
     Logging:Debug("SendComm(%s, %s, %s) : %s (%d)",
             prefix, Util.Objects.ToString(target), command,
             '[omitted]', #toSend
@@ -149,6 +152,7 @@ end
 
 
 -- anything attached to 'Comm' will be available via the instance
+
 local Comm = AddOn.Instance(
         'Core.Comm',
         function()
