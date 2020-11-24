@@ -9,7 +9,7 @@ local ItemUtil =  AddOn:GetLibrary("ItemUtil")
 --- @type LibGearPoints
 local LibGP = AddOn:GetLibrary("GearPoints")
 --- @type UI.Ace
-local AceUI = AddOn.Require('UI.Ace'), AddOn.Require('UI.Util')
+local AceUI = AddOn.Require('UI.Ace')
 --- @type UI.Util
 local UIUtil = AddOn.Require('UI.Util')
 --- @class GearPoints
