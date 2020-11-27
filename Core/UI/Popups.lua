@@ -1,3 +1,4 @@
+--- @type AddOn
 local _, AddOn = ...
 local L, Util, Dialog, UIUtil =
     AddOn.Locale, AddOn:GetLibrary("Util"), AddOn:GetLibrary("Dialog"), AddOn.Require('UI.Util')

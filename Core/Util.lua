@@ -1,5 +1,11 @@
+--- @type AddOn
 local _, AddOn = ...
-local L, Logging, Util = AddOn.Locale, AddOn:GetLibrary('Logging'), AddOn:GetLibrary('Util')
+local L, C = AddOn.Locale, AddOn.Constants
+--- @type LibLogging
+local Logging =  AddOn:GetLibrary("Logging")
+--- @type LibUtil
+local Util =  AddOn:GetLibrary("Util")
+--- @type Models.Player
 local Player = AddOn.ImportPackage('Models').Player
 
 local function bbit(p) return 2 ^ (p - 1) end
@@ -41,7 +47,6 @@ end
 function AddOn:Qualify(...)
     return Util.Strings.Join('_', self.Constants.name, ...)
 end
-
 
 function AddOn:IsInNonInstance()
     local instanceType = select(2, IsInInstance())
@@ -140,14 +145,70 @@ AddOn.FilterClassesByFactionFn = function(class)
 end
 
 function AddOn.ConvertIntervalToString(years, months, days)
-
     local text = format(L["n_days"], days)
-
     if years > 0 then
         text = format(L["n_years_and_n_months_and_n_days"], years, months, text)
     elseif months > 0 then
         text = format(L["n_months_and_n_days"], months, text)
     end
-
     return text
+end
+
+local function GetAverageItemLevel()
+    local sum, count = 0, 0
+    for i= INVSLOT_FIRST_EQUIPPED, INVSLOT_LAST_EQUIPPED do
+        local link = GetInventoryItemLink(C.player, i)
+        if not Util.Strings.IsEmpty(link)  then
+            local ilvl = select(4, GetItemInfo(link)) or 0
+            sum = sum + ilvl
+            count = count + 1
+        end
+    end
+    return Util.Numbers.Round(sum / count, 2)
+end
+
+local enchanting_localized_name
+function AddOn:GetPlayerInfo()
+    Logging:Trace("GetPlayerInfo()")
+    if not enchanting_localized_name then
+        enchanting_localized_name = GetSpellInfo(7411)
+    end
+
+    local enchant, lvl = false, 0
+    for i = 1, GetNumSkillLines() do
+        -- Cycle through all lines under "Skill" tab on char
+        local skillName, _, _, skillRank  = GetSkillLineInfo(i)
+        if Util.Strings.Equal(skillName, enchanting_localized_name) then
+            enchant, lvl = true, skillRank
+            break
+        end
+    end
+
+    local avgItemLevel = GetAverageItemLevel()
+    return self.guildRank, enchant, lvl, avgItemLevel
+end
+
+function AddOn:UpdatePlayerGear(startSlot, endSlot)
+    startSlot = startSlot or INVSLOT_FIRST_EQUIPPED
+    endSlot = endSlot or INVSLOT_LAST_EQUIPPED
+    Logging:Trace("UpdatePlayerGear(%d, %d)", startSlot, endSlot)
+    for i = startSlot, endSlot do
+        local link = GetInventoryItemLink("player", i)
+        if link then
+            local name = GetItemInfo(link)
+            if name then
+                self.playerData.gear[i] = link
+            else
+                self:ScheduleTimer("UpdatePlayerGear", 1, i, i)
+            end
+        else
+            self.playerData.gear[i] = nil
+        end
+    end
+end
+
+function AddOn:UpdatePlayerData()
+    Logging:Trace("UpdatePlayerData()")
+    self.playerData.ilvl = GetAverageItemLevel()
+    self:UpdatePlayerGear()
 end

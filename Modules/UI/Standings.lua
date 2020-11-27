@@ -1,16 +1,35 @@
+--- @type AddOn
 local _, AddOn = ...
-local L, C, Logging, Util, ItemUtil, Dialog =
-    AddOn.Locale, AddOn.Constants,
-    AddOn:GetLibrary("Logging"), AddOn:GetLibrary("Util"),
-    AddOn:GetLibrary("ItemUtil"), AddOn:GetLibrary("Dialog")
-local UI, UIUtil, MI, ST, DropDown =
-    AddOn.Require('UI.Native'), AddOn.Require('UI.Util'), AddOn.Require('UI.MoreInfo'),
-    AddOn.Require('UI.ScrollingTable'), AddOn.Require('UI.DropDown')
-local Award, STColumnBuilder, STCellBuilder =
-    AddOn.Package('Models').Award, AddOn.Package('UI.ScrollingTable').ColumnBuilder,
-    AddOn.Package('UI.ScrollingTable').CellBuilder
-local AceUI, Date, DateFormat = AddOn.Require('UI.Ace'),  AddOn.Package('Models').Date,
-    AddOn.Package('Models').DateFormat
+local L, C  = AddOn.Locale, AddOn.Constants
+--- @type LibLogging
+local Logging =  AddOn:GetLibrary("Logging")
+--- @type LibUtil
+local Util =  AddOn:GetLibrary("Util")
+--- @type LibItemUtil
+local ItemUtil = AddOn:GetLibrary("ItemUtil")
+local Dialog = AddOn:GetLibrary("Dialog")
+--- @type UI.Native
+local UI =  AddOn.Require('UI.Native')
+--- @type UI.Util
+local UIUtil = AddOn.Require('UI.Util')
+--- @type UI.MoreInfo
+local MI = AddOn.Require('UI.MoreInfo')
+--- @type UI.ScrollingTable
+local ST = AddOn.Require('UI.ScrollingTable')
+--- @type UI.DropDown
+local DropDown =  AddOn.Require('UI.DropDown')
+--- @type Models.Award
+local Award = AddOn.Package('Models').Award
+--- @type UI.ScrollingTable.ColumnBuilder
+local STColumnBuilder = AddOn.Package('UI.ScrollingTable').ColumnBuilder
+--- @type UI.ScrollingTable.CellBuilder
+local STCellBuilder = AddOn.Package('UI.ScrollingTable').CellBuilder
+--- @type UI.Ace
+local AceUI = AddOn.Require('UI.Ace')
+--- @type Models.Date
+local Date = AddOn.Package('Models').Date
+--- @type Models.DateFormat
+local DateFormat = AddOn.Package('Models').DateFormat
 
 --- @type Standings
 local Standings = AddOn:GetModule("Standings", true)

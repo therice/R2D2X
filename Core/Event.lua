@@ -1,6 +1,15 @@
+--- @type AddOn
 local _, AddOn = ...
-local L, Logging, Util, Rx = AddOn.Locale, AddOn:GetLibrary('Logging'), AddOn:GetLibrary('Util'), AddOn:GetLibrary('Rx')
-local C, Subject = AddOn.Constants, Rx.rx.Subject
+--- @type LibLogging
+local Logging =  AddOn:GetLibrary("Logging")
+--- @type LibUtil
+local Util =  AddOn:GetLibrary("Util")
+--- @type LibRx
+local Rx = AddOn:GetLibrary("Rx")
+--- @type rx.Subject
+local Subject = Rx.rx.Subject
+--- @type Models.Metrics
+local Metrics = AddOn.Package('Models').Metrics
 
 -- private stuff only for use within this scope
 --- @class Core.Events
@@ -11,14 +20,15 @@ local Events = AddOn.Package('Core'):Class('Events')
 function Events:initialize()
     self.registered = {}
     self.subjects = {}
+    -- tracks the stats for received events
+    self.metricsRcv = Metrics("EventsReceived")
     self.AceEvent = {}
 end
 
+--- @return rx.Subject
 function Events:Subject(event)
     local name = event
-    if not self.subjects[name] then
-        self.subjects[name] = Subject.create()
-    end
+    if not self.subjects[name] then self.subjects[name] = Subject.create() end
     return self.subjects[name]
 end
 
@@ -33,12 +43,15 @@ function Events:RegisterEvent(event)
     if not self.registered[event] then
         Logging:Trace("RegisterEvent(%s) : registering 'self' with AceEvent", event)
         self.registered[event] = true
-        self.AceEvent:RegisterEvent(event, function(event, ...) return self:HandleEvent(event, ...) end)
+        self.AceEvent:RegisterEvent(
+                event,
+                self.metricsRcv:Timer(event):Timed(function(event, ...) return self:HandleEvent(event, ...) end)
+        )
     end
 end
 
-
 -- anything attached to 'Event' will be available via the instance
+--- @class Core.Event
 local Event = AddOn.Instance(
         'Core.Event',
         function()
@@ -50,6 +63,7 @@ local Event = AddOn.Instance(
 
 AddOn:GetLibrary('AceEvent'):Embed(Event.private.AceEvent)
 
+--- @return rx.Subscription
 function Event:Subscribe(event, func)
     assert(Util.Strings.IsSet(event), "'event' was not provided")
     assert(Util.Objects.IsFunction(func), "'func' was not provided")
@@ -58,6 +72,7 @@ function Event:Subscribe(event, func)
     return self.private:Subject(event):subscribe(func)
 end
 
+--- @return table<number, rx.Subscription>
 function Event:BulkSubscribe(funcs)
     assert(
             funcs and Util.Objects.IsTable(funcs) and
@@ -71,6 +86,8 @@ function Event:BulkSubscribe(funcs)
                     ) == Util.Tables.Count(funcs),
             "each 'func' table entry must be an event(string) to function mapping"
     )
+
+    Logging:Trace("BulkSubscribe(%d)", Util.Tables.Count(funcs))
 
     local subs, idx = {}, 1
     for event, func in pairs(funcs) do

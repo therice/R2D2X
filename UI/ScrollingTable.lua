@@ -1,10 +1,20 @@
 local _, AddOn = ...
-local Logging, Util, ST =
-    AddOn:GetLibrary('Logging'), AddOn:GetLibrary('Util'), AddOn:GetLibrary('ScrollingTable')
+local L, C  = AddOn.Locale, AddOn.Constants
+--- @type LibLogging
+local Logging =  AddOn:GetLibrary("Logging")
+--- @type LibUtil
+local Util =  AddOn:GetLibrary("Util")
+--- @type LibScrollingTable
+local ST = AddOn:GetLibrary('ScrollingTable')
+--- @type UI.Util
 local UIUtil = AddOn.Require('UI.Util')
 local Package = AddOn.Package('UI.ScrollingTable')
-local Attributes, Builder = AddOn.Package('UI.Util').Attributes, AddOn.Package('UI.Util').Builder
+--- @type UI.Util.Attributes
+local Attributes = AddOn.Package('UI.Util').Attributes
+--- @type UI.Util.Builder
+local Builder = AddOn.Package('UI.Util').Builder
 
+--- @class Column
 local Column = AddOn.Class('Column', Attributes)
 -- ST column entry
 function Column:initialize() Attributes.initialize(self, {}) end
@@ -26,7 +36,7 @@ function ColumnBuilder:initialize()
 end
 function ColumnBuilder:column(name) return self:entry(Column):named(name) end
 
-
+---- @class Cell
 local Cell = AddOn.Class('Cell', Attributes)
 function Cell:initialize(value)
     Attributes.initialize(self, {})
@@ -36,26 +46,85 @@ end
 function Cell:color(color) return self:set('color', color) end
 function Cell:DoCellUpdate(fn) return self:set('DoCellUpdate', fn)end
 
+--- @class ClassIconCell
 local ClassIconCell = AddOn.Class('ClassIconCell', Cell)
 function ClassIconCell:initialize(value, class)
     Cell.initialize(self, value)
     self:DoCellUpdate(
-    function(_, frame)
+        function(_, frame)
             local coords = CLASS_ICON_TCOORDS[Util.Strings.Upper(class)]
             if coords then
                 frame:SetNormalTexture("Interface\\GLUES\\CHARACTERCREATE\\UI-CHARACTERCREATE-CLASSES")
                 frame:GetNormalTexture():SetTexCoord(unpack(coords))
             else
-                frame:SetNormalTexture("Interface/ICONS/INV_Misc_QuestionMark.PNG")
+                frame:SetNormalTexture("Interface/ICONS/INV_Misc_QuestionMark.png")
             end
         end
     )
 end
 
+--- @class ClassColoredCell
 local ClassColoredCell = AddOn.Class('ClassColoredCell', Cell)
 function ClassColoredCell:initialize(value, class)
     Cell.initialize(self, value)
     self:color(UIUtil.GetClassColor(class))
+end
+
+--- @class DeleteButtonCell
+local DeleteButtonCell = AddOn.Class('DeleteButtonCell', Cell)
+function DeleteButtonCell:initialize(fn)
+    Cell.initialize(self, nil)
+    self:DoCellUpdate(
+            function(_, frame, data, _, _, realrow)
+                -- todo : prevent repeated textures and OnEnter/OnLeave?
+                frame:SetNormalTexture("Interface/BUTTONS/UI-GroupLoot-Pass-Up.png")
+                frame:SetScript("OnEnter", function()
+                    UIUtil:CreateTooltip(L['double_click_to_delete_this_entry'])
+                end)
+                frame:SetScript("OnLeave", function() UIUtil:HideTooltip() end)
+                frame:SetScript(
+                        "OnClick",
+                        function()
+                            if frame.lastClick and GetTime() - frame.lastClick <= 0.5 then
+                                frame.lastClick = nil
+                                fn(data, realrow)
+                            else
+                                frame.lastClick = GetTime()
+                            end
+                        end
+                )
+                frame:SetSize(20,20)
+            end
+    )
+end
+
+--- @class ItemIconCell
+local ItemIconCell = AddOn.Class('ItemIconCell', Cell)
+function ItemIconCell:initialize(link, texture)
+    Cell.initialize(self, nil)
+    self:DoCellUpdate(
+            function(_, frame)
+                frame:SetNormalTexture(texture or "Interface/ICONS/INV_Misc_QuestionMark.png")
+                frame:SetScript("OnEnter", function() UIUtil:CreateHypertip(link) end)
+                frame:SetScript("OnLeave", function() UIUtil:HideTooltip() end)
+                frame:SetScript("OnClick", function() if IsModifiedClick() then HandleModifiedItemClick(link) end end)
+            end
+    )
+end
+
+--- @class TextCell
+local TextCell = AddOn.Class('TextCell', Cell)
+function TextCell:initialize(value, fn)
+    Cell.initialize(self, value)
+    self:DoCellUpdate(
+            function(_, frame, data, _, _, realrow)
+                if frame.text:GetFontObject() ~= _G.GameFontNormal then
+                    frame.text:SetFontObject("GameFontNormal")
+                end
+
+                fn(data, realrow)
+            end
+    )
 end
 
 --- @class UI.ScrollingTable.CellBuilder
@@ -65,23 +134,45 @@ function CellBuilder:initialize()
     tinsert(self.embeds, 'cell')
     tinsert(self.embeds, 'classIconCell')
     tinsert(self.embeds, 'classColoredCell')
+    tinsert(self.embeds, 'deleteCell')
+    tinsert(self.embeds, 'itemIconCell')
+    tinsert(self.embeds, 'textCell')
 end
 
+--- @return Cell
 function CellBuilder:cell(value)
     return self:entry(Cell, value)
 end
 
+--- @return ClassIconCell
 function CellBuilder:classIconCell(class)
     return self:entry(ClassIconCell, class, class)
 end
 
+--- @return ClassColoredCell
 function CellBuilder:classColoredCell(value, class)
     return self:entry(ClassColoredCell, value, class)
+end
+
+--- @return DeleteButtonCell
+function CellBuilder:deleteCell(fn)
+    return self:entry(DeleteButtonCell, fn)
+end
+
+--- @return ItemIconCell
+function CellBuilder:itemIconCell(link, texture)
+    return self:entry(ItemIconCell, link, texture)
+end
+
+--- @return TextCell
+function CellBuilder:textCell(value, fn)
+    return self:entry(TextCell, value)
 end
 
 local DefaultRowCount, DefaultRowHeight, DefaultHighlight =
     20, 25, { ["r"] = 1.0, ["g"] = 0.9, ["b"] = 0.0, ["a"] = 0.5 }
 
+--- @class UI.ScrollingTable
 local ScrollingTable = AddOn.Instance(
         'UI.ScrollingTable',
         function()
@@ -90,6 +181,13 @@ local ScrollingTable = AddOn.Instance(
             }
         end
 )
+
+--- @return UI.ScrollingTable.ColumnBuilder
+function ScrollingTable.ColumnBuilder()
+    return ColumnBuilder()
+end
+
+--- @return table
 function ScrollingTable.New(cols, rows, rowHeight, highlight, frame)
     cols = cols or {}
     rows = rows or DefaultRowCount
@@ -107,15 +205,15 @@ function ScrollingTable.New(cols, rows, rowHeight, highlight, frame)
     return st
 end
 
+--- @return function
 function ScrollingTable.SortFn(valueFn)
     return function(table, rowa, rowb, sortbycol)
         return ScrollingTable.Sort(table, rowa, rowb, sortbycol, valueFn)
     end
 end
 
-function ScrollingTable.Sort(
-        table, rowa, rowb, sortbycol, valueFn
-)
+--- @return boolean
+function ScrollingTable.Sort(table, rowa, rowb, sortbycol, valueFn)
     local column = table.cols[sortbycol]
     local row1, row2 = table:GetRow(rowa), table:GetRow(rowb)
     local v1, v2 = valueFn(row1), valueFn(row2)

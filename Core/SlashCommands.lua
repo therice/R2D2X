@@ -1,3 +1,4 @@
+--- @type AddOn
 local _, AddOn = ...
 local L, C, Logging, Util, Rx = AddOn.Locale, AddOn.Constants, AddOn:GetLibrary('Logging'), AddOn:GetLibrary('Util'), AddOn:GetLibrary('Rx')
 local Subject = Rx.rx.Subject
@@ -85,6 +86,7 @@ function SlashCommandsInternal:Subject(cmds)
     return self.subjects[first]
 end
 
+--- @class Core.SlashCommands
 local SlashCommands = AddOn.Instance(
         'Core.SlashCommands',
         function()

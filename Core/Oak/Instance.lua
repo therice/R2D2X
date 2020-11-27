@@ -1,3 +1,4 @@
+--- @type AddOn
 local _, AddOn = ...
 local Util = LibStub("LibUtil-1.1")
 

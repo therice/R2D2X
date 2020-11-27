@@ -1,7 +1,22 @@
+--- @type AddOn
 local _, AddOn = ...
-local L, Logging, Util, Rx = AddOn.Locale, AddOn:GetLibrary('Logging'), AddOn:GetLibrary('Util'), AddOn:GetLibrary('Rx')
-local Subject, Compression = Rx.rx.Subject, Util.Compression
-local C, Compressor = AddOn.Constants, Compression.GetCompressors(Compression.CompressorType.LibDeflate)[1]
+local C = AddOn.Constants
+--- @type LibLogging
+local Logging =  AddOn:GetLibrary("Logging")
+--- @type LibUtil
+local Util =  AddOn:GetLibrary("Util")
+--- @type LibRx
+local Rx = AddOn:GetLibrary("Rx")
+--- @type rx.Subject
+local Subject = Rx.rx.Subject
+--- @type LibUtil.Compression
+local Compression = Util.Compression
+--- @type LibUtil.Compression.Compressor
+local Compressor = Compression.GetCompressors(Compression.CompressorType.LibDeflate)[1]
+--- @type Models.Metrics
+local Metrics = AddOn.Package('Models').Metrics
+--- @type Models.Player
+local Player = AddOn.Package('Models').Player
 
 --- scrubs passed value for transmission over the wire
 -- specifically, entries that are modeled as classes via LibClass
@@ -44,7 +59,16 @@ local Comms = AddOn.Package('Core'):Class('Comms')
 function Comms:initialize()
     self.subjects = {}
     self.registered = {}
-    self.AceComm = {}
+    -- tracks the metrics for received commands (by prefix)
+    -- these metrics include decompress and fire timings
+    self.metricsRecv = Metrics("CommReceived")
+    -- tracks the metrics for fired commands (by prefix and command)
+    -- these metrics only include fire (processing) timings
+    self.metricsFired = Metrics("CommFired")
+    -- tracks the metrics for sent commands (by prefix and command)
+    -- these metrics include compression and sending timings
+    self.metricsSend = Metrics("CommSent")
+    self.AceComm  = {}
 end
 
 function Comms:Subject(prefix, command)
@@ -106,7 +130,9 @@ function Comms:ReceiveComm(prefix, msg, dist, sender)
     Logging:Debug("ReceiveComm(%s) : via=%s, sender=%s,%s", prefix, dist, sender, senderName)
     local success, command, data = self:ProcessReceived(msg)
     if success then
-        self:FireCommand(prefix, dist, senderName, command, data)
+        self.metricsFired:Timer(Util.Strings.Join(':', prefix, command or "")):Time(
+            function(...) self:FireCommand(prefix, dist, senderName, command, data) end
+        )
     end
 end
 
@@ -120,39 +146,52 @@ function Comms:RegisterComm(prefix)
     if not self.registered[prefix] then
         Logging:Trace("RegisterComm(%s) : registering 'self' with AceComm", prefix)
         self.registered[prefix] = true
-        self.AceComm:RegisterComm(prefix, function(...) return self:ReceiveComm(...) end)
+        self.AceComm:RegisterComm(
+                prefix,
+                self.metricsRecv:Timer(prefix):Timed(function(...) return self:ReceiveComm(...) end)
+        )
     end
 end
 
 function Comms:SendComm(prefix, target, prio, callback, callbackarg, command, ...)
-    local toSend = self:PrepareForSend(command, ...)
-    Logging:Debug("SendComm(%s, %s, %s) : %s (%d)",
-            prefix, Util.Objects.ToString(target), command,
-            '[omitted]', #toSend
-    )
+    self.metricsSend:Timer(Util.Strings.Join(':', prefix, command or "")):Time(
+        function(...)
+            local toSend = self:PrepareForSend(command, ...)
+            local isPlayer = (Util.Objects.IsTable(target) and target:isInstanceOf(Player))
 
-    if target == C.group then
-        local channel, player = self:GroupChannel()
-        self.AceComm:SendCommMessage(prefix, toSend, channel, player, prio, callback, callbackarg)
-    elseif target == C.guild then
-        self.AceComm:SendCommMessage(prefix, toSend, C.Channels.Guild, nil, prio, callback, callbackarg)
-    else
-        target = Util.Objects.IsTable(target) and target:GetName() or target
-        Logging:Debug("SendComm() : %s", target)
-        -- If target == "player"
-        if AddOn.UnitIsUnit(target, C.player) then
-            Logging:Debug("SendComm() : UnitIsUnit(true), %s", AddOn.player.name)
-            self.AceComm:SendCommMessage(prefix, toSend, C.Channels.Whisper, AddOn.player:GetName(), prio, callback, callbackarg)
-        else
-            Logging:Debug("SendComm() : UnitIsUnit(false), %s", target)
-            self.AceComm:SendCommMessage(prefix, toSend, C.Channels.Whisper, target, prio, callback, callbackarg)
-        end
-    end
+            Logging:Trace("SendComm(%s, %s, %s) : %s (%d)", prefix,
+                          isPlayer and target:GetName() or Util.Objects.ToString(target),
+                          command, '[omitted]', #toSend
+            )
+
+            if target == C.group then
+                local channel, player = self:GroupChannel()
+                Logging:Trace("SendComm(%s, %s)", tostring(channel), tostring(player))
+                self.AceComm:SendCommMessage(prefix, toSend, channel, player, prio, callback, callbackarg)
+            elseif target == C.guild then
+                Logging:Trace("SendComm(%s, %s)", tostring(C.Channels.Guild), tostring(nil))
+                self.AceComm:SendCommMessage(prefix, toSend, C.Channels.Guild, nil, prio, callback, callbackarg)
+            else
+                target = isPlayer and target:GetName() or target
+                Logging:Debug("SendComm(%s)", target)
+                -- If target == "player"
+                if AddOn.UnitIsUnit(target, C.player) then
+                    Logging:Trace("SendComm() : UnitIsUnit(true), %s", AddOn.player.name)
+                    self.AceComm:SendCommMessage(prefix, toSend, C.Channels.Whisper, AddOn.player:GetName(), prio,
+                                                 callback, callbackarg)
+                else
+                    Logging:Trace("SendComm() : UnitIsUnit(false), %s", target)
+                    self.AceComm:SendCommMessage(prefix, toSend, C.Channels.Whisper, target, prio, callback,
+                                                 callbackarg)
+                end
+            end
+        end,
+        ...
+    )
 end
 
-
 -- anything attached to 'Comm' will be available via the instance
-
+--- @class Core.Comm
 local Comm = AddOn.Instance(
         'Core.Comm',
         function()
@@ -165,6 +204,7 @@ local Comm = AddOn.Instance(
 AddOn:GetLibrary('AceComm'):Embed(Comm.private.AceComm)
 AddOn:GetLibrary('AceSerializer'):Embed(Comm.private)
 
+--- @return rx.Subscription
 function Comm:Subscribe(prefix, command, func)
     assert(prefix and type(prefix) == 'string', "subscription prefix was not provided")
     assert(tInvert(C.CommPrefixes)[prefix], format("'%s' is not a registered prefix", tostring(prefix)))
@@ -172,6 +212,7 @@ function Comm:Subscribe(prefix, command, func)
     return self.private:Subject(prefix, command):subscribe(func)
 end
 
+--- @return table<number, rx.Subscription>
 function Comm:BulkSubscribe(prefix, funcs)
     assert(funcs and type(funcs) == 'table', "functions must be a table")
     Logging:Trace("BulkSubscribe(%s) :%s", prefix, Util.Objects.ToString(funcs))
@@ -184,6 +225,7 @@ function Comm:BulkSubscribe(prefix, funcs)
     return subs
 end
 
+--- @return function
 function Comm:GetSender(prefix)
     assert(Util.Strings.IsSet(prefix), "prefix was not provided")
     self.private:RegisterComm(prefix)
@@ -204,9 +246,8 @@ function Comm:Send(args)
     assert(Util.Objects.IsSet(args.command), "command was not provided")
     args.data = Util.Objects.IsTable(args.data) and args.data or {args.data}
     self.private:SendComm(
-            args.prefix or C.CommPrefixes.Main, args.target or C.group, args.prio,
-            args.callback, args.callbackarg,
-            args.command, unpack(args.data)
+            args.prefix or C.CommPrefixes.Main, args.target or C.group,
+            args.prio, args.callback, args.callbackarg, args.command, unpack(args.data)
     )
 end
 

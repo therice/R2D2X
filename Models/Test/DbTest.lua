@@ -15,7 +15,6 @@ end
 describe("DB", function()
     setup(function()
         AddOnName, AddOn = loadfile("Test/TestSetup.lua")(true, 'Models_Db')
-        ConfigureLogging()
         loadfile('Models/Test/DbTestData.lua')()
         Util = AddOn:GetLibrary('Util')
         CompressedDb = AddOn.Package('Models').CompressedDb

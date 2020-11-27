@@ -1,3 +1,4 @@
+--- @type AddOn
 local _, AddOn = ...
 local L, C, Logging, Util, ItemUtil, ACD =
 	AddOn.Locale, AddOn.Constants, AddOn:GetLibrary("Logging"), AddOn:GetLibrary("Util"),

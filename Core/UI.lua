@@ -1,3 +1,4 @@
+--- @type AddOn
 local _, AddOn = ...
 local Logging, L, C, Util = AddOn:GetLibrary('Logging'), AddOn.Locale, AddOn.Constants, AddOn:GetLibrary('Util')
 local UIUtil = AddOn.Require('UI.Util')

@@ -1,3 +1,4 @@
+--- @type AddOn
 local name, AddOn = ...
 
 -- this will be first non-library file to load
@@ -56,6 +57,9 @@ AddOn.Constants = {
     Commands = {
         PlayerInfo              =   "pi",
         PlayerInfoRequest       =   "pir",
+        LootTable               =   "lt",
+        MasterLooterDbRequest   =   "mldbr",
+        Reconnect               =   "rct",
     },
 
     DropDowns = {
@@ -64,6 +68,7 @@ AddOn.Constants = {
     },
 
     Events = {
+        ChatMessageWhisper      =   "CHAT_MSG_WHISPER",
         EncounterEnd            =   "ENCOUNTER_END",
         EncounterStart          =   "ENCOUNTER_START",
         GroupLeft               =   "GROUP_LEFT",

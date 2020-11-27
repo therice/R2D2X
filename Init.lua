@@ -1,6 +1,7 @@
 local AceAddon, AceAddonMinor = LibStub('AceAddon-3.0')
 local AddOnName, AddOn = ...
 
+--- @class AddOn
 AddOn = AceAddon:NewAddon(AddOn, AddOnName, 'AceConsole-3.0', 'AceEvent-3.0', "AceSerializer-3.0", "AceHook-3.0", "AceTimer-3.0", "AceBucket-3.0")
 AddOn:SetDefaultModuleState(false)
 _G.R2D2X = AddOn

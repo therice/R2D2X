@@ -1,3 +1,4 @@
+--- @type AddOn
 local _, AddOn = ...
 local L, Logging = AddOn.Locale, AddOn:GetLibrary("Logging")
 local C, Comm = AddOn.Constants, AddOn.Require('Core.Comm')
@@ -9,7 +10,7 @@ function AddOn:SubscribeToPermanentComms()
 
         end,
         [C.Commands.PlayerInfo] = function(_, sender)
-
+            Logging:Debug("%s, %s", C.Commands.PlayerInfo, tostring(sender))
         end,
     })
 end

@@ -1,4 +1,6 @@
 local MAJOR, MINOR = "ScrollingTable", tonumber("15415439531")
+
+--- @class LibScrollingTable
 local lib, _ = LibStub:NewLibrary(MAJOR, MINOR);
 if not lib then return  end
 

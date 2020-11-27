@@ -3,4 +3,5 @@
     <Script file="Logging.lua" />
     <Script file="Standings.lua" />
     <Script file="GearPointsCustom.lua" />
+    <Script file="LootSession.lua" />
 </Ui>

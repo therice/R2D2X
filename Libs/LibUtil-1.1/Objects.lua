@@ -267,9 +267,7 @@ local Dispatchers = setmetatable({}, {__index=function(self, argCount)
     return dispatcher
 end})
 
-Dispatchers[0] = function(func)
-    return xpcall(func, errorhandler)
-end
+Dispatchers[0] = function(func) return xpcall(func, errorhandler) end
 
 ---@param func function
 function Self.Safecall(func, ...)

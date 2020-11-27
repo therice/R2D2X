@@ -106,6 +106,9 @@ describe("Comm", function()
             end)
 
             teardown(function()
+                print(Util.Objects.ToString(Comm.private.metricsSend:Summarize()))
+                print(Util.Objects.ToString(Comm.private.metricsRecv:Summarize()))
+                print(Util.Objects.ToString(Comm.private.metricsFired:Summarize()))
                 _sub:unsubscribe()
             end)
 

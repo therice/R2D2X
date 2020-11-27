@@ -359,6 +359,7 @@ end
 function lib:ItemLinkToColor(link)
     return strmatch(link or "", "(|c[A-Za-z0-9]*)|")
 end
+
 -- itemId (1), enchantId (2), gemId1 (3), gemId2 (4), gemId3(5), gemId4(6), suffixId(7), uniqueId(8), linkLevel(9)
 -- neutralization removes uniqueId and linkLevel, leaving rest unchanged
 local NEUTRALIZE_ITEM_PATTERN = "item:(%d*):(%d*):(%d*):(%d*):(%d*):(%d*):(%d*):%d*:%d*"

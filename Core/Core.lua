@@ -1,7 +1,14 @@
+--- @type AddOn
 local _, AddOn = ...
-local L, Logging, Util = AddOn.Locale, AddOn:GetLibrary("Logging"), AddOn:GetLibrary('Util')
-local C, SlashCommands, Player =
-    AddOn.Constants, AddOn.Require('Core.SlashCommands'), AddOn.ImportPackage('Models').Player
+local L, C = AddOn.Locale, AddOn.Constants
+--- @type LibLogging
+local Logging =  AddOn:GetLibrary("Logging")
+--- @type LibUtil
+local Util =  AddOn:GetLibrary("Util")
+--- @type Core.SlashCommands
+local SlashCommands = AddOn.Require('Core.SlashCommands')
+--- @type Models.Player
+local Player = AddOn.ImportPackage('Models').Player
 
 local function ModeToggle(self, flag)
     if self.mode:Enabled(flag) then self.mode:Disable(flag) else self.mode:Enable(flag) end
@@ -77,6 +84,17 @@ function AddOn:StandingsModule()
     return self:GetModule("Standings")
 end
 
+--- @return LootSession
+function AddOn:LootSessionModule()
+    return self:GetModule("LootSession")
+end
+
+--- @return MasterLooter
+function AddOn:MasterLooterModule()
+    return self:GetModule("MasterLooter")
+end
+
+
 function AddOn:RegisterChatCommands()
     Logging:Debug("RegisterChatCommands(%s)", self:GetName())
     SlashCommands:BulkSubscribe(
@@ -91,6 +109,14 @@ function AddOn:RegisterChatCommands()
                 function()
                     AddOn.Package('Models').Player.ClearCache()
                     self:Print("Player cache cleared")
+                end,
+            },
+            {
+                {'clearic', 'cic'},
+                L['clear_item_cache_desc'],
+                function()
+                    AddOn.Package('Models.Item').Item.ClearCache()
+                    self:Print("Item cache cleared")
                 end,
             },
             {

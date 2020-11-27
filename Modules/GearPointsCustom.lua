@@ -10,6 +10,8 @@ local AceUI = AddOn.Require('UI.Ace')
 local GuildStorage = AddOn:GetLibrary("GuildStorage")
 --- @type LibItemUtil
 local ItemUtil =  AddOn:GetLibrary("ItemUtil")
+--- @type Models.Item.Item
+local Item = AddOn.Package('Models.Item').Item
 local ACR = AddOn:GetLibrary('AceConfigRegistry')
 --- @class GearPointsCustom
 local GpCustom = AddOn:NewModule("GearPointsCustom", "AceBucket-3.0")
@@ -87,6 +89,7 @@ function GpCustom:AddItem(item)
 		-- remove id from table, don't want to store it
 		item['id'] = nil
 		AddOn.SetDbValue(GpCustom, {'custom_items.'.. id}, item)
+		Item.ClearCache(item)
 		ACR:NotifyChange(C.name)
 	end
 end
@@ -101,6 +104,7 @@ function GpCustom:RemoveItem(item)
 	-- could do this, but don't get the callback for configuration change
 	-- GpCustom.db.profile.custom_items[item] = nil
 	AddOn.SetDbValue(GpCustom, {'custom_items.'..item}, nil)
+	Item.ClearCache(item)
 	ACR:NotifyChange(C.name)
 end
 

@@ -2,7 +2,7 @@ local AddOnName, AddOn, C, Util, Event
 
 describe("Event", function()
     setup(function()
-        AddOnName, AddOn = loadfile("Test/TestSetup.lua")(true, 'Core_SlashCommands')
+        AddOnName, AddOn = loadfile("Test/TestSetup.lua")(true, 'Core_Event')
         C, Util, Event = AddOn.Constants, AddOn:GetLibrary('Util'), AddOn.Require('Core.Event')
     end)
     teardown(function()
@@ -72,6 +72,7 @@ describe("Event", function()
 
 
             teardown(function()
+                print(Util.Objects.ToString(Event.private.metricsRcv:Summarize()))
                 _sub:unsubscribe()
                 _G.IsLoggedIn = function() return false end
             end)
@@ -126,6 +127,7 @@ describe("Event", function()
 
 
             teardown(function()
+                print(Util.Objects.ToString(Event.private.metricsRcv:Summarize()))
                 for _, _sub in pairs(_subs) do
                     _sub:unsubscribe()
                 end

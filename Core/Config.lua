@@ -40,6 +40,13 @@ local function BuildConfigOptions()
                                         AddOn:Print("Player cache cleared")
                                     end
                             )
+                        :execute('clearICache', L["clear_item_cache"]):desc(L["clear_item_cache_desc"]):order(8)
+                            :set('func',
+                                 function ()
+                                     AddOn.Package('Models.Item').Item.ClearCache()
+                                     AddOn:Print("Item cache cleared")
+                                 end
+                            )
 
     -- set point to location where to add subsequent options
     ConfigBuilder:SetPath('args')

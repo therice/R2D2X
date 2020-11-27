@@ -1,6 +1,7 @@
 -- Functionality below is intended to provide package/class like semantics to Lua
 -- Extremely rudimentary, but provides easy and consistent mechanism to namespace and define classes
 -- Both package and class support based upon LibClass library
+--- @type AddOn
 local _, AddOn = ...
 local Class = LibStub("LibClass-1.0")
 
@@ -32,7 +33,7 @@ function Package:__index(name)
 end
 
 -- define a new class which isn't associated with a package
--- useful for scoping classes to only hwere needed
+-- useful for scoping classes to only where needed
 function AddOn.Class(name, super)
     -- class names must always be string
     assert(name and type(name) == 'string', 'Class name was not provided')

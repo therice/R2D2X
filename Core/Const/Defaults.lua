@@ -1,3 +1,4 @@
+--- @type AddOn
 local _, AddOn = ...
 local Logging = LibStub("LibLogging-1.0")
 

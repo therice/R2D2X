@@ -49,6 +49,7 @@ function EntryBuilder:build()
     return built
 end
 
+--- @class UI.DropDown
 local DropDown = AddOn.Instance(
         'UI.DropDown',
         function()

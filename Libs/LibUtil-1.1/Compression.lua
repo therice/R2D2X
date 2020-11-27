@@ -47,6 +47,7 @@ local Encoders = {
     [Self.EncoderType.LibDeflate]  = LibDeflateEncoder()
 }
 
+--- @class LibUtil.Compression.Compressor
 local Compressor = Class('Compressor')
 local LibDeflateCompressor = Class('LibDeflateCompressor', Compressor)
 

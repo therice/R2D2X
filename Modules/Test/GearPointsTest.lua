@@ -61,6 +61,7 @@ describe("GearPoints", function()
         end
 
         GameTooltip:GetScript('OnTooltipSetItem')(tt)
+        print(Util.Objects.ToString(lines))
         assert(#tt.lines == 2)
     end)
 end)

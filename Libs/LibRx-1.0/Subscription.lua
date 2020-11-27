@@ -1,7 +1,7 @@
 local Lib = LibStub("LibRx-1.0", true)
 local Util = LibStub("LibUtil-1.1", true)
 
---- @class Subscription
+--- @class rx.Subscription
 local Subscription = Lib:_DefineClass('rx', 'Subscription')
 Subscription.__index = Subscription
 

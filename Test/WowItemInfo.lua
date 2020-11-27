@@ -9,7 +9,7 @@
 -- itemType : Localized name of the item’s class/type.
 -- itemSubType : Localized name of the item’s subclass/subtype.
 -- itemEquipLoc : Non-localized token identifying the inventory type of the item
-local IdToInfo = {
+local Items = {
     -- https://classic.wowhead.com/item=18832/brutality-blade
     [18832] = {
         'Brutality Blade',
@@ -57,41 +57,34 @@ local IdToInfo = {
     }
 }
 
+local function ItemId(item)
+    if type(item) == 'string' then
+        if string.match(item,"^%d+$") then
+            item = tonumber(item)
+        else
+            item = tonumber(strmatch(item or "", ".*item:(%d+):"))
+        end
+    end
+    return item
+end
+
 -- item can be one of following input types
 -- 	Numeric ID of the item. e.g. 30234
 -- 	Name of an item owned by the player at some point during this play session, e.g. "Nordrassil Wrath-Kilt"
 --  A fragment of the itemString for the item, e.g. "item:30234:0:0:0:0:0:0:0" or "item:30234"
 --  The full itemLink (e.g. |cff9d9d9d|Hitem:7073:0:0:0:0:0:0:0:80:0|h[Broken Fang]|h|r )
 local function ItemInfo(item)
-    -- Numeric ID of the item. e.g. 30234
-    if type(item) == 'number' or tonumber(item) ~= nil then
-        return item, IdToInfo[tonumber(item)] or {}
-    end
-
-    if type(item) == 'string' then
-        -- Check if item string or full link
-        local id = strmatch(item or "", "item:(%d+):")
-        -- print(item .. ' -> ' .. tostring(id))
-        if id and id ~= "" then
-            return tonumber(id), IdToInfo[tonumber(id)]
-            -- it's an item name
-        else
-            for id, info in pairs(IdToInfo) do
-                if info[1] == item then
-                    return id, info or {}
-                end
-            end
-
-        end
-    end
-
-    return 0, {}
+    local id = ItemId(item)
+    return id, Items[id] or {}
 end
 
--- todo : GetItemInfo and GetItemInfoInstant only support number params at moment
 _G.GetItemInfo = function(item)
-    local _, info = ItemInfo(item)
-    return unpack(info)
+    local id, info = ItemInfo(item)
+    if info and #info > 0 then
+        return unpack(info)
+    else
+        return "ItemName" .. id, "item:" .. id ..":0:0:0:0:0:0:0:" .. random(60)
+    end
 end
 
 -- itemID, itemType, itemSubType, itemEquipLoc, icon, itemClassID, itemSubClassID
@@ -99,7 +92,6 @@ end
 -- https://wow.gamepedia.com/API_GetItemInfoInstant
 _G.GetItemInfoInstant = function(item)
     local id, info = ItemInfo(item)
-
     if id > 0 then
         return id,
         info and info[6] or nil,

@@ -1,3 +1,4 @@
+--- @type AddOn
 local name, AddOn = ...
 local L, C, Util, DbIcon, DataBroker =
     AddOn.Locale, AddOn.Constants, AddOn:GetLibrary("Util"), AddOn:GetLibrary("DbIcon"), AddOn:GetLibrary("DataBroker")

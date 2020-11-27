@@ -1,8 +1,19 @@
+
+--- @type AddOn
 local _, AddOn = ...
-local L, Logging, GuildStorage = AddOn.Locale, AddOn:GetLibrary("Logging"), AddOn:GetLibrary('GuildStorage')
-local C, Comm, Player, SlashCommands =
-    AddOn.Constants, AddOn.Require('Core.Comm'), AddOn.ImportPackage('Models').Player,
-    AddOn.Require('Core.SlashCommands')
+local L, C = AddOn.Locale, AddOn.Constants
+--- @type LibLogging
+local Logging =  AddOn:GetLibrary("Logging")
+--- @type LibUtil
+local Util =  AddOn:GetLibrary("Util")
+--- @type LibGuildStorage
+local GuildStorage =  AddOn:GetLibrary('GuildStorage')
+--- @type Core.Comm
+local Comm = AddOn.Require('Core.Comm')
+--- @type Models.Player
+local Player = AddOn.ImportPackage('Models').Player
+--- @type Core.SlashCommands
+local SlashCommands = AddOn.Require('Core.SlashCommands')
 
 function AddOn:OnInitialize()
     Logging:Debug("OnInitialize(%s)", self:GetName())
@@ -10,7 +21,14 @@ function AddOn:OnInitialize()
     self.version = AddOn.Package('Models').SemanticVersion(self.version)
     -- bitfield which keeps track of our operating mode
     self.mode = AddOn.Package('Core').Mode()
+    -- is the addon enabled, can be altered at runtime
     self.enabled = true
+    -- tracks information about the player at time of login and when encounters begin
+    self.playerData = {
+        -- slot number -> item link
+        gear = {
+        }
+    }
     -- our guild (start off as unguilded, will get callback when ready to populate)
     self.guildRank = L["unguilded"]
     -- the master looter (Player)
@@ -26,7 +44,6 @@ function AddOn:OnInitialize()
     -- register slash commands
     SlashCommands:Register()
     self:RegisterChatCommands()
-
     -- setup comms
     Comm:Register(C.CommPrefixes.Main)
     Comm:Register(C.CommPrefixes.Version)
@@ -102,5 +119,6 @@ end
 
 function AddOn:OnDisable()
     Logging:Debug("OnDisable(%s)", self:GetName())
+    self:UnsubscribeFromEvents()
     SlashCommands:Unregister()
 end

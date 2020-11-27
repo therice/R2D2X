@@ -204,10 +204,53 @@ local MultiCreatureEncounters = {
 --- @param mapId number
 --- @return number
 function EP:ScaleIfRequired(value, mapId)
-	Logging:Trace("EP:ScaleIfRequired() : value = %s, mapId = %s", tostring(value), tostring(mapId))
+	Logging:Trace("ScaleIfRequired() : value = %s, mapId = %s", tostring(value), tostring(mapId))
+
+	if Util.Objects.IsNil(mapId) then
+		-- only applicable if in instance and part of a raid
+		if IsInInstance() and IsInRaid() then
+			_, _, _, _, _, _, _, mapId = GetInstanceInfo()
+			Logging:Trace("ScaleIfRequired() : mapId = %s via GetInstanceInfo()", tostring(mapId))
+		end
+
+		-- check again, if not found then return value
+		if Util.Objects.IsNil(mapId) then
+			Logging:Trace("ScaleIfRequired() : Unable to determine map id, returning original value")
+			return value
+		end
+	end
 
 	-- todo
-	return value
+	--[[
+	local raidScalingSettings
+	if next(AddOn.mlDb) and not Util.Objects.IsEmpty(AddOn:GetMasterLooterDbValue('raid', tostring(mapId))) then
+		raidScalingSettings = AddOn:GetMasterLooterDbValue('raid', tostring(mapId))
+		Logging:Debug("EP:ScaleIfRequired() : Scaling settings obtained from ML DB")
+	else
+		raidScalingSettings = self.db.profile.raid[tostring(mapId)]
+		Logging:Debug("EP:ScaleIfRequired() : Scaling settings obtained from Effort Points Module")
+	end
+	--]]
+
+	-- todo : remove after todo above is fixed
+	local raidScalingSettings = self.db.profile.raid.maps[tostring(mapId)]
+	Logging:Debug("ScaleIfRequired() : mapId = %s, scaling_settings = %s", tostring(mapId), Util.Objects.ToString(raidScalingSettings))
+	if raidScalingSettings then
+		local scaleAward = raidScalingSettings.scaling or false
+		local scalePct = raidScalingSettings.scaling_pct or 1.0
+		-- if the raid has reduced (scaled) awards, apply them now
+		if scaleAward then
+			local scaled = Util.Numbers.Round(value * scalePct)
+			Logging:Debug("ScaleIfRequired() : Scaling %d by %.1f %% = %d", value, (scalePct * 100.0), scaled)
+			return scaled
+		else
+			Logging:Debug("ScaleIfRequired() : Scaling disabled for mapId = %s , returning original value", tostring(mapId))
+			return value
+		end
+	else
+		Logging:Debug("ScaleIfRequired() : No scaling settings available for mapId = %s , returning original value", tostring(mapId))
+		return value
+	end
 end
 
 --- @param encounter Models.Encounter
@@ -264,11 +307,12 @@ function EP:OnEncounterEnd(encounter)
 			end
 		end
 
+		Logging:Debug("OnEncounterEnd(%s) : EP = %d",
+		              Util.Objects.ToString(encounter:toTable()), tonumber(creatureEp)
+		)
+
 		-- have EP and either victory or defeat with awarding of defeat EP
 		if creatureEp and (success or (not success and awardDefeat)) then
-			Logging:Debug("OnEncounterEnd(%s) : EP = %d",
-			              Util.Objects.ToString(encounter:toTable()), tonumber(creatureEp)
-			)
 			creatureEp = tonumber(creatureEp)
 			-- if defeat, scale EP based upon defeat percentage
 			if not success then
@@ -289,6 +333,7 @@ function EP:OnEncounterEnd(encounter)
 					creatureEp, encounter.name
 			)
 
+			-- Logging:Debug("OnEncounterEnd() : %s", Util.Objects.ToString(award:toTable(), 10))
 
 			if (success and autoAwardVictory) or (not success and autoAwardDefeat) then
 				AddOn:StandingsModule():Adjust(award)
@@ -315,9 +360,11 @@ function EP:OnEncounterEnd(encounter)
 			end
 			]] --
 		else
-			Logging:Warn("OnEncounterEnd(%s) : no EP value found for creature id(s) %s",
+			Logging:Warn("OnEncounterEnd(%s) : EP not found or awarded for creature id(s) %s, EP=%s",
 			             Util.Objects.ToString(encounter:toTable()),
-			             Util.Objects.ToString(creatureIds))
+			             Util.Objects.ToString(creatureIds),
+			             tostring(creatureEp)
+			)
 		end
 	else
 		Logging:Warn("OnEncounterEnd(%s) : no creature id found for encounter",  Util.Objects.ToString(encounter:toTable()))

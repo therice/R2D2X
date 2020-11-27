@@ -107,8 +107,27 @@ _G.strchar = string.char
 _G.pack = table.pack
 _G.unpack = table.unpack
 _G.sort = table.sort
--- this isn't functionally correct
-_G.debugprofilestop = function() return 0 end
+
+--[[ Test code for debugprofilestop
+
+		local clock = os.clock
+		function sleep(n)  -- seconds
+			local t0 = clock()
+			while clock() - t0 <= n do end
+		end
+
+        t = debugprofilestop()
+        sleep(2)
+        print(format("%.2f", debugprofilestop() - t))
+--]]
+function sleep(n)  -- seconds
+    local t = os.clock()
+    while os.clock() - t <= n do end
+end
+
+
+-- this mostly works
+_G.debugprofilestop = function() return os.clock() * 1000 end
 
 
 function getglobal(k)
@@ -129,14 +148,8 @@ function SetLocale(locale)
     wow_api_locale = locale
 end
 
-_time = 0
-function GetTime()
-    return _time
-end
-
-
 C_Timer = {}
-function C_Timer.After(duration, callback)  end
+function C_Timer.After(duration, callback)  callback() end
 function C_Timer.NewTimer(duration, callback)  end
 function C_Timer.NewTicker(duration, callback, iterations)  end
 
@@ -163,11 +176,21 @@ function hooksecurefunc(func_name, post_hook_func)
     end
 end
 
+_time = 0
+function GetTime()
+    return _time
+end
+
+function SetTime(time)
+    if not time then time = GetServerTime() end
+    _time = time
+end
+
 function GetFramerate()
     return 60
 end
 
-function GetServerTime ()
+function GetServerTime()
     return os.time()
 end
 
@@ -353,12 +376,16 @@ function GetRaidRosterInfo(i)
     AddPlayerGuid(name, guid, realm, classInfo.classFile)
 
     -- https://wow.gamepedia.com/API_GetRaidRosterInfo
-    -- name, _, _, _, _, _, zone, online
-    return name, nil, nil, nil, nil, nil, classInfo.classFile, 1
+    -- name, rank, subgroup, level, class, fileName, zone, online
+    -- return name, nil, nil, nil, nil, nil, classInfo.classFile, 1
+    return name, nil, nil, nil, nil, classInfo.classFile, 'ZONE', 1
+
 end
 
+-- _, _, _, _, _, _, _, mapId
 function GetInstanceInfo()
-    return "Temple of Ahn\'Qiraj", "raid", 1, "40 Player", 40, 0, false, 531, nil
+    local ii = _G.InstanceInfo
+    return ii and ii.name or "Temple of Ahn\'Qiraj", "raid", 1, "40 Player", 40, 0, false, ii and ii.mapid or 531, nil
 end
 
 function IsLoggedIn() return false end
@@ -402,8 +429,27 @@ function UnitFactionGroup(unit)
     return FACTION_ALLIANCE, FACTION_ALLIANCE
 end
 
+function GetSpellInfo(id)
+    if id == 7411 then return "Enchanting" end
+    return nil
+end
+
+function GetNumSkillLines()
+    return 20
+end
+
+function GetSkillLineInfo(index)
+    if index == 4 then return "Enchanting", nil, nil, 298 end
+
+    return "Unknown" .. index, nil, nil, random(300)
+end
+
+function GetInventoryItemLink(unit, slotId)
+  return "item:" .. random(50000) ..":0:0:0:0:0:0:0:" .. random(60)
+end
 
 function ChatFrame_AddMessageEventFilter(event, fn)  end
+
 
 function SendChatMessage(text, chattype, language, destination)
     assert(#text<255)
@@ -432,8 +478,9 @@ function SendAddonMessage(prefix, message, distribution, target)
     end
 end
 
-C_ChatInfo = {}
-C_ChatInfo.RegisterAddonMessagePrefix = RegisterAddonMessagePrefix
+_G.C_ChatInfo = {}
+_G.C_ChatInfo.RegisterAddonMessagePrefix = RegisterAddonMessagePrefix
+_G.C_ChatInfo.SendAddonMessage = SendAddonMessage
 
 C_FriendList = {}
 
@@ -606,7 +653,6 @@ _G.LE_ITEM_ARMOR_SIGIL = 10
 _G.LE_ITEM_ARMOR_RELIC = 11
 _G.LE_ITEM_CLASS_WEAPON = 2
 _G.LE_ITEM_CLASS_ARMOR = 4
-
 -- not colored
 _G.ITEM_QUALITY0_DESC = 'Poor'
 _G.ITEM_QUALITY1_DESC = 'Common'
@@ -615,6 +661,29 @@ _G.ITEM_QUALITY3_DESC = 'Rare'
 _G.ITEM_QUALITY4_DESC = 'Epic'
 _G.ITEM_QUALITY5_DESC = 'Legendary'
 _G.ITEM_QUALITY6_DESC = 'Artifact'
+
+_G.INVSLOT_AMMO           = 0
+_G.INVSLOT_HEAD           = 1
+_G.INVSLOT_NECK           = 2
+_G.INVSLOT_SHOULDER       = 3
+_G.INVSLOT_BODY           = 4
+_G.INVSLOT_CHEST          = 5
+_G.INVSLOT_WAIST          = 6
+_G.INVSLOT_LEGS           = 7
+_G.INVSLOT_FEET           = 8
+_G.INVSLOT_WRIST          = 9
+_G.INVSLOT_HAND           = 10
+_G.INVSLOT_FINGER1        = 11
+_G.INVSLOT_FINGER2        = 12
+_G.INVSLOT_TRINKET1       = 13
+_G.INVSLOT_TRINKET2       = 14
+_G.INVSLOT_BACK           = 15
+_G.INVSLOT_MAINHAND       = 16
+_G.INVSLOT_OFFHAND        = 17
+_G.INVSLOT_RANGED         = 18
+_G.INVSLOT_TABARD         = 19
+_G.INVSLOT_FIRST_EQUIPPED = _G.INVSLOT_HEAD
+_G.INVSLOT_LAST_EQUIPPED  = _G.INVSLOT_TABARD
 
 _G.RANDOM_ROLL_RESULT = "%s rolls %d (%d-%d)"
 

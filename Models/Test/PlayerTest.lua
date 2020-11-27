@@ -4,7 +4,6 @@ describe("Player", function()
     setup(function()
         AddOnName, AddOn = loadfile("Test/TestSetup.lua")(true, 'Models_Player')
         Player, Util = AddOn.Package('Models').Player, AddOn:GetLibrary('Util')
-        ConfigureLogging()
     end)
 
     teardown(function()

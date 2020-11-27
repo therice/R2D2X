@@ -1,3 +1,4 @@
+--- @type AddOn
 local _, AddOn = ...
 AddOn.Libs, AddOn.LibsMinor = {}, {}
 

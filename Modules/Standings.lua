@@ -1,3 +1,4 @@
+--- @type AddOn
 local _, AddOn = ...
 local L, C = AddOn.Locale, AddOn.Constants
 --- @type LibLogging

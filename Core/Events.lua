@@ -1,15 +1,31 @@
+--- @type  AddOn
 local _, AddOn = ...
-local L, Logging = AddOn.Locale, AddOn:GetLibrary("Logging")
-local Event, Util = AddOn.Require('Core.Event'), AddOn:GetLibrary('Util')
+local L, C  = AddOn.Locale, AddOn.Constants
+--- @type LibLogging
+local Logging =  AddOn:GetLibrary("Logging")
+--- @type LibUtil
+local Util =  AddOn:GetLibrary("Util")
+--- @type Core.Event
+local Event = AddOn.Require('Core.Event')
 
 function AddOn:SubscribeToEvents()
     Logging:Debug("SubscribeToEvents(%s)", self:GetName())
+    local events = {}
     for event, method in pairs(self.Events) do
         Logging:Trace("SubscribeToEvents(%s) : %s", self:GetName(), event)
-        Event:Subscribe(
-                event,
-                function(evt, ...) self[method](self, evt, ...) end
-        )
+        events[event] = function(evt, ...) self[method](self, evt, ...) end
+    end
+    self.eventSubscriptions = Event:BulkSubscribe(events)
+end
+
+
+function AddOn:UnsubscribeFromEvents()
+    Logging:Debug("UnsubscribeFromEvents(%s)", self:GetName())
+    if self.eventSubscriptions then
+        for _, subscription in pairs(self.eventSubscriptions) do
+            subscription:unsubscribe()
+        end
+        self.eventSubscriptions = nil
     end
 end
 
@@ -22,14 +38,18 @@ local initialLoad = true
 -- reload ui = false, true
 -- instance zone event = false, false
 function AddOn:PlayerEnteringWorld(_, isLogin, isReload)
-    Logging:Debug("PlayerEnteringWorld(%s) : isLogin=%s, isReload=%s", AddOn.player:GetName(), tostring(isLogin), tostring(isReload))
+    Logging:Debug("PlayerEnteringWorld(%s) : isLogin=%s, isReload=%s, initialLoad=%s",
+                  AddOn.player:GetName(), tostring(isLogin), tostring(isReload), tostring(initialLoad)
+    )
     self:NewMasterLooterCheck()
     -- if we have not yet handled the initial entering world event
     if initialLoad then
         if not self:IsMasterLooter() and Util.Objects.IsSet(self.masterLooter) then
-            Logging:Debug("Player '%s' entering world", tostring(self.player))
-            -- todo
+            Logging:Debug("Player '%s' entering world (initial load)", tostring(self.player))
+            self:ScheduleTimer("Send", 2, self.masterLooter, C.Commands.Reconnect)
+            self:Send(C.group, C.Commands.PlayerInfo, self:GetPlayerInfo())
         end
+        self:UpdatePlayerData()
         initialLoad = false
     end
 end
@@ -38,14 +58,16 @@ end
 function AddOn:PartyEvent(event, ...)
     Logging:Debug("PartyEvent(%s)", event)
     self:NewMasterLooterCheck()
+    -- todo : standby roster reset
+end
+
+
+function AddOn:LootOpened(_, ...)
+    Logging:Debug("LootOpened()")
 end
 
 function AddOn:LootClosed(_, ...)
     Logging:Debug("LootClosed()")
-end
-
-function AddOn:LootOpened(_, ...)
-    Logging:Debug("LootOpened()")
 end
 
 function AddOn:LootReady(_, ...)

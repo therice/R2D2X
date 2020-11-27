@@ -52,6 +52,7 @@ function Natives:Embed(object)
     return object
 end
 
+--- @class UI.Native
 local Native = AddOn.Instance(
         'UI.Native',
         function()
