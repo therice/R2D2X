@@ -37,6 +37,7 @@ read_globals = {
 	"max",
 	"mod",
 	"min",
+	"random",
 	"strfind",
 	"strjoin",
 	"strmatch",
