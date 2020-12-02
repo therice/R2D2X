@@ -214,7 +214,7 @@ function GuildRoster ()
     -- dubious to work around issues with library using this function
     -- being called before addon is loaded
     if _G.IsAddOnLoaded('R2D2X') then
-        print('GuildRoster')
+        -- print('GuildRoster')
         GuildRosterUpdate()
     end
 end
@@ -232,9 +232,46 @@ function UnitInParty() return _G.IsInGroupVal end
 -- https://wow.gamepedia.com/API_UnitIsUnit
 function UnitIsUnit(a, b)
     -- extremely rudimentary, doesnt' handle things like resolving targettarget, player, etc
+    -- print(tostring(a) .. '/' .. tostring(b))
     if a == b then return 1 else return nil end
 end
 
+function InCombatLockdown() return false end
+
+function GetLootThreshold() return 2 end
+
+function GetNumLootItems() return 3 end
+
+function LootSlotHasItem(slot) return (slot % 2 ~= 0)  end
+
+function GetLootSlotInfo(slot)
+    return random(2500), "Item"..slot, 1, nil, 4
+end
+
+local CreatureGuid = 'Creature-0-970-0-11-31146-000136DF91'
+function GetLootSourceInfo(slot)
+    return CreatureGuid
+end
+
+function GetUnitName(unit)
+    if unit == "target" then
+        return "C'Thun"
+    end
+
+    return "Unknown"
+end
+
+function GetLootSlotLink(slot)
+    return GetInventoryItemLink(nil, slot)
+end
+
+function LootSlot(slot)
+    -- todo : fire event
+end
+
+function IsEquippableItem(item)
+    return true
+end
 
 function IsInInstance()
     local type = "none"
@@ -404,6 +441,14 @@ function GetNumPartyMembers() return 5 end
 
 function GetNumGroupMembers() return 40 end
 
+function UnitIsDeadOrGhost(name) return false end
+
+function InCinematic() return false end
+
+function UnitIsGroupLeader(name)
+    if _G.UnitIsGroupLeaderVal then return true end
+    return false
+end
 
 function UnitGUID (name)
     if name == 'player' then name = UnitName(name) end
@@ -450,10 +495,16 @@ end
 
 function ChatFrame_AddMessageEventFilter(event, fn)  end
 
+-- dubious
+local function SenderName()
+    local player, realm = UnitFullName("player")
+    return  player .. '-' .. realm
+end
 
 function SendChatMessage(text, chattype, language, destination)
+    -- print('SendChatMessage -> ' .. tostring(destination))
     assert(#text<255)
-    WoWAPI_FireEvent("CHAT_MSG_"..strupper(chattype), text, "Sender", language or "Common")
+    WoWAPI_FireEvent("CHAT_MSG_"..strupper(chattype), text, SenderName(), language or "Common")
 end
 
 local registeredPrefixes = {}
@@ -463,18 +514,19 @@ function RegisterAddonMessagePrefix(prefix)
 end
 
 function SendAddonMessage(prefix, message, distribution, target)
+    -- print('SendAddonMessage -> ' .. tostring(distribution) .. '/' .. tostring(target))
     if RegisterAddonMessagePrefix then --4.1+
         assert(#message <= 255,
                 string.format("SendAddonMessage: message too long (%d bytes > 255)",
                         #message))
         -- CHAT_MSG_ADDON(prefix, message, distribution, sender)
-        WoWAPI_FireEvent("CHAT_MSG_ADDON", prefix, message, distribution, "Sender")
+        WoWAPI_FireEvent("CHAT_MSG_ADDON", prefix, message, distribution, SenderName())
     else -- allow RegisterAddonMessagePrefix to be nilled out to emulate pre-4.1
         assert(#prefix + #message < 255,
                 string.format("SendAddonMessage: message too long (%d bytes)",
                         #prefix + #message))
         -- CHAT_MSG_ADDON(prefix, message, distribution, sender)
-        WoWAPI_FireEvent("CHAT_MSG_ADDON", prefix, message, distribution, "Sender")
+        WoWAPI_FireEvent("CHAT_MSG_ADDON", prefix, message, distribution, SenderName())
     end
 end
 
@@ -552,7 +604,7 @@ function __WOW_Input(text)
             end
         end
     end;
-    print("No command found:", text)
+    -- print("No command found:", text)
 end
 
 local ChatFrameTemplate = {
@@ -574,6 +626,7 @@ local Color = {}
 function Color:New(r, g, b, a)
     local c = {r=r, g=g, b=b, a=a}
     c['GetRGB'] = function() return c.r, c.g, c.b end
+    c.hex = string.format("%02x%02x%02x", math.floor(255*c.r), math.floor(255*c.g), math.floor(255*c.b))
     return c
 end
 
@@ -591,6 +644,10 @@ _G.ITEM_QUALITY_COLORS = {
     {color = Color:New(7, 0, 0, 0)},
 }
 _G.ITEM_QUALITY_COLORS[0] = {color = Color:New(0, 0, 0, 0)}
+
+for _, c in pairs(_G.ITEM_QUALITY_COLORS) do
+    c.hex = c.color.hex
+end
 
 function GetItemQualityColor(rarity)
     return _G.ITEM_QUALITY_COLORS[rarity].color
@@ -686,6 +743,7 @@ _G.INVSLOT_FIRST_EQUIPPED = _G.INVSLOT_HEAD
 _G.INVSLOT_LAST_EQUIPPED  = _G.INVSLOT_TABARD
 
 _G.RANDOM_ROLL_RESULT = "%s rolls %d (%d-%d)"
+_G.RETRIEVING_ITEM_INFO = "Retrieving item information"
 
 _G.TOOLTIP_DEFAULT_BACKGROUND_COLOR = {
     r = 0,
@@ -697,6 +755,9 @@ _G.TOOLTIP_DEFAULT_COLOR = {
     g = 0,
     b = 0,
 }
+
+_G.LE_ITEM_BIND_ON_EQUIP = 2
+_G.LE_ITEM_BIND_ON_ACQUIRE = 1
 
 _G.AUTO_LOOT_DEFAULT_TEXT = "Auto Loot"
 
@@ -710,6 +771,7 @@ _G.FauxScrollFrame_Update = function() end
 _G.FauxScrollFrame_GetOffset = function() return 0 end
 _G.CLASS_ICON_TCOORDS = {}
 _G.ENABLE = "Enable"
+
 
 -- https://wow.gamepedia.com/API_GetItemSubClassInfo
 function GetItemSubClassInfo(classId, subClassId)

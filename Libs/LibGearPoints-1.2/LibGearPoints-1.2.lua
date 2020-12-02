@@ -268,7 +268,6 @@ function lib:GetValue(item)
     if not item then return end
 
     local _, itemLink, rarity, ilvl, _, _, itemSubClass, _, equipLoc = GetItemInfo(item)
-    print(itemLink)
     if not itemLink then return end
 
     -- Get the item ID to check against known token IDs

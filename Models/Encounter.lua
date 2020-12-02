@@ -1,5 +1,6 @@
 local _, AddOn = ...
-local Util, Logging = AddOn:GetLibrary("Util"), AddOn:GetLibrary("Logging")
+---@type LibUtil
+local Util = AddOn:GetLibrary("Util")
 
 --- @class Models.Encounter
 --- @field id Models.Encounter
@@ -27,7 +28,7 @@ end
 
 --- @return boolean
 function Encounter:IsSuccess()
-    return self.success and (self.success == 1)
+    return self.success and (self.success == 1) or false
 end
 
 Encounter.None = Encounter(nil, _G.UNKNOWN, nil, nil)

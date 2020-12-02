@@ -7,6 +7,7 @@
     <Script file="Point.lua"/>
     <Script file="Encounter.lua"/>
     <Script file="Item\Item.lua"/>
+    <Script file="Item\Loot.lua"/>
     <Script file="History\History.lua"/>
     <Script file="History\Traffic.lua"/>
     <Script file="History\Loot.lua"/>

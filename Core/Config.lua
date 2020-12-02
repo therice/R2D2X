@@ -89,7 +89,7 @@ local function BuildConfigOptions()
                 }
             end
 
-            Logging:Trace("BuildConfigOptions() : registering options for module %s -> %s", name, Util.Objects.ToString(options))
+            Logging:Trace("BuildConfigOptions() : registering options for module %s", name)
             -- these are added without order, meaning they will be displayed alphabetically based upon top level group names
             -- if you want a specific order, will need to establish either in individual modules (prone to conflicts)
             -- or establish it above and index by module name

@@ -51,6 +51,10 @@ describe("LibItemUtil", function()
                     ItemUtil:ItemLinkToItemString('|cff9d9d9d|Hitem:22356:0:0:0:0:0:0:0:80:0:0:0:0|h[Desecrated Waistguard]|h|r'),
                     'item:22356:0:0:0:0:0:0:0:80:0:0:0:0'
             )
+            assert.equal(ItemUtil:ItemLinkToItemString(
+                    'item:22356:0:0:0:0:0:0:::0:0:0:0'),
+                    'item:22356:0:0:0:0:0:0:::0:0:0:0'
+            )
         end)
         it("item string is neutralized", function()
             local neutralized = ItemUtil:NeutralizeItem('item:22356:0:0:0:0:0:0:0:80:0:0:0:0')
@@ -67,6 +71,19 @@ describe("LibItemUtil", function()
         it("item color is resolved", function()
             local color = ItemUtil:ItemLinkToColor('|cff9d9d9d|Hitem:22356:0:0:0:0:0:0::|h[Desecrated Waistguard]|h|r')
             assert.equal(color, '|cff9d9d9d')
+        end)
+        it("can be detected", function()
+            local link = "|cff9d9d9d|Hitem:18832:2564:0:0:0:0:0:0:60:0:0:0:0|h[Brutality Blade]|h|r"
+            assert(ItemUtil:ContainsItemString(link))
+            -- |cff9d9d9d|Hitem:18832:2564:0:0:0:0:0:::0:0:0:0|h[Brutality Blade]|h|r
+            local neutralized = ItemUtil:NeutralizeItem(link)
+            assert(ItemUtil:ContainsItemString(neutralized))
+            -- item:18832:2564:0:0:0:0:0:::0:0:0:0
+            local itemString = ItemUtil:ItemLinkToItemString(neutralized)
+            assert(ItemUtil:ContainsItemString(itemString))
+            -- 18832:2564:0:0:0:0:0:::0:0:0:0
+            local clean = gsub(itemString, "item:", "")
+            assert(not ItemUtil:ContainsItemString(clean))
         end)
     end)
     describe("custom items", function()

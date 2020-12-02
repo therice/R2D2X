@@ -97,8 +97,10 @@ local function smallerIdList(myIds, otherIds)
 end
 
 local function smallerPrerelease(mine, other)
-    if mine == other or not mine then return false
-    elseif not other then return true
+    if mine == other or not mine
+        then return false
+    elseif not other
+        then return true
     end
     
     return smallerIdList(Util.Strings.Split(mine, '.'), Util.Strings.Split(other, '.'))

@@ -62,7 +62,7 @@ local function ItemId(item)
         if string.match(item,"^%d+$") then
             item = tonumber(item)
         else
-            item = tonumber(strmatch(item or "", ".*item:(%d+):"))
+            item = tonumber(strmatch(item or "", ".*item:(%d+):?"))
         end
     end
     return item
@@ -80,6 +80,7 @@ end
 
 _G.GetItemInfo = function(item)
     local id, info = ItemInfo(item)
+    -- print(tostring(item) .. ' -> ' .. tostring(id))
     if info and #info > 0 then
         return unpack(info)
     else

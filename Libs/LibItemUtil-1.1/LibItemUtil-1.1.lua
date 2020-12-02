@@ -274,13 +274,12 @@ local EquipLocationToGearSlots = {
     INVTYPE_RANGEDRIGHT     = {"MainHandSlot", ["or"] = "SecondaryHandSlot"},
     INVTYPE_FINGER          = {"Finger0Slot", "Finger1Slot"},
     INVTYPE_HOLDABLE        = {"SecondaryHandSlot", ["or"] = "MainHandSlot"},
-    INVTYPE_TRINKET         = {"TRINKET0SLOT", "TRINKET1SLOT"}
+    INVTYPE_TRINKET         = {"Trinket0Slot", "Trinket1Slot"}
 }
 
 -- @return a table containing corresponding gear slots (or nil if not found)
 function lib:GetGearSlots(equipLoc)
     if not equipLoc then return nil end
-
     return EquipLocationToGearSlots[equipLoc]
 end
 
@@ -336,7 +335,7 @@ end
 --  @param itemlink of which you want the itemID from
 --  @returns number or nil
 function lib:ItemLinkToId(link)
-    return tonumber(strmatch(link or "", "item:(%d+):"))
+    return tonumber(strmatch(link or "", "item:(%d+):?"))
 end
 
 -- returns the 'itemString' from an item link
@@ -360,6 +359,17 @@ function lib:ItemLinkToColor(link)
     return strmatch(link or "", "(|c[A-Za-z0-9]*)|")
 end
 
+--- @param item string
+--- @return boolean indicating if passed string contains an item string
+function lib:ContainsItemString(item)
+    -- nil or not a string -> false
+    if not item or type(item) ~= 'string' then return false end
+    ---- empty string -> false
+    if item:trim() == "" then return false end
+
+    return strmatch(item, "item[%-?%d:]+") and true or false
+end
+
 -- itemId (1), enchantId (2), gemId1 (3), gemId2 (4), gemId3(5), gemId4(6), suffixId(7), uniqueId(8), linkLevel(9)
 -- neutralization removes uniqueId and linkLevel, leaving rest unchanged
 local NEUTRALIZE_ITEM_PATTERN = "item:(%d*):(%d*):(%d*):(%d*):(%d*):(%d*):(%d*):%d*:%d*"
@@ -381,7 +391,7 @@ local restrictedClassFrameNameFormat = tooltip:GetName().."TextLeft%d"
 -- If the number at binary bit i is 1 (bit 1 is the lowest bit), then the item works for the class with ID i.
 -- 0b100,000,000,010 indicates the item works for Paladin(classID 2) and DemonHunter(class ID 12)
 function lib:GetItemClassesAllowedFlag(itemLink)
-    if type(str) == "string" and str:trim() ~= "" then return 0 end
+    if type(itemLink) == "string" and itemLink:trim() == "" then return 0 end
     tooltip:SetOwner(UIParent, "ANCHOR_NONE")
     tooltip:SetHyperlink(itemLink)
 

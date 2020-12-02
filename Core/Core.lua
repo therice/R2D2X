@@ -9,6 +9,11 @@ local Util =  AddOn:GetLibrary("Util")
 local SlashCommands = AddOn.Require('Core.SlashCommands')
 --- @type Models.Player
 local Player = AddOn.ImportPackage('Models').Player
+--- @type Models.Item.LootTableEntry
+local LootTableEntry = AddOn.Package('Models.Item').LootTableEntry
+--- @type LibItemUtil
+local ItemUtil = AddOn:GetLibrary("ItemUtil")
+local Dialog = AddOn:GetLibrary("Dialog")
 
 local function ModeToggle(self, flag)
     if self.mode:Enabled(flag) then self.mode:Disable(flag) else self.mode:Enable(flag) end
@@ -94,6 +99,15 @@ function AddOn:MasterLooterModule()
     return self:GetModule("MasterLooter")
 end
 
+--- @return LootAllocate
+function AddOn:LootAllocateModule()
+    return self:GetModule("LootAllocate")
+end
+
+--- @return Loot
+function AddOn:LootModule()
+    return self:GetModule("Loot")
+end
 
 function AddOn:RegisterChatCommands()
     Logging:Debug("RegisterChatCommands(%s)", self:GetName())
@@ -136,12 +150,19 @@ function AddOn:RegisterChatCommands()
                     self:Print("Persistence Mode = " .. tostring(self:PersistenceModeEnabled()))
                 end,
                 true
+            },
+            {
+                {'test', 't'},
+                L['chat_commands_test'],
+                function(count)
+                    self:Test(tonumber(count) or 2)
+                end
             }
     )
 end
 
 function AddOn:IsMasterLooter()
-    Logging:Debug("IsMasterLooter(%s) : %s, %s", self:GetName(), tostring(self.masterLooter), tostring(self.player))
+    Logging:Debug("IsMasterLooter(%s) : ml=%s, player=%s", self:GetName(), tostring(self.masterLooter), tostring(self.player))
     return self.masterLooter and self.player and Util.Objects.Equals(self.masterLooter, self.player)
 end
 
@@ -185,12 +206,11 @@ end
 function AddOn:NewMasterLooterCheck()
     Logging:Debug("NewMasterLooterCheck()")
 
-    local oldMl, oldLm = self.masterLooter and self.masterLooter:GetName() or nil, self.lootMethod
-    -- todo
-    -- this could be nil, check it
+    local oldMl, oldLm = self.masterLooter, self.lootMethod
     _, self.masterLooter = self:GetMasterLooter()
     self.lootMethod = GetLootMethod()
 
+    -- ML is set, but it's an unknown player
     if Util.Objects.IsSet(self.masterLooter) and
             (
                 Util.Strings.Equal(self.masterLooter:GetName(), "Unknown") or
@@ -201,58 +221,232 @@ function AddOn:NewMasterLooterCheck()
         return self:ScheduleTimer("NewMasterLooterCheck", 1)
     end
 
-    if self:UnitIsUnit(oldMl, "player") and not self:IsMasterLooter() then
+    -- at this point we can check if we're the ML, it's not changing
+    local isML = self:IsMasterLooter()
+    -- old ML is us, but no longer ML
+    if self:UnitIsUnit(oldMl, "player") and not isML then
         self:StopHandleLoot()
     end
 
+    -- is current ML unset
     if Util.Objects.IsEmpty(self.masterLooter) then return end
 
-    if self:UnitIsUnit(oldMl, self.masterLooter:GetName()) and Util.Strings.Equal(oldLm, self.lootMethod) then
+    -- old ML is us, new ML is us (implied by check above) and loot method has not changed
+    if self:UnitIsUnit(oldMl, self.masterLooter) and Util.Strings.Equal(oldLm, self.lootMethod) then
         Logging:Debug("NewMasterLooterCheck() : No Master Looter change")
         return
     end
 
-    -- todo
-    -- if self:MasterLooterModule():DbValue('usage.never') then return end
+    local ML = self:MasterLooterModule()
+    -- settings say to never use
+    if ML:GetDbValue('usage.never') then return end
 
     -- request ML DB if not received within 15 seconds
-    -- todo
-    -- self:ScheduleTimer("Timer", 15,  AddOn.Constants.Commands.MasterLooterDbCheck)
+    self:ScheduleTimer(
+        function()
+            if Util.Objects.IsSet(self.masterLooter) then
+                -- base check on an attribute that should be present
+                if not self.mlDb.raid then
+                    self:Send(self.masterLooter, C.Commands.MasterLooterDbRequest)
+                end
+            end
+        end,
+        15
+    )
 
-    -- Someone else has become ML
-    if not self:IsMasterLooter() and Util.Strings.IsSet(self.masterLooter:GetName()) then return end
+    -- Someone else has become ML, nothing additional to do
+    if not isML and Util.Objects.IsSet(self.masterLooter) then return end
 
-    -- if not IsInRaid() and self.db.profile.onlyUseInRaids then return end
-    -- todo
-    -- if not IsInRaid() and self:MasterLooterModule():DbValue('onlyUseInRaids') then return end
+    -- not in raid and setting is to only use in traids
+    if not IsInRaid() and ML:GetDbValue('onlyUseInRaids') then return end
 
     -- already handling loot, just bail
     if self.handleLoot then return end
 
     local _, type = IsInInstance()
+    -- don't use in arena an PVP
     if Util.Objects.In(type, 'arena', 'pvp') then return end
 
     Logging:Debug("NewMasterLooterCheck() : isMasterLooter=%s", tostring(self:IsMasterLooter()))
 
-    -- todo
-    --[[
-    -- we are ml and shouldn't as for usage
-    --  self.db.profile.usage.ml
-    if self.isMasterLooter and self:MasterLooterModule():DbValue('usage.ml') then
+    -- we're the ML and settings say to use when ML
+    if isML and ML:GetDbValue('usage.ml') then
         self:StartHandleLoot()
-        -- ask if using master looter
-        -- self.db.profile.usage.ask_ml
-    elseif self.isMasterLooter and self:MasterLooterModule():DbValue('usage.ask_ml') then
-        return Dialog:Spawn(AddOn.Constants.Popups.ConfirmUsage)
+    -- we're the ML and settings say to ask
+    elseif isML and ML:GetDbValue('usage.ask_ml') then
+        return Dialog:Spawn(C.Popups.ConfirmUsage)
     end
-    --]]
 end
-
 
 function AddOn:StartHandleLoot()
     Logging:Debug("StartHandleLoot()")
+    local lootMethod = GetLootMethod()
+    if not Util.Strings.Equal(lootMethod, "master") and GetNumGroupMembers() > 0 then
+        self:Print(L["changing_loot_method_to_ml"])
+        SetLootMethod("master", self.Ambiguate(self.player:GetName()))
+    end
+
+    local ML, lootThreshold = self:MasterLooterModule(), GetLootThreshold()
+    local autoAwardLowerThreshold = ML:GetDbValue('autoAwardLowerThreshold')
+    if ML:GetDbValue('autoAward') and lootThreshold ~= 2 and lootThreshold > autoAwardLowerThreshold then
+        self:Print(L["changing_loot_threshold_auto_awards"])
+        SetLootThreshold(autoAwardLowerThreshold >= 2 and autoAwardLowerThreshold or 2)
+    end
+
+    self:Print(format(L["player_handles_looting"], self.player:GetName()))
+    self.handleLoot = true
+    -- these are sent, but not actually consumed by addon
+    self:Send(C.group, C.Commands.HandleLootStart)
+    self:CallModule("MasterLooter")
+    self:MasterLooterModule():NewMasterLooter(self.masterLooter)
 end
 
 function AddOn:StopHandleLoot()
     Logging:Debug("StopHandleLoot()")
+    self.handleLoot = false
+    self:MasterLooterModule():Disable()
+    -- these are sent, but not actually consumed by addon
+    self:Send(C.group, C.Commands.HandleLootStop)
+end
+
+function AddOn:HaveMasterLooterDb()
+    return self.mlDb and Util.Tables.Count(self.mlDb) ~= 0
+end
+
+function AddOn:MasterLooterDbValue(...)
+    return Util.Tables.Get(self.mlDb, Util.Strings.Join('.', ...))
+end
+
+function AddOn:OnMasterLooterDbReceived(mlDb)
+    Logging:Debug("OnMasterLooterDbReceived()")
+    self.mlDb = mlDb
+end
+
+function AddOn:OnLootTableReceived(lt)
+    Logging:Debug("OnLootTableReceived() : %s", Util.Objects.ToString(lt))
+
+    if not self.enabled then
+        for i = 1, #lt do
+            self:SendResponse(self.masterLooter, i, C.Responses.Disabled)
+        end
+        Logging:Trace("Sent 'disabled' response for all loot table entries")
+        return
+    end
+
+    -- lt will an array of session to LootTableEntry representations
+    -- each representations will be generated via LootTableEntry:ForTransmit()
+    -- ref = ItemRef:ForTransmit()
+    -- E.G.
+    -- {{ref = 15037:0:0:0:0:0:0::}, {ref = 25798:0:0:0:0:0:0::}}
+
+    -- convert transmitted reference into an ItemRef
+    local interim = Util.Tables.Map(
+            Util.Tables.Copy(lt),
+            function(e) return LootTableEntry.ItemRefFromTransmit(e) end
+    )
+    -- determine how many uncached items there are
+    local uncached = Util.Tables.CountFn(
+            interim,
+            function(i)
+                return not i:GetItem()
+            end
+    )
+
+    if uncached > 0 then
+        self:ScheduleTimer('OnLootTableReceived', 0, lt)
+        return
+    end
+
+    -- index will be the session, entry will be an ItemRef
+    -- no need for additional processing, as the ItemRef will pointed to a cached item
+    --
+    -- these references may be augmented with additional attributes as needed
+    -- but nothing else, by default, except the item reference
+    self.lootTable = interim
+
+    -- received LootTable without having received MasterLooterDb, well...
+    if not self:HaveMasterLooterDb() then
+        Logging:Warn("OnLootTableReceived() : received LootTable without having received MasterLooterDb from %s", tostring(self.masterLooter))
+        self:Send(self.masterLooter, C.Commands.MasterLooterDbRequest)
+        self:ScheduleTimer('OnLootTableReceived', 5, lt)
+        return
+    end
+
+    ---- we're the master looter, start allocation
+    if self:IsMasterLooter() then
+        AddOn:CallModule("LootAllocate")
+        AddOn:LootAllocateModule():ReceiveLootTable(self.lootTable)
+    end
+
+    ---- for anyone that is currently part of group, but outside of instances
+    ---- automatically respond to each item (if support is enabled)
+    if self:MasterLooterDbValue('outOfRaid') and GetNumGroupMembers() >= 8 and not IsInInstance() then
+        Logging:Debug("OnLootTableReceived() : raid member, but not in the instance. responding to each item to that affect.")
+        Util.Tables.Call(
+            self.lootTable,
+            function(_ , session)
+                self:SendResponse(self.masterLooter, session,  C.Responses.NotInRaid)
+            end,
+            true -- need the index for session id
+        )
+        return
+    end
+
+    self:DoAutoPass(self.lootTable)
+    self:SendLootAck(self.lootTable)
+
+    AddOn:CallModule("Loot")
+    AddOn:LootModule():Start(self.lootTable)
+
+    Logging:Debug("OnLootTableReceived() : %d", Util.Tables.Count(self.lootTable))
+end
+
+function AddOn:AutoPassCheck(class, equipLoc, typeId, subTypeId, classes)
+    return not ItemUtil:ClassCanUse(class, classes, equipLoc, typeId, subTypeId)
+end
+
+function AddOn:DoAutoPass(lt, skip)
+    skip = Util.Objects.Default(skip, 0)
+    Logging:Debug("DoAutoPass(%d)", skip)
+    for session, entry in ipairs(lt) do
+        if session > skip then
+            if not Util.Objects.Default(entry.noAutoPass, false) then
+                --- @type Models.Item.Item
+                local item = entry:GetItem()
+                if not item:IsBoe() then
+                    if self:AutoPassCheck(self.player.class, item.equipLoc, item.typeId, item.subTypeId, item.classes) then
+                        Logging:Trace("DoAutoPass() : Auto-passing on %s", item.link)
+                        self:Print(format(L["auto_passed_on_item"], item.link))
+                        entry.autoPass = true
+                    end
+                else
+                    Logging:Trace("DoAutoPass() : skipped auto-pass on %s as it's BOE", item.link)
+                end
+            end
+        end
+    end
+end
+
+function AddOn:SendLootAck(lt, skip)
+    skip = Util.Objects.Default(skip, 0)
+    Logging:Debug("SendLootAck(%d)", skip)
+    local hasData, toSend = false, { gear1 = {}, gear2 = {}, diff = {}, response = {} }
+    for session, entry in ipairs(lt) do
+        if session > (skip or 0) then
+            hasData = true
+            --- @type Models.Item.Item
+            local item = entry:GetItem()
+            local g1, g2 = self:GetPlayersGear(item.link, item.equipLoc)
+            local diff = self:GetItemLevelDifference(item.link, g1, g2)
+
+            toSend.gear1[session] = g1 and AddOn.SanitizeItemString(g1) or nil
+            toSend.gear2[session] = g2 and AddOn.SanitizeItemString(g2) or nil
+            toSend.diff[session] = diff
+            toSend.response[session] = Util.Objects.Default(entry.autoPass, false)
+        end
+    end
+
+    if hasData then
+        self:Send(self.masterLooter, C.Commands.LootAck, self.playerData.ilvl, toSend)
+    end
 end

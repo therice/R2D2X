@@ -201,7 +201,7 @@ function Standings.FilterFunc(table, row)
 
     if include then
         if Util.Tables.ContainsKey(filters.minimums, 'ep') and filters.minimums['ep'] then
-            -- include = member.ep >= AddOn:EffortPointsModule().db.profile.ep_min
+            include = subject.ep >= AddOn:EffortPointsModule().db.profile.ep_min
         end
     end
 

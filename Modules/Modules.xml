@@ -6,5 +6,7 @@
     <Script file="Standings.lua" />
     <Script file="LootSession.lua" />
     <Script file="MasterLooter.lua" />
+    <Script file="LootAllocate.lua" />
+    <Script file="Loot.lua" />
     <Include file="UI\UI.xml"/>
 </Ui>

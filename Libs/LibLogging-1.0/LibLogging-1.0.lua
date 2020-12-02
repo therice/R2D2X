@@ -126,10 +126,21 @@ local function Log(writer, level, fmt, ...)
     -- don't log if specified level is filtered by our root threshold
     local levelThreshold = GetThreshold(level)
     if levelThreshold > RootThreshold then return end
-    writer(string.format("%s [%s] (%s): " .. fmt,
-                         LevelColors[levelThreshold],
-                         "|cFFFFFACD" .. GetDateTime() .. "|r",
-                         "|cFFB0E0E6" .. GetCaller() .. "|r", ...))
+
+    -- wrap in pcall to prevent logging errors from bombing caller
+    -- instead capture and report error as needed
+    local success, result = pcall(
+            function(f, ...) writer(format(f, ...)) end,
+            "%s [%s] (%s): " .. fmt,
+            LevelColors[levelThreshold],
+            "|cFFFFFACD" .. GetDateTime() .. "|r",
+            "|cFFB0E0E6" .. GetCaller() .. "|r",
+            ...
+    )
+
+    if not success then
+        print('LibLogging(ERROR) ' .. GetCaller() .. ' : ' .. result)
+    end
 end
 
 function lib:Log(level, fmt, ...)

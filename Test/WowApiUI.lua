@@ -371,6 +371,8 @@ function FrameClass:SetResizable() end
 
 function FrameClass:SetMinResize() end
 
+function FrameClass:GetFontObject() return "" end
+
 function CreateFrame(kind, name, parent, template)
     local frame = FrameClass:New(name)
     frame.type = kind
@@ -399,10 +401,12 @@ end
 UIParent = CreateFrame('Frame', 'UIParent', {})
 GameTooltip = CreateFrame('Frame', 'GameTooltip', UIParent)
 Minimap = CreateFrame('Frame', 'Minimap', UIParent)
+InterfaceOptionsFrameCancel = CreateFrame('Frame', 'InterfaceOptionsFrameCancel', UIParent)
 
 _G.UIParent = UIParent
 _G.GameTooltip = GameTooltip
 _G.Minimap = Minimap
+_G.InterfaceOptionsFrameCancel = InterfaceOptionsFrameCancel
 
 local textures, TextureClass = {}, {}
 TextureClass.__index = TextureClass

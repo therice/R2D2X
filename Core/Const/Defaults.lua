@@ -10,6 +10,7 @@ AddOn.Defaults = {
     },
     profile = {
         logThreshold = Logging.Level.Trace,
+        minimizeInCombat = false,
         minimap = {
             shown       = true,
             locked      = false,
@@ -108,4 +109,19 @@ AddOn.DefaultCustomItems = {
     [22372] = { 4, 88, "INVTYPE_FEET" },        -- Desecrated Sandals
     [22520] = { 4, 90, "INVTYPE_TRINKET" },     -- The Phylactery of Kel'Thuzad
     [22726] = { 5, 90, "INVTYPE_2HWEAPON" },    -- Splinter of Atiesh
+}
+
+AddOn.TestItems = {
+    16800, 18878, 16938, 17063, 18816, 19372, 19348, 16805, 16829, 16837, 16859, 16863, 16925, 16818, 16933,
+    16910, 16903, 16936, 16944, 16952, 16960,
+    -- Weapons
+    17076, 12590, 14555, 11684, 22691, 871, 19350, 19351, 19361, 19435,
+    -- Armor
+    12640, 14551, 14153, 12757,
+    -- Rings
+    18821, 19140, 19148, 1980, 942, 18813, 13143,
+    -- Capes
+    19398, 19430, 19378,
+    -- Trinkets
+    19395, 19406, 19431, 19379,
 }

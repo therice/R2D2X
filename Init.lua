@@ -12,7 +12,7 @@ AddOn.version = GetAddOnMetadata(AddOnName, "Version")
 --@debug@
 -- if local development and not substituted, then use a dummy version
 if AddOn.version == '@project-version@' then
-    AddOn.version = '2.0-dev'
+    AddOn.version = '2021.1.0-dev'
 end
 --@end-debug@
 
@@ -52,18 +52,21 @@ end
 
 AddOn.Locale = AddOn:GetLibrary("AceLocale"):GetLocale(AddOn.Constants.name)
 
-local Logging, Util = AddOn:GetLibrary("Logging"), AddOn:GetLibrary("Util")
+local Logging = AddOn:GetLibrary("Logging")
+---@type LibUtil
+local Util = AddOn:GetLibrary("Util")
 --@debug@
 Logging:SetRootThreshold(AddOn._IsTestContext() and Logging.Level.Trace or Logging.Level.Debug)
 --@end-debug@
 
-local function GetDbValue(self, i)
-    Logging:Debug("GetDbValue(%s, %s)", self:GetName(), tostring(i[#i]))
-    return Util.Tables.Get(self.db.profile, tostring(i[#i]))
+local function GetDbValue(self, i, ...)
+    local path = Util.Objects.IsTable(i) and tostring(i[#i]) or Util.Strings.Join('.', i, ...)
+    Logging:Trace("GetDbValue(%s, %s)", self:GetName(), path)
+    return Util.Tables.Get(self.db.profile, path)
 end
 
 local function SetDbValue(self, i, v)
-    Logging:Debug("SetDbValue(%s, %s, %s)", self:GetName(), tostring(i[#i]), tostring(v or 'nil'))
+    Logging:Trace("SetDbValue(%s, %s, %s)", self:GetName(), tostring(i[#i]), tostring(v or 'nil'))
     Util.Tables.Set(self.db.profile, tostring(i[#i]), v)
     AddOn:ConfigChanged(self:GetName(), i[#i])
 end
@@ -72,11 +75,11 @@ AddOn.GetDbValue = GetDbValue
 AddOn.SetDbValue = SetDbValue
 
 local ModulePrototype = {
-    IsDisabled = function (self, i)
+    IsDisabled = function (self, _)
         Logging:Trace("Module:IsDisabled(%s) : %s", self:GetName(), tostring(not self:IsEnabled()))
         return not self:IsEnabled()
     end,
-    SetEnabled = function (self, i, v)
+    SetEnabled = function (self, _, v)
         if v then
             Logging:Trace("Module:SetEnabled(%s) : Enabling module", self:GetName())
             self:Enable()
@@ -89,6 +92,14 @@ local ModulePrototype = {
     end,
     GetDbValue = GetDbValue,
     SetDbValue = SetDbValue,
+    -- will provide the default value used for bootstrapping a module's db
+    -- will only return a value if the module has a 'Defaults' attribute
+    GetDefaultDbValue = function(self, ...)
+        if self.Defaults then
+            return Util.Tables.Get(self.Defaults, Util.Strings.Join('.', ...))
+        end
+        return nil
+    end,
     -- specifies if module should be enabled on startup
     EnableOnStartup = function (self)
         local enable = (self.db and ((self.db.profile and self.db.profile.enabled) or self.db.enabled)) or false
@@ -105,13 +116,11 @@ local ModulePrototype = {
     end,
     -- implement to provide data import functionality for a module
     ImportData = function(self, data)
-
         -- fire message that the configuration table has changed (this is handled on per module basis, as necessary)
         -- AddOn:ConfigTableChanged(self:GetName())
         -- notify config registry of change as well, this updates configuration UI if displayed
         -- AddOn:GetLibrary('AceConfigRegistry'):NotifyChange(AddOnName)
     end,
-
     ModuleSettings = function(self)
         return AddOn:ModuleSettings(self:GetName())
     end

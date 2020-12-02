@@ -1,13 +1,13 @@
+--- @type AddOn
 local _, AddOn = ...
-
 --- @type LibUtil
 local Util = AddOn:GetLibrary("Util")
 --- @type LibLogging
 local Logging = AddOn:GetLibrary("Logging")
 --- @type LibItemUtil
 local ItemUtil = AddOn:GetLibrary("ItemUtil")
---- @type table
-local cache= {}
+--- @type table<number, Models.Item.Item>
+local cache = {}
 
 --
 -- Item
@@ -47,7 +47,7 @@ Example Item(s) via GetItemInfo
 }
 --]]
 --- @class Models.Item.Item
-local Item =  AddOn.Package('Models.Item'):Class('Item')
+local Item = AddOn.Package('Models.Item'):Class('Item')
 function Item:initialize(id, link, quality, ilvl, type, equipLoc, subType, texture, typeId, subTypeId, bindType, classes)
 	self.id        = id
 	self.link      = link
@@ -61,7 +61,6 @@ function Item:initialize(id, link, quality, ilvl, type, equipLoc, subType, textu
 	self.texture   = texture
 	self.bindType  = bindType
 	self.classes   = classes
-	self.gp        = nil
 end
 
 -- create an Item via GetItemInfo
@@ -77,24 +76,32 @@ local function ItemQuery(item)
 		-- check to see if a custom item has been setup for the id
 		-- which overrides anything provided by API
 		local customItem = ItemUtil:GetCustomItem(tonumber(id))
-		--Logging:Debug("CustomItem = %s, %s", Util.Objects.ToString(customItem), tostring(not customItem and subType or nil))
+		-- Logging:Debug("CustomItem = %s, %s", Util.Objects.ToString(customItem), tostring(not customItem and subType or nil))
+		if Util.Objects.IsSet(customItem) then
+			rarity = customItem.rarity
+			ilvl = customItem.item_level
+			equipLoc = customItem.equip_location
+			subType = nil
+			subTypeId = nil
+		end
+
 		return Item:new(
 				id,
 				link,
-				not customItem and rarity or customItem.rarity,
-				not customItem and ilvl or customItem.item_level,
+				rarity,
+				ilvl,
 				type,
-				not customItem and equipLoc or customItem.equip_location,
-				not customItem and subType or nil,
+				equipLoc,
+				subType,
 				texture,
 				typeId,
-				not customItem and subTypeId or nil,
+				subTypeId,
 				bindType,
 				ItemUtil:GetItemClassesAllowedFlag(link)
 		)
-	else
-		return nil
 	end
+
+	return nil
 end
 
 --- @return boolean
@@ -133,21 +140,34 @@ function Item:GetTypeText()
 	end
 end
 
--- accepts same input types as https://wow.gamepedia.com/API_GetItemInfo
--- itemId : Number - Numeric ID of the item. e.g. 30234 for  [Nordrassil Wrath-Kilt]
--- itemName : String - Name of an item owned by the player at some point during this play session, e.g. "Nordrassil Wrath-Kilt".
--- itemString ; String - A fragment of the itemString for the item, e.g. "item:30234:0:0:0:0:0:0:0" or "item:30234".
--- itemLink : String - The full itemLink.
+-- accepts same input types (except itemName) as https://wow.gamepedia.com/API_GetItemInfo
+-- itemId : number - Numeric ID of the item. e.g. 30234 for  [Nordrassil Wrath-Kilt]
+-- itemName : string - Name of an item owned by the player at some point during this play session, e.g. "Nordrassil Wrath-Kilt".
+-- itemString : string - A fragment of the itemString for the item, e.g. "item:30234:0:0:0:0:0:0:0" or "item:30234".
+-- itemLink : string - The full itemLink.
 function Item.Get(item)
-	Logging:Trace('Get(%s)', tostring(item))
-	local itemId = Util.Objects.IsNumber(item) and item or ItemUtil:ItemLinkToId(item)
+	-- cannot simply use the itemId as a number, as links could represent stuff
+	-- that the base item id wouldn't capture (e.g. sockets eventuall)
+
+	-- see if it's a number as first pass
+	local itemId = (Util.Objects.IsNumber(item) and item) or (strmatch(item,"^%d+$") and tonumber(item)) or nil
+	-- not a number, now check for string permutations
+	if not itemId and Util.Objects.IsString(item) and ItemUtil:ContainsItemString(item) then
+		itemId = ItemUtil:NeutralizeItem(ItemUtil:ItemLinkToItemString(item))
+	end
+
+	Logging:Trace('Get(%s) : %s', tostring(item), tostring(itemId))
+	if not itemId then error(format("item '%s' couldn't be parsed into a cache key", tostring(item))) end
+
 	local instance = cache[itemId]
+	-- local cached = Util.Objects.IsSet(instance)
 	if not instance then
-		instance = ItemQuery(item)
+		instance = ItemQuery(itemId)
 		if instance then
 			cache[itemId] = instance
 		end
 	end
+	-- Logging:Trace('Get(%s) : %s', tostring(item), cached and "cached" or "not cached")
 	return instance
 end
 
@@ -160,4 +180,52 @@ function Item.ClearCache(item)
 			cache[itemId] = nil
 		end
 	end
+end
+
+--- a reference to an item, the the actual item but can be obtained as needed
+--- @class Models.Item.ItemRef
+local ItemRef = AddOn.Package('Models.Item'):Class('ItemRef')
+--- @param item any supports item strings, item links and item ids (not item names)
+function ItemRef:initialize(item)
+	self.item = item
+end
+
+--- @return Models.Item.Item the item represented by the reference
+function ItemRef:GetItem()
+	return Item.Get(self.item)
+end
+
+--[[
+|cff9d9d9d|Hitem:18832:2564:0:0:0:0:0:0:60:0:0:0:0|h[Brutality Blade]|h|r ->
+|cff9d9d9d|Hitem:18832:2564:0:0:0:0:0:::0:0:0:0|h[Brutality Blade]|h|r ->
+item:18832:2564:0:0:0:0:0:::0:0:0:0 ->
+18832:2564:0:0:0:0:0:::0:0:0:0
+--]]
+-- not sure we need the actual link here for transmission, but it could contain
+-- "stuff" that will eventually be relevant to presenting items to group members
+function ItemRef:ForTransmit()
+	Logging:Trace("ForTransmit(%s)", tostring(self.item))
+	local transmit
+	-- if the reference is a number, try to obtain via an actual item lookup
+	if Util.Objects.IsNumber(self.item) or strmatch(self.item or "", "^%d+$") then
+		local item = self:GetItem()
+		if item and item.link then
+			transmit = item.link
+		else
+			transmit = 'item:' .. self.item
+		end
+	elseif ItemUtil:ContainsItemString(self.item) then
+		transmit = self.item
+	else
+		error(format("cannot represent ItemRef '%s' for transmission", tostring(self.item)))
+	end
+
+	transmit = ItemUtil:ItemLinkToItemString(transmit)
+	transmit = ItemUtil:NeutralizeItem(transmit)
+	transmit = AddOn.SanitizeItemString(transmit)
+	return transmit
+end
+
+function ItemRef.FromTransmit(ref)
+	return ItemRef(AddOn.DeSanitizeItemString(ref))
 end

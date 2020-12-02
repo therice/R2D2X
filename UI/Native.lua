@@ -2,7 +2,7 @@ local _, AddOn = ...
 local Logging = AddOn:GetLibrary('Logging')
 local pkg = AddOn.Package('UI.Native')
 
---- @class UI.AceConfig.Widget
+--- @class UI.Native.Widget
 local Widget = pkg:Class('Widget')
 function Widget:initialize(parent, name)
     self.parent = parent
@@ -17,6 +17,29 @@ local Natives = AddOn.Class('Natives')
 function Natives:initialize()
     self.widgets = {}   -- mapping of widget type to widget class
     self.count = {}     -- mapping of widget type to count of instances created without an explicit name
+    self.frames = {}    -- all native frames which have been created via Native widget
+end
+
+function Natives:TrackFrame(f)
+    tinsert(self.frames, f)
+end
+
+function Natives:MinimizeFrames()
+    for _, frame in ipairs(self.frames) do
+        if frame:IsVisible() and not frame.combatMinimized then
+            frame.combatMinimized = true
+            frame:Minimize()
+        end
+    end
+end
+
+function Natives:MaximizeFrames()
+    for _, frame in ipairs(self.frames) do
+        if frame.combatMinimized then
+            frame.combatMinimized = false
+            frame:Maximize()
+        end
+    end
 end
 
 function Natives:New(widgetType, parent, name, ...)
@@ -74,6 +97,18 @@ function Native:RegisterWidget(widgetType, class)
     assert(widgetType and type(widgetType) == 'string', "Widget type was not provided")
     assert(class and type(class) == 'table', "Widget class was not provided")
     self.private.widgets[widgetType] = class
+end
+
+function Native:TrackFrame(f)
+    self.private:TrackFrame(f)
+end
+
+function Native:MinimizeFrames()
+    self.private:MinimizeFrames()
+end
+
+function Native:MaximizeFrames()
+    self.private:MaximizeFrames()
 end
 
 if AddOn._IsTestContext('UI_Native') then

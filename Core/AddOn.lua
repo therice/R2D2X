@@ -12,6 +12,8 @@ local GuildStorage =  AddOn:GetLibrary('GuildStorage')
 local Comm = AddOn.Require('Core.Comm')
 --- @type Models.Player
 local Player = AddOn.ImportPackage('Models').Player
+--- @type Models.Encounter
+local Encounter = AddOn.ImportPackage('Models').Encounter
 --- @type Core.SlashCommands
 local SlashCommands = AddOn.Require('Core.SlashCommands')
 
@@ -31,12 +33,19 @@ function AddOn:OnInitialize()
     }
     -- our guild (start off as unguilded, will get callback when ready to populate)
     self.guildRank = L["unguilded"]
+    -- the ML DB, sent by the master looter
+    -- it contains settings as controlled by the ML
+    self.mlDb = {}
     -- the master looter (Player)
     self.masterLooter = nil
     -- capture looting method for later required checks
     self.lootMethod = GetLootMethod() or "freeforall"
     -- does addon handle loot?
     self.handleLoot = false
+    -- are we currently engaged in combat
+    self.inCombat = false
+    -- the current encounter
+    self.encounter = Encounter.None
 
     self.db = self:GetLibrary("AceDB"):New(self:Qualify('DB'), self.Defaults)
     if not AddOn._IsTestContext() then Logging:SetRootThreshold(self.db.profile.logThreshold) end
@@ -121,4 +130,26 @@ function AddOn:OnDisable()
     Logging:Debug("OnDisable(%s)", self:GetName())
     self:UnsubscribeFromEvents()
     SlashCommands:Unregister()
+end
+
+function AddOn:Test(count)
+    Logging:Debug("Test(%d)", count)
+    local items = Util.Tables.Temp()
+    for _ =1, count do
+        Util.Tables.Push(items, AddOn.TestItems[random(1, #AddOn.TestItems)])
+    end
+
+    self.mode:Enable(C.Modes.Test)
+    self.isMasterLooter, self.masterLooter = self:GetMasterLooter()
+
+    if not self.isMasterLooter then
+        self:Print(L["error_test_as_non_leader"])
+        self.mode:Disable(C.Modes.Test)
+        return
+    end
+
+    self:CallModule("MasterLooter")
+    local ML = self:MasterLooterModule()
+    ML:NewMasterLooter(self.masterLooter)
+    ML:Test(items)
 end

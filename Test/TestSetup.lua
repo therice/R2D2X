@@ -130,7 +130,8 @@ function xpcall_patch()
             --        ./Models/History/Test/TrafficTest.lua:28: in function <./Models/History/Test/TrafficTest.lua:27>
             --
             --print(code)
-            --print(dump(debug.getinfo(1)))
+            -- print(debug.traceback(1))
+            -- print('here')
             geterrorhandler()(code)
             return err(code)
         else
@@ -181,10 +182,10 @@ function After()
     ResetLogging()
 end
 
-function NewAceDb()
+function NewAceDb(defaults)
     local AceDB = LibStub('AceDB-3.0')
     -- need to add random # to end or it will have the same data
-    return AceDB:New('TestDB' .. random(100000))
+    return AceDB:New('TestDB' .. random(100000), defaults or {})
 end
 
 function GetSize(tbl, includeIndices, includeKeys)
@@ -215,7 +216,6 @@ end
 
 
 Before()
-
 xpcall_patch()
 
 local thisDir = pl.abspath(debug.getinfo(1).source:match("@(.*)/.*.lua$"))

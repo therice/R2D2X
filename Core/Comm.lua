@@ -121,13 +121,13 @@ function Comms:ProcessReceived(msg)
 end
 
 function Comms:FireCommand(prefix, dist, sender, command, data)
-    Logging:Debug("FireCommand(%s) : via=%s, sender=%s, command=%s", prefix, dist, sender, command)
+    Logging:Debug("FireCommand(%s) : via=%s, sender=%s, command=%s", tostring(prefix), tostring(dist), tostring(sender), tostring(command))
     self:Subject(prefix, command):next(data, sender, command, dist)
 end
 
 function Comms:ReceiveComm(prefix, msg, dist, sender)
     local senderName = AddOn:UnitName(sender)
-    Logging:Debug("ReceiveComm(%s) : via=%s, sender=%s,%s", prefix, dist, sender, senderName)
+    Logging:Debug("ReceiveComm(%s) : via=%s, sender=%s/%s", tostring(prefix), tostring(dist), tostring(sender), tostring(senderName))
     local success, command, data = self:ProcessReceived(msg)
     if success then
         self.metricsFired:Timer(Util.Strings.Join(':', prefix, command or "")):Time(
@@ -161,19 +161,19 @@ function Comms:SendComm(prefix, target, prio, callback, callbackarg, command, ..
 
             Logging:Trace("SendComm(%s, %s, %s) : %s (%d)", prefix,
                           isPlayer and target:GetName() or Util.Objects.ToString(target),
-                          command, '[omitted]', #toSend
+                          command, '[omitted]' or Util.Objects.ToString(ScrubData(...)), #toSend
             )
 
             if target == C.group then
                 local channel, player = self:GroupChannel()
-                Logging:Trace("SendComm(%s, %s)", tostring(channel), tostring(player))
+                Logging:Trace("SendComm(%s, %s, %s)", tostring(prefix), tostring(channel), tostring(player))
                 self.AceComm:SendCommMessage(prefix, toSend, channel, player, prio, callback, callbackarg)
             elseif target == C.guild then
-                Logging:Trace("SendComm(%s, %s)", tostring(C.Channels.Guild), tostring(nil))
+                Logging:Trace("SendComm(%s, %s, %s)", tostring(prefix), tostring(C.Channels.Guild), tostring(nil))
                 self.AceComm:SendCommMessage(prefix, toSend, C.Channels.Guild, nil, prio, callback, callbackarg)
             else
                 target = isPlayer and target:GetName() or target
-                Logging:Debug("SendComm(%s)", target)
+                Logging:Debug("SendComm(%s, %s)", tostring(prefix), tostring(target))
                 -- If target == "player"
                 if AddOn.UnitIsUnit(target, C.player) then
                     Logging:Trace("SendComm() : UnitIsUnit(true), %s", AddOn.player.name)

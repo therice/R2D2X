@@ -32,6 +32,8 @@ lib.ReputationItems = {
     [20863] = "Clay Scarab",
     [20864] = "Bone Scarab",
     [20865] = "Ivory Scarab",
+    -- Naxx
+    -- Wartorn ... ?
 }
 
 lib.TokenEquipmentLocations = {
@@ -52,5 +54,31 @@ lib.TokenEquipmentLocations = {
     [20931] = { "LegsSlot" },                   -- Skin of the Great Sandworm
     [20932] = { "ShoulderSlot", "FeetSlot" },   -- Bindings of Dominance
     [20933] = { "ChestSlot" },                  -- Husk of the Old God
+    -- Naxx
+    [22351] = { "ChestSlot" },                  -- Desecrated Robe (Priest, Mage, Warlock)
+    [22350] = { "ChestSlot" },                  -- Desecrated Tunic (Paladin, Hunter, Shaman, Paladin)
+    [22349] = { "ChestSlot" },                  -- Desecrated Breastplate (Warrior, Rogue)
+    [22366] = { "LegsSlot" },                   -- Desecrated Leggings (Priest, Mage, Warlock)
+    [22359] = { "LegsSlot" },                   -- Desecrated Legguards (Paladin, Hunter, Shaman, Paladin)
+    [22352] = { "LegsSlot" },                   -- Desecrated Legplates (Warrior, Rogue)
+    [22366] = { "HeadSlot" },                   -- Desecrated Circlet (Priest, Mage, Warlock)
+    [22360] = { "HeadSlot" },                   -- Desecrated Headpiece (Paladin, Hunter, Shaman, Paladin)
+    [22353] = { "HeadSlot" },                   -- Desecrated Helmet (Warrior, Rogue)
+    [22369] = { "WristSlot" },                  -- Desecrated Bindings (Priest, Mage, Warlock)
+    [22362] = { "WristSlot" },                  -- Desecrated Wristguards (Paladin, Hunter, Shaman, Paladin)
+    [22355] = { "WristSlot" },                  -- Desecrated Bracers (Warrior, Rogue)
+    [22371] = { "HandSlot" },                   -- Desecrated Gloves (Priest, Mage, Warlock)
+    [22364] = { "HandSlot" },                   -- Desecrated Handguards (Paladin, Hunter, Shaman, Paladin)
+    [22357] = { "HandSlot" },                   -- Desecrated Gauntlets (Warrior, Rogue)
+    [22372] = { "FeetSlot" },                   -- Desecrated Sandals (Priest, Mage, Warlock)
+    [22365] = { "FeetSlot" },                   -- Desecrated Boots (Paladin, Hunter, Shaman, Paladin)
+    [22358] = { "FeetSlot" },                   -- Desecrated Sabatons (Warrior, Rogue)
+    [22370] = { "WaistSlot" },                  -- Desecrated Belt (Priest, Mage, Warlock)
+    [22363] = { "WaistSlot" },                  -- Desecrated Girdle (Paladin, Hunter, Shaman, Paladin)
+    [22356] = { "WaistSlot" },                  -- Desecrated Waistguard (Warrior, Rogue)
+    [22368] = { "ShoulderSlot" },               -- Desecrated Shoulderpads (Priest, Mage, Warlock)
+    [22361] = { "ShoulderSlot" },               -- Desecrated Spaulders (Paladin, Hunter, Shaman, Paladin)
+    [22354] = { "ShoulderSlot" },               -- Desecrated Pauldrons (Warrior, Rogue)
+    [22520] = { "Trinket0Slot", "Trinket1Slot" }-- The Phylactery of Kel'Thuzad
 }
 

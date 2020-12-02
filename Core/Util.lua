@@ -5,6 +5,8 @@ local L, C = AddOn.Locale, AddOn.Constants
 local Logging =  AddOn:GetLibrary("Logging")
 --- @type LibUtil
 local Util =  AddOn:GetLibrary("Util")
+--- @type LibItemUtil
+local ItemUtil = AddOn:GetLibrary("ItemUtil")
 --- @type Models.Player
 local Player = AddOn.ImportPackage('Models').Player
 
@@ -134,6 +136,32 @@ function AddOn:UnitClass(name)
     return select(2, UnitClass(Ambiguate(name, "short")))
 end
 
+-- The link of same item generated from different players, or if two links are generated between player spec switch, are NOT the same
+-- This function compares the raw item strings with link level and spec ID removed.
+--
+-- Also compare with unique id removed, because wowpedia says that:
+-- "In-game testing indicates that the UniqueId can change from the first loot to successive loots on the same item."
+-- Although log shows item in the loot actually has no uniqueId in Legion, but just in case Blizzard changes it in the future.
+--
+-- @return true if two items are the same item
+function AddOn.ItemIsItem(item1, item2)
+    if not Util.Objects.IsString(item1) or not Util.Objects.IsString(item2) then return item1 == item2 end
+    item1 = ItemUtil:ItemLinkToItemString(item1)
+    item2 = ItemUtil:ItemLinkToItemString(item2)
+    if not (item1 and item2) then return false end
+    return ItemUtil:NeutralizeItem(item1) ==  ItemUtil:NeutralizeItem(item2)
+end
+
+---@param item string any value to be prefaced with 'item:'
+function AddOn.DeSanitizeItemString(item)
+    return "item:" .. (item or "0")
+end
+
+---@param link string any string containing an item link
+function AddOn.SanitizeItemString(link)
+    return gsub(ItemUtil:ItemLinkToItemString(link), "item:", "")
+end
+
 AddOn.FilterClassesByFactionFn = function(class)
     local faction =  UnitFactionGroup(AddOn.Constants.player)
     if faction== 'Alliance' then
@@ -142,6 +170,52 @@ AddOn.FilterClassesByFactionFn = function(class)
         return class ~= "Paladin"
     end
     return true
+end
+
+function AddOn:ExtractCreatureId(guid)
+    if not guid then return nil end
+    local id = guid:match(".+(%b--)")
+    return id and (id:gsub("-", "")) or nil
+end
+
+local BlacklistedItemClasses = {
+    [0]  = { -- Consumables
+        all = true
+    },
+    [5]  = { -- Reagents
+        all = true
+    },
+    [7]  = { -- Trade-skills
+        all = true
+    },
+    [15] = { -- Misc
+        [1] = true, -- Reagent
+    }
+}
+
+function AddOn:IsItemBlacklisted(item)
+    if not item then return false end
+    local _, _, _, _, _, itemClassId, itemsubClassId = GetItemInfoInstant(item)
+    if not (itemClassId and itemsubClassId) then return false end
+    if BlacklistedItemClasses[itemClassId] then
+        if BlacklistedItemClasses[itemClassId].all or BlacklistedItemClasses[itemClassId][itemsubClassId] then
+            return true
+        end
+    end
+    return false
+end
+
+function AddOn.IsItemBindType(item, bindType)
+    if not item then return false end
+    return select(14, GetItemInfo(item)) == bindType
+end
+
+function AddOn.IsItemBoe(item)
+    return AddOn.IsItemBindType(item, LE_ITEM_BIND_ON_EQUIP)
+end
+
+function AddOn.IsItemBop(item)
+    return AddOn.IsItemBindType(item, LE_ITEM_BIND_ON_ACQUIRE)
 end
 
 function AddOn.ConvertIntervalToString(years, months, days)
@@ -174,18 +248,18 @@ function AddOn:GetPlayerInfo()
         enchanting_localized_name = GetSpellInfo(7411)
     end
 
-    local enchant, lvl = false, 0
+    local enchanter, enchanterLvl = false, 0
     for i = 1, GetNumSkillLines() do
         -- Cycle through all lines under "Skill" tab on char
         local skillName, _, _, skillRank  = GetSkillLineInfo(i)
         if Util.Strings.Equal(skillName, enchanting_localized_name) then
-            enchant, lvl = true, skillRank
+            enchanter, enchanterLvl = true, skillRank
             break
         end
     end
 
     local avgItemLevel = GetAverageItemLevel()
-    return self.guildRank, enchant, lvl, avgItemLevel
+    return self.guildRank, enchanter, enchanterLvl, avgItemLevel
 end
 
 function AddOn:UpdatePlayerGear(startSlot, endSlot)
@@ -211,4 +285,76 @@ function AddOn:UpdatePlayerData()
     Logging:Trace("UpdatePlayerData()")
     self.playerData.ilvl = GetAverageItemLevel()
     self:UpdatePlayerGear()
+end
+
+function AddOn:GetPlayersGear(link, equipLoc, current)
+    current = current or self.playerData.gear
+    Logging:Trace("GetPlayersGear(%s, %s)", tostring(link), tostring(equipLoc))
+
+    local GetInventoryItemLink = GetInventoryItemLink
+    if Util.Tables.Count(current) > 0 then
+        GetInventoryItemLink = function(_, slot) return current[slot] end
+    end
+
+    -- this is special casing for token based items, which require a different approach
+    local itemId = ItemUtil:ItemLinkToId(link)
+    if itemId and ItemUtil:IsTokenBasedItem(itemId) then
+        local equipLocs = ItemUtil:GetTokenBasedItemLocations(itemId)
+        if #equipLocs > 1 then
+            local items = {true, true}
+            -- at most two equipment slots
+            for i = 1, 2 do
+                items[i] = GetInventoryItemLink(C.player, GetInventorySlotInfo(equipLocs[i]))
+            end
+            return unpack(items)
+        elseif equipLocs[1] == "Weapon" then
+            return
+                GetInventoryItemLink(C.player, GetInventorySlotInfo("MainHandSlot")),
+                GetInventoryItemLink(C.player, GetInventorySlotInfo("SecondaryHandSlot"))
+        else
+            return GetInventoryItemLink(C.player, GetInventorySlotInfo(equipLocs[1]))
+        end
+    end
+
+    local gearSlots = ItemUtil:GetGearSlots(equipLoc)
+    if not gearSlots then return nil, nil end
+    -- index 1 will always have a value if returned
+    local item1, item2 = GetInventoryItemLink(C.player, GetInventorySlotInfo(gearSlots[1])), nil
+    if not item1 and gearSlots['or'] then
+        item1 = GetInventoryItemLink(C.player, GetInventorySlotInfo(gearSlots['or']))
+    end
+    if gearSlots[2] then
+        item2 = GetInventoryItemLink(C.player, GetInventorySlotInfo(gearSlots[2]))
+    end
+    return item1, item2
+end
+
+function AddOn:GetItemLevelDifference(item, g1, g2)
+    if not g1 and g2 then error("You can't provide g2 without g1 in GetItemLevelDifference()") end
+    local _, link, _, ilvl, _, _, _, _, equipLoc = GetItemInfo(item)
+    if not g1 then
+        g1, g2 = self:GetPlayersGear(link, equipLoc, self.playerData.gear)
+    end
+
+    -- trinkets and rings have two slots
+    if Util.Objects.In(equipLoc, "INVTYPE_TRINKET", "INVTYPE_FINGER") then
+        local itemId = ItemUtil:ItemLinkToId(link)
+        if itemId == ItemUtil:ItemLinkToId(g1) then
+            local ilvl1 = select(4, GetItemInfo(g1))
+            return ilvl - ilvl1
+        elseif g2 and itemId == ItemUtil:ItemLinkToId(g2) then
+            local ilvl2 = select(4, GetItemInfo(g2))
+            return ilvl - ilvl2
+        end
+    end
+
+    local diff = 0
+    local g1diff, g2diff = g1 and select(4, GetItemInfo(g1)), g2 and select(4, GetItemInfo(g2))
+    if g1diff and g2diff then
+        diff = g1diff >= g2diff and ilvl - g2diff or ilvl - g1diff
+    elseif g1diff then
+        diff = ilvl - g1diff
+    end
+
+    return diff
 end

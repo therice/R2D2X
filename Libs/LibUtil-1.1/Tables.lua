@@ -21,7 +21,7 @@ function Self.Get(t, ...)
         path = Self.Tmp(...)
     end
 
-    for i,k in Util.IEach(path) do
+    for _,k in Util.IEach(path) do
         if k == nil then
             break
         elseif t ~= nil then
@@ -52,7 +52,7 @@ function Self.Set(t, ...)
     end
 
     local u, j = t
-    for i,k in Util.IEach(path) do
+    for _,k in Util.IEach(path) do
         if k == nil then
             break
         elseif j then
@@ -524,11 +524,11 @@ function Self.Copy(t, fn, index, notVal, ...)
 end
 
 -- Copy a table into another table
---@param t1 the table in which to copy
---@param t2 the table from which to copy
-function Self.CopyInto(t1, t2)
-    for k, v in pairs(t2) do
-        t1[k] = v
+---@param to table the table in which to copy
+---@param from table the table from which to copy
+function Self.CopyInto(to, from)
+    for k, v in pairs(from) do
+        to[k] = v
     end
 end
 

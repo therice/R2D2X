@@ -1,6 +1,8 @@
 local _, AddOn = ...
 local Logging, Util, Window = AddOn:GetLibrary('Logging'), AddOn:GetLibrary('Util'), AddOn:GetLibrary('Window')
+--- @type UI.Native
 local NativeUI = AddOn.Require('UI.Native')
+--- @type UI.Native.Widget
 local BaseWidget = AddOn.ImportPackage('UI.Native').Widget
 local Frame = AddOn.Package('UI.Widgets'):Class('Frame', BaseWidget)
 
@@ -98,6 +100,7 @@ function Frame:Create()
     self:CreateTitle(f)
     self:CreateContent(f)
     self.EmbedMinimizeSupport(f)
+    NativeUI:TrackFrame(f)
     return f
 end
 

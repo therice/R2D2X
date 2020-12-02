@@ -1,5 +1,13 @@
 local AddOnName, AddOn
-local CompressedDb, Util
+---@type Models.CompressedDb
+local CompressedDb
+---@type Models.MasterLooterDb
+local MasterLooterDb
+---@type MasterLooterDb
+local MasterLooterDbInstance
+---@type LibUtil
+local Util
+local C, Player
 
 local function NewDb(data)
     -- need to add random # to end or it will have the same data
@@ -16,13 +24,19 @@ describe("DB", function()
     setup(function()
         AddOnName, AddOn = loadfile("Test/TestSetup.lua")(true, 'Models_Db')
         loadfile('Models/Test/DbTestData.lua')()
-        Util = AddOn:GetLibrary('Util')
+        C, Util = AddOn.Constants,AddOn:GetLibrary('Util')
+        Player = AddOn.Package('Models').Player
         CompressedDb = AddOn.Package('Models').CompressedDb
+        MasterLooterDb = AddOn.Package('Models').MasterLooterDb
+        MasterLooterDbInstance = AddOn.Require('MasterLooterDb')
+        AddOn.player = Player:Get("Player1")
     end)
 
     teardown(function()
         After()
+        AddOn.player = nil
     end)
+
     describe("CompressedDb", function()
         it("handles compress and decompress", function()
             for _, v in pairs(TestData) do
@@ -183,4 +197,91 @@ describe("DB", function()
 
         end)
     end)
-end )
+
+    describe("MasterLooterDb", function()
+        it("is created (empty)", function()
+            local mldb = MasterLooterDb()
+            assert(mldb)
+            assert.equal(0, #mldb.db)
+            assert(not mldb:IsInitialized())
+        end)
+        it("is populated (empty)", function()
+            local mldb = MasterLooterDb()
+            assert(mldb)
+            mldb:Build({}, {})
+            assert(mldb:IsInitialized())
+            assert.is.Nil(mldb.db.outOfRaid)
+            assert.is.Nil(mldb.db.timeout)
+            assert.is.Nil(mldb.db.showLootResponses)
+            assert.are.same({}, mldb.db.raid)
+        end)
+        it("is populated", function()
+            local mldb = MasterLooterDb()
+            assert(mldb)
+            local mlSettings = NewAceDb(AddOn:MasterLooterModule().Defaults)
+            local epSettings = NewAceDb(AddOn:EffortPointsModule().Defaults)
+            mldb:Build(mlSettings.profile, epSettings.profile)
+            assert(mldb:IsInitialized())
+            assert.is.Not.Nil(mldb.db.outOfRaid)
+            assert.is.Not.Nil(mldb.db.timeout)
+            assert.is.Not.Nil(mldb.db.showLootResponses)
+            assert(Util.Tables.Count(mldb.db.raid) >= 1)
+        end)
+        it("for transmit", function()
+            local mldb = MasterLooterDb()
+            assert(mldb)
+            mldb:Build({ outOfRaid = true, timeout = 120}, { })
+            assert.are.same(
+                    {db = {outOfRaid = true, timeout = 120, raid = {}}},
+                    mldb:ForTransmit()
+            )
+        end)
+    end)
+
+    describe("MasterLooterDb (singleton)", function()
+        local Comm = AddOn.Require('Core.Comm')
+        local mlSettings = NewAceDb(AddOn:MasterLooterModule().Defaults)
+        local epSettings = NewAceDb(AddOn:EffortPointsModule().Defaults)
+
+        it("Get(error)", function()
+            assert.has.error(function() MasterLooterDbInstance:Get() end)
+        end)
+        it("Get(success)", function()
+            AddOn:MasterLooterModule().db = mlSettings
+            AddOn:EffortPointsModule().db = epSettings
+            MasterLooterDbInstance:Get()
+            MasterLooterDbInstance:Get(true)
+        end)
+        it("Send", function()
+            AddOn:MasterLooterModule().db = mlSettings
+            AddOn:EffortPointsModule().db = epSettings
+            MasterLooterDbInstance:Send('Player1-Realm1')
+        end)
+        it("Set(error)", function()
+            assert.has.error(function() MasterLooterDbInstance:Set() end)
+            assert.has.error(function() MasterLooterDbInstance:Set(true) end)
+        end)
+        it("Set(success)", function()
+            Comm:RegisterPrefix(C.CommPrefixes.Main)
+            AddOn:MasterLooterModule().db = mlSettings
+            AddOn:EffortPointsModule().db = epSettings
+
+            local rcvd, before, after
+            local subscription =
+                Comm:Subscribe(
+                        C.CommPrefixes.Main,
+                        C.Commands.MasterLooterDb,
+                        function(data) rcvd = unpack(data) end
+                )
+            before = MasterLooterDbInstance:Get()
+            MasterLooterDbInstance:Send(AddOn.player)
+            WoWAPI_FireUpdate(GetTime()+10)
+
+            MasterLooterDbInstance:Set(rcvd)
+            after = MasterLooterDbInstance:Get()
+
+            assert.are.same(before, after)
+            subscription:unsubscribe()
+        end)
+    end)
+end)

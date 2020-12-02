@@ -7,6 +7,12 @@ local Logging =  AddOn:GetLibrary("Logging")
 local Util =  AddOn:GetLibrary("Util")
 --- @type Core.Event
 local Event = AddOn.Require('Core.Event')
+--- @type Models.Encounter
+local Encounter = AddOn.ImportPackage('Models').Encounter
+--- @type UI.Native
+local UINative = AddOn.Require('UI.Native')
+--- @type LibDialog
+local Dialog = AddOn:GetLibrary("Dialog")
 
 function AddOn:SubscribeToEvents()
     Logging:Debug("SubscribeToEvents(%s)", self:GetName())
@@ -47,7 +53,7 @@ function AddOn:PlayerEnteringWorld(_, isLogin, isReload)
         if not self:IsMasterLooter() and Util.Objects.IsSet(self.masterLooter) then
             Logging:Debug("Player '%s' entering world (initial load)", tostring(self.player))
             self:ScheduleTimer("Send", 2, self.masterLooter, C.Commands.Reconnect)
-            self:Send(C.group, C.Commands.PlayerInfo, self:GetPlayerInfo())
+            self:Send(self.masterLooter, C.Commands.PlayerInfo, self:GetPlayerInfo())
         end
         self:UpdatePlayerData()
         initialLoad = false
@@ -59,41 +65,100 @@ function AddOn:PartyEvent(event, ...)
     Logging:Debug("PartyEvent(%s)", event)
     self:NewMasterLooterCheck()
     -- todo : standby roster reset
+    -- if event == E.GroupLeft then self:StandbyModule():ResetRoster() end
 end
 
-
-function AddOn:LootOpened(_, ...)
-    Logging:Debug("LootOpened()")
-end
-
-function AddOn:LootClosed(_, ...)
-    Logging:Debug("LootClosed()")
-end
-
+-- https://wow.gamepedia.com/LOOT_READY
+-- This is fired when looting begins, but before the loot window is shown.
+-- Loot functions like GetNumLootItems will be available until LOOT_CLOSED is fired.
 function AddOn:LootReady(_, ...)
     Logging:Debug("LootReady()")
+    self:MasterLooterModule():OnLootReady(...)
 end
 
+-- https://wow.gamepedia.com/LOOT_OPENED
+-- Fired when a corpse is looted, after LOOT_READY.
+function AddOn:LootOpened(_, ...)
+    Logging:Debug("LootOpened()")
+    self:MasterLooterModule():OnLootOpened(...)
+end
+
+-- https://wow.gamepedia.com/LOOT_CLOSED
+-- Fired when a player ceases looting a corpse.
+-- Note that this will fire before the last CHAT_MSG_LOOT event for that loot.
+function AddOn:LootClosed(_, ...)
+    Logging:Debug("LootClosed()")
+    self:MasterLooterModule():OnLootClosed(...)
+end
+
+--- https://wow.gamepedia.com/LOOT_SLOT_CLEARED
+--- Fired when loot is removed from a corpse.
+--- lootSlot : number
 function AddOn:LootSlotCleared(_, ...)
     Logging:Debug("LootSlotCleared()")
+    self:MasterLooterModule():OnLootSlotCleared(...)
 end
 
-function AddOn:EncounterEnd(_, ...)
-    Logging:Debug("EncounterEnd()")
-end
-
+-- https://wow.gamepedia.com/ENCOUNTER_START
+-- ENCOUNTER_START: encounterID, "encounterName", difficultyID, groupSize
 function AddOn:EncounterStart(_, ...)
     Logging:Debug("EncounterStart()")
+    self.encounter = Encounter(...)
+    self:UpdatePlayerData()
 end
 
+-- https://wow.gamepedia.com/ENCOUNTER_END
+-- ENCOUNTER_END: encounterID, "encounterName", difficultyID, groupSize, success
+function AddOn:EncounterEnd(_, ...)
+    Logging:Debug("EncounterEnd()")
+    self.encounter = Encounter(...)
+    -- if master looter, need to check for EP
+    if self:IsMasterLooter() then
+        self:EffortPointsModule():OnEncounterEnd(self.encounter)
+    end
+end
+
+
+-- https://wow.gamepedia.com/RAID_INSTANCE_WELCOME
 function AddOn:RaidInstanceEnter(_, ...)
     Logging:Debug("RaidInstanceEnter()")
+    local ML = self:MasterLooterModule()
+    if not IsInRaid() and ML:GetDbValue('onlyUseInRaids') then return end
+    if Util.Objects.IsEmpty(self.masterLooter) and UnitIsGroupLeader(C.player) then
+        if ML:GetDbValue('usage.leader') then
+            self.masterLooter = self.player
+            self:StartHandleLoot()
+        elseif ML:GetDbValue('usage.ask_leader') then
+            Dialog:Spawn(C.Popups.ConfirmUsage)
+        end
+    end
 end
 
+local UIOptionsOldCancel = InterfaceOptionsFrameCancel:GetScript("OnClick")
+
+-- https://wow.gamepedia.com/PLAYER_REGEN_DISABLED
+-- Fired whenever you enter combat, as normal regen rates are disabled during combat.
+-- This means that either you are in the hate list of a NPC or that you've been taking part in a pvp action
+-- (either as attacker or victim).
 function AddOn:EnterCombat(_, ...)
-
+    Logging:Debug("EnterCombat()")
+    InterfaceOptionsFrameCancel:SetScript(
+        "OnClick",
+        function() InterfaceOptionsFrameOkay:Click() end
+    )
+    self.inCombat = true
+    if not self.db.profile.minimizeInCombat then return end
+    UINative:MinimizeFrames()
 end
 
+-- https://wow.gamepedia.com/PLAYER_REGEN_ENABLED
+-- Fired after ending combat, as regen rates return to normal. Useful for determining when a player has left combat.
+-- This occurs when you are not on the hate list of any NPC, or a few seconds after the latest pvp attack that you were
+-- involved with.
 function AddOn:LeaveCombat(_, ...)
-
+    Logging:Debug("LeaveCombat()")
+    InterfaceOptionsFrameCancel:SetScript("OnClick", UIOptionsOldCancel)
+    self.inCombat = false
+    if not self.db.profile.minimizeInCombat then return end
+    UINative:MaximizeFrames()
 end

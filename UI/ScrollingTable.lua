@@ -87,7 +87,7 @@ function DeleteButtonCell:initialize(fn)
                         function()
                             if frame.lastClick and GetTime() - frame.lastClick <= 0.5 then
                                 frame.lastClick = nil
-                                fn(data, realrow)
+                                fn(frame, data, realrow)
                             else
                                 frame.lastClick = GetTime()
                             end
@@ -107,22 +107,22 @@ function ItemIconCell:initialize(link, texture)
                 frame:SetNormalTexture(texture or "Interface/ICONS/INV_Misc_QuestionMark.png")
                 frame:SetScript("OnEnter", function() UIUtil:CreateHypertip(link) end)
                 frame:SetScript("OnLeave", function() UIUtil:HideTooltip() end)
-                frame:SetScript("OnClick", function() if IsModifiedClick() then HandleModifiedItemClick(link) end end)
+                frame:SetScript("OnClick", function() if link and IsModifiedClick() then HandleModifiedItemClick(link) end end)
             end
     )
 end
 
 --- @class TextCell
 local TextCell = AddOn.Class('TextCell', Cell)
-function TextCell:initialize(value, fn)
-    Cell.initialize(self, value)
+function TextCell:initialize(fn)
+    Cell.initialize(self, nil)
     self:DoCellUpdate(
             function(_, frame, data, _, _, realrow)
                 if frame.text:GetFontObject() ~= _G.GameFontNormal then
                     frame.text:SetFontObject("GameFontNormal")
                 end
 
-                fn(data, realrow)
+                fn(frame, data, realrow)
             end
     )
 end
@@ -165,8 +165,8 @@ function CellBuilder:itemIconCell(link, texture)
 end
 
 --- @return TextCell
-function CellBuilder:textCell(value, fn)
-    return self:entry(TextCell, value)
+function CellBuilder:textCell(fn)
+    return self:entry(TextCell, fn)
 end
 
 local DefaultRowCount, DefaultRowHeight, DefaultHighlight =
@@ -185,6 +185,11 @@ local ScrollingTable = AddOn.Instance(
 --- @return UI.ScrollingTable.ColumnBuilder
 function ScrollingTable.ColumnBuilder()
     return ColumnBuilder()
+end
+
+--- @return UI.ScrollingTable.CellBuilder
+function ScrollingTable.CellBuilder()
+    return CellBuilder()
 end
 
 --- @return table

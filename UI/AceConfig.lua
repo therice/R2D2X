@@ -31,6 +31,7 @@ function ConfigBuilder:initialize(options, path)
     tinsert(self.embeds, 'header')
     tinsert(self.embeds, 'group')
     tinsert(self.embeds, 'toggle')
+    tinsert(self.embeds, 'input')
     tinsert(self.embeds, 'execute')
     tinsert(self.embeds, 'description')
     tinsert(self.embeds, 'select')
@@ -126,6 +127,10 @@ end
 
 function ConfigBuilder:select(param, name)
     return self:entry(Option, param, 'select', name)
+end
+
+function ConfigBuilder:input(param, name)
+    return self:entry(Option, param, 'input', name)
 end
 
 function ConfigBuilder:range(param, name, min, max, step)

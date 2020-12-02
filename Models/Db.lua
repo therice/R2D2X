@@ -1,9 +1,14 @@
+---@type AddOn
 local _, AddOn = ...
-
-local Util, Logging, Base64, Serialize =
-    AddOn:GetLibrary("Util"), AddOn:GetLibrary("Logging"), AddOn:GetLibrary("Base64"),
-    AddOn:GetLibrary("AceSerializer")
-
+local C = AddOn.Constants
+---@type LibUtil
+local Util = AddOn:GetLibrary("Util")
+---@type LibLogging
+local Logging = AddOn:GetLibrary("Logging")
+---@type LibBase64
+local Base64 = AddOn:GetLibrary("Base64")
+local Serialize = AddOn:GetLibrary("AceSerializer")
+---@type LibUtil.Compression.Compressor
 local Compressor = Util.Compression.GetCompressors(Util.Compression.CompressorType.LibDeflate)[1]
 
 local function compress(data)
@@ -221,4 +226,106 @@ end
 if AddOn._IsTestContext('Models_Db') then
     function CompressedDb.static:compress(data) return compress(data) end
     function CompressedDb.static:decompress(data) return decompress(data) end
+end
+
+--- @class Models.MasterLooterDb
+local MasterLooterDb = AddOn.Package('Models'):Class('MasterLooterDb')
+function MasterLooterDb:initialize()
+    self.db = {}
+end
+
+function MasterLooterDb:IsInitialized()
+    return self.db and Util.Tables.Count(self.db) > 0
+end
+
+function MasterLooterDb:ForTransmit()
+    return self:toTable()
+end
+
+local _build = function(self, mlSettings, epSettings)
+    Logging:Trace("MasterLooterDb:_build(BEFORE) : %d", Util.Tables.Count(self.db))
+
+    mlSettings = mlSettings or {}
+    epSettings = epSettings or {}
+
+    -- do not support custom buttons and responses currently
+    -- so nothing to be done with checking for changes
+    local raids = {}
+    for mapId, raidSettings in pairs(epSettings.raid and epSettings.raid.maps or {}) do
+        -- scaling and scaling_pct
+        raids[mapId] = raidSettings
+    end
+
+    self.db = {
+        outOfRaid           =   mlSettings.outOfRaid,
+        timeout             =   mlSettings.timeout,
+        showLootResponses   =   mlSettings.showLootResponses,
+        raid                =   raids,
+    }
+
+    Logging:Trace("MasterLooterDb:_build(AFTER) : %d", Util.Tables.Count(self.db))
+end
+
+-- Singleton of MasterLooterDb through which all operations should be performed, it will manged the actual
+-- instance and required operations
+---@class MasterLooterDb
+local MasterLooterDbSingleton = AddOn.Instance(
+        'MasterLooterDb',
+        function()
+            return {
+                instance = MasterLooterDb()
+            }
+        end
+)
+
+local _settings = function()
+    local ML, EP = AddOn:MasterLooterModule(), AddOn:EffortPointsModule()
+    if not ML or not ML.db or not ML.db.profile then
+        error("MasterLooter module DB is not available")
+    end
+    if not EP or not EP.db or not EP.db.profile then
+        error("EffortPoints module DB is not available")
+    end
+
+    return ML.db.profile, EP.db.profile
+end
+
+---@return table
+function MasterLooterDbSingleton:Get(rebuild)
+    rebuild = Util.Objects.IsNil(rebuild) and false or true
+    Logging:Trace("MasterLooterDbSingleton:Get(%s)", tostring(rebuild))
+
+    if rebuild or not self.instance:IsInitialized() then
+        _build(self.instance, _settings())
+    end
+
+    -- return the underlying table, not any other metadata
+    return self.instance.db
+end
+
+---@param data table
+function MasterLooterDbSingleton:Set(data)
+    Logging:Trace("MasterLooterDbSingleton:Set(%s)", Util.Objects.ToString(data, 2))
+    if not data or not Util.Objects.IsTable(data) then
+        error("MasterLooter data is nil or not table")
+    end
+    self.instance = MasterLooterDb:reconstitute(data)
+end
+
+---@type Core.Comm
+local Comm = Util.Memoize.Memoize(function() return AddOn.Require('Core.Comm') end)
+function MasterLooterDbSingleton:Send(target)
+    -- make sure the DB has been built, if already built it won't be rebuilt
+    self:Get()
+    Comm():Send {
+        target = target,
+        command = C.Commands.MasterLooterDb,
+        data = {self.instance:ForTransmit()}
+    }
+end
+
+if AddOn._IsTestContext('Models_Db') then
+    function MasterLooterDb:Build(mlSettings, epSettings)
+        _build(self, mlSettings, epSettings)
+    end
 end

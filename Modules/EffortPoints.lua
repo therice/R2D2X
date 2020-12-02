@@ -20,7 +20,7 @@ EP.Defaults = {
 		enabled = true,
 		-- this is the minimum amount of EP needed to qualify for awards
 		ep_min  = 1,
-		raid    = {
+		raid = {
 			-- should EP be auto-awarded for kills
 			auto_award_victory = true,
 			-- should EP be awarded for defeats
@@ -255,8 +255,17 @@ end
 
 --- @param encounter Models.Encounter
 function EP:OnEncounterEnd(encounter)
+	-- don't adjust EP if disabled or not handling loot
+	if not AddOn.enabled or not AddOn.handleLoot then
+		Logging:Warn(
+				"OnEncounterEnd() : not handling encounter end, enabled=%s, handleLoot=%s",
+	             tostring(AddOn.enabled), tostring(AddOn.handleLoot)
+		)
+		return
+	end
+
 	if not encounter then
-		Logging:Warn("EP:OnEncounterEnd() : no encounter provided")
+		Logging:Warn("OnEncounterEnd() : no encounter provided")
 		return
 	end
 
@@ -463,6 +472,6 @@ end)
 
 function EP:BuildConfigOptions()
 	local options = Options(self)
-	Logging:Debug("%s", Util.Objects.ToString(options, 8))
+	-- Logging:Debug("%s", Util.Objects.ToString(options, 8))
 	return options[self:GetName()], true
 end

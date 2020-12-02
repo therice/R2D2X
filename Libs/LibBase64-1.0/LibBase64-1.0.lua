@@ -7,6 +7,7 @@ License: MIT
 ]]
 
 local MAJOR, MINOR = 'LibBase64-1.0', 2
+---@class LibBase64
 local LibBase64 = LibStub:NewLibrary(MAJOR, MINOR)
 if not LibBase64 then return end
 

@@ -1,5 +1,6 @@
 local _, AddOn = ...
 local Logging, Util, AceGUI = AddOn:GetLibrary('Logging'), AddOn:GetLibrary('Util'), AddOn:GetLibrary('AceGUI')
+---@type UI.AceConfig.ConfigBuilder
 local AceConfigBuilder = AddOn.ImportPackage('UI.AceConfig').ConfigBuilder
 
 --- @class UI.Ace

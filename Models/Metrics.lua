@@ -67,7 +67,9 @@ function Timer:Time(fn, ...)
 	local start = debugprofilestop()
 	local success, result = pcall(fn, ...)
 	self:Update(debugprofilestop() - start, success)
-	if not success then error(result) end
+	if not success then
+		error(result)
+	end
 	return result
 end
 

@@ -28,12 +28,15 @@ local function Put(player)
     cache[player.guid] = player:toTable()
 end
 
+local CACHE_TIME = 60 * 60 * 24 * 2 -- 2 days
+
 local function Get(guid)
     local player = cache[guid]
     if player  then
         Logging:Trace('Get(%s) : %s', tostring(guid), Util.Objects.ToString(player))
-        -- todo
-        if GetServerTime() - player.timestamp > 0 then return Player:reconstitute(player) end
+        if GetServerTime() - player.timestamp <= CACHE_TIME then
+            return Player:reconstitute(player)
+        end
     else
         Logging:Trace("Get(%s) : No cached entry", tostring(guid))
     end
@@ -71,6 +74,13 @@ end
 
 function Player:ForTransmit()
     return gsub(self.guid, GuidPatternPremable, "")
+end
+
+function Player:Update(data)
+    for k, v in pairs(data) do
+        self[k] = v
+    end
+    Put(self)
 end
 
 function Player:GetInfo()

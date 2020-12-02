@@ -1,18 +1,29 @@
-local AddOnName, AddOn, Util
+local AddOnName, AddOn, Util, Player, C
 
 
-describe("Standings", function()
+describe("MasterLooter", function()
 	setup(function()
-		AddOnName, AddOn = loadfile("Test/TestSetup.lua")(true, 'Modules_LootSession')
-		Util = AddOn:GetLibrary('Util')
+		AddOnName, AddOn = loadfile("Test/TestSetup.lua")(true, 'Modules_MasterLooter')
+		C = AddOn.Constants
+		Util, Player = AddOn:GetLibrary('Util'), AddOn.Package('Models').Player
 		AddOnLoaded(AddOnName, true)
+		SetTime()
 	end)
 
 	teardown(function()
+		print(Util.Objects.ToString( AddOn.Require('Core.Event').private.metricsRcv:Summarize()))
+		print(Util.Objects.ToString( AddOn.Require('Core.Comm').private.metricsSend:Summarize()))
+		print(Util.Objects.ToString( AddOn.Require('Core.Comm').private.metricsRecv:Summarize()))
+		print(Util.Objects.ToString( AddOn.Require('Core.Comm').private.metricsFired:Summarize()))
 		After()
 	end)
 
 	describe("lifecycle", function()
+		teardown(function()
+			AddOn:YieldModule("LootSession")
+			AddOn:YieldModule("MasterLooter")
+		end)
+
 		it("is disabled on startup", function()
 			local module = AddOn:MasterLooterModule()
 			assert(module)
@@ -29,6 +40,109 @@ describe("Standings", function()
 			local module = AddOn:MasterLooterModule()
 			assert(module)
 			assert(not module:IsEnabled())
+		end)
+	end)
+
+	describe("events", function()
+		local module
+
+		setup(function()
+			_G.IsInRaidVal = true
+			AddOn.handleLoot = true
+			AddOn.player = Player:Get("Player1")
+			AddOn:CallModule("MasterLooter")
+			module = AddOn:MasterLooterModule()
+			PlayerEnteredWorld()
+			assert(module:IsEnabled())
+		end)
+
+		teardown(function()
+			AddOn:YieldModule("LootSession")
+			AddOn:StopHandleLoot()
+			AddOn.masterLooter = nil
+			module = nil
+		end)
+
+		it("handles LOOT_READY", function()
+			WoWAPI_FireEvent("LOOT_READY")
+			assert(module:IsEnabled())
+			assert(module:_GetLootSlot(1))
+			assert(not module:_GetLootSlot(2))
+			assert(module:_GetLootSlot(3))
+		end)
+
+		it("handles LOOT_OPENED", function()
+			WoWAPI_FireEvent("LOOT_OPENED")
+			assert(module:IsEnabled())
+			assert(module:_GetLootSlot(1))
+			assert(not module:_GetLootSlot(2))
+			assert(module:_GetLootSlot(3))
+			assert(module:_GetLootTableEntry(1))
+			assert(module:_GetLootTableEntry(2))
+			assert(not module:_GetLootTableEntry(3))
+			local lt = module:_GetLootTableForTransmit()
+			assert(#lt == 2)
+			for _, e in pairs(lt) do
+				assert(e.ref)
+				assert(not e.slot)
+				assert(not e.awarded)
+				assert(not e.sent)
+			end
+		end)
+		it("handles LOOT_SLOT_CLEARED", function()
+			WoWAPI_FireEvent("LOOT_SLOT_CLEARED", 1)
+			assert(module:IsEnabled())
+			assert(module:_GetLootSlot(1).looted)
+		end)
+
+		it("handles LOOT_CLOSED", function()
+			WoWAPI_FireEvent("LOOT_CLOSED")
+			assert(module:IsEnabled())
+			assert(module.lootOpen == false)
+		end)
+	end)
+
+	describe("commands", function()
+		local ml
+		setup(function()
+			_G.IsInRaidVal = true
+			_G.UnitIsGroupLeaderVal = true
+			_G.UnitIsUnit = function(unit1, unit2) return true end
+			AddOn.player = Player:Get("Player1")
+			AddOn:CallModule("MasterLooter")
+			ml = AddOn:MasterLooterModule()
+			ml.db.profile.autoStart = true
+			ml.db.profile.autoAdd = true
+			ml.db.profile.outOfRaid = true
+			ml.db.profile.usage = {
+				never  = false,
+				ml     = true,
+				ask_ml = false,
+				state  = "ml",
+			}
+			PlayerEnteredWorld()
+			assert(ml:IsEnabled())
+			assert(AddOn:IsMasterLooter())
+			GuildRosterUpdate()
+		end)
+
+		teardown(function()
+			AddOn:YieldModule("MasterLooter")
+			AddOn:StopHandleLoot()
+			AddOn:YieldModule("Loot")
+			AddOn:YieldModule("LootAllocate")
+			AddOn.masterLooter = nil
+			AddOn.player = nil
+			AddOn.handleLoot = false
+			ml = nil
+		end)
+
+		it("sends LootTable", function()
+			WoWAPI_FireEvent("LOOT_READY")
+			WoWAPI_FireEvent("LOOT_OPENED")
+			WoWAPI_FireUpdate(GetTime()+10)
+			assert(AddOn.lootTable)
+			assert(#AddOn.lootTable >= 1)
 		end)
 	end)
 end)
