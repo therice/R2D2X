@@ -1,4 +1,4 @@
-## Interface: 11305
+## Interface: 11306
 ## Title: |cfffe7b2cR2D2X|r
 ## Notes: R2D2X - EPGP AddOn for World of Warcraft
 ## Author: Gnomechómsky-Atiesh

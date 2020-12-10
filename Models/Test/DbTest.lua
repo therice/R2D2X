@@ -208,7 +208,7 @@ describe("DB", function()
         it("is populated (empty)", function()
             local mldb = MasterLooterDb()
             assert(mldb)
-            mldb:Build({}, {})
+            mldb:Build({}, {}, {})
             assert(mldb:IsInitialized())
             assert.is.Nil(mldb.db.outOfRaid)
             assert.is.Nil(mldb.db.timeout)
@@ -218,21 +218,49 @@ describe("DB", function()
         it("is populated", function()
             local mldb = MasterLooterDb()
             assert(mldb)
-            local mlSettings = NewAceDb(AddOn:MasterLooterModule().Defaults)
-            local epSettings = NewAceDb(AddOn:EffortPointsModule().Defaults)
-            mldb:Build(mlSettings.profile, epSettings.profile)
+            local mlSettings = NewAceDb(AddOn:MasterLooterModule().defaults)
+            local epSettings = NewAceDb(AddOn:EffortPointsModule().defaults)
+            local gpSettings = NewAceDb(AddOn:GearPointsModule().defaults)
+            mldb:Build(
+                    { db = mlSettings },
+                    { db = epSettings },
+                    { db = gpSettings }
+            )
             assert(mldb:IsInitialized())
             assert.is.Not.Nil(mldb.db.outOfRaid)
             assert.is.Not.Nil(mldb.db.timeout)
             assert.is.Not.Nil(mldb.db.showLootResponses)
+            assert(mldb.db.buttons.numButtons == 4)
             assert(Util.Tables.Count(mldb.db.raid) >= 1)
+            mldb:Build(
+                    { db = mlSettings },
+                    { db = epSettings, defaults = AddOn:EffortPointsModule().defaults },
+                    { db = gpSettings }
+            )
+            assert(mldb:IsInitialized())
+            assert.is.Not.Nil(mldb.db.outOfRaid)
+            assert.is.Not.Nil(mldb.db.timeout)
+            assert.is.Not.Nil(mldb.db.showLootResponses)
+            assert(mldb.db.buttons.numButtons == 4)
+            assert(Util.Tables.Count(mldb.db.raid) == 0)
         end)
         it("for transmit", function()
             local mldb = MasterLooterDb()
             assert(mldb)
-            mldb:Build({ outOfRaid = true, timeout = 120}, { })
+            mldb:Build(
+                {
+                    db = {
+                        profile = {
+                            outOfRaid = true,
+                            timeout   = 120
+                        }
+                    }
+                },
+                { },
+                { }
+            )
             assert.are.same(
-                    {db = {outOfRaid = true, timeout = 120, raid = {}}},
+                    {db = {outOfRaid = true, timeout = 120, buttons = {numButtons = 0}, raid = {}, award_scaling = {}, slot_scaling = {}}},
                     mldb:ForTransmit()
             )
         end)
@@ -240,8 +268,9 @@ describe("DB", function()
 
     describe("MasterLooterDb (singleton)", function()
         local Comm = AddOn.Require('Core.Comm')
-        local mlSettings = NewAceDb(AddOn:MasterLooterModule().Defaults)
-        local epSettings = NewAceDb(AddOn:EffortPointsModule().Defaults)
+        local mlSettings = NewAceDb(AddOn:MasterLooterModule().defaults)
+        local epSettings = NewAceDb(AddOn:EffortPointsModule().defaults)
+        local gpSettings = NewAceDb(AddOn:GearPointsModule().defaults)
 
         it("Get(error)", function()
             assert.has.error(function() MasterLooterDbInstance:Get() end)
@@ -249,12 +278,14 @@ describe("DB", function()
         it("Get(success)", function()
             AddOn:MasterLooterModule().db = mlSettings
             AddOn:EffortPointsModule().db = epSettings
+            AddOn:GearPointsModule().db = gpSettings
             MasterLooterDbInstance:Get()
             MasterLooterDbInstance:Get(true)
         end)
         it("Send", function()
             AddOn:MasterLooterModule().db = mlSettings
             AddOn:EffortPointsModule().db = epSettings
+            AddOn:GearPointsModule().db = gpSettings
             MasterLooterDbInstance:Send('Player1-Realm1')
         end)
         it("Set(error)", function()
@@ -265,6 +296,7 @@ describe("DB", function()
             Comm:RegisterPrefix(C.CommPrefixes.Main)
             AddOn:MasterLooterModule().db = mlSettings
             AddOn:EffortPointsModule().db = epSettings
+            AddOn:GearPointsModule().db = gpSettings
 
             local rcvd, before, after
             local subscription =

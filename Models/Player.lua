@@ -132,7 +132,7 @@ end
 function Player:Get(input)
     local guid, info
 
-    Logging:Debug("Get(%s)", tostring(input))
+    Logging:Trace("Get(%s)", tostring(input))
 
     if Util.Strings.IsSet(input) then
         if not strmatch(input, GuidPatternPremable) and strmatch(input, GuidPatternRemainder) then

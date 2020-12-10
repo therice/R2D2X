@@ -5,8 +5,6 @@ local L, C = AddOn.Locale, AddOn.Constants
 local Logging = AddOn:GetLibrary("Logging")
 --- @type LibUtil
 local Util = AddOn:GetLibrary("Util")
---- @type LibItemUtil
-local ItemUtil = AddOn:GetLibrary("ItemUtil")
 --- @type Models.Player
 local Player = AddOn.ImportPackage('Models').Player
 --- @type Core.Comm
@@ -43,6 +41,11 @@ function AddOn:SubscribeToPermanentComms()
         end,
         [C.Commands.LootTableAdd] = function(data, sender)
             Logging:Debug("LootTableAdd %s from %s", Util.Objects.ToString(data), tostring(sender))
+            if not self.UnitIsUnit(sender, self.masterLooter) then
+                Logging:Warn("LootTableAdd received from %s (they are not the ML)", tostring(sender))
+                return
+            end
+            self:OnLootTableAddReceived(unpack(data))
         end,
         [C.Commands.MasterLooterDb] = function(data, sender)
             Logging:Debug("MasterLooterDb from %s", tostring(sender))
@@ -53,12 +56,24 @@ function AddOn:SubscribeToPermanentComms()
             else
                 Logging:Warn("MasterLooterDb received from %s (NOT the master looter)", tostring(sender))
             end
+        end,
+        [C.Commands.LootSessionEnd] = function(_, sender)
+            Logging:Debug("LootSessionEnd from %s", tostring(sender))
+            if AddOn:IsMasterLooter(sender) then
+                AddOn:OnLootSessionEnd()
+            end
+        end,
+        [C.Commands.ReRoll] = function(data, sender)
+            Logging:Debug("ReRoll from %s", tostring(sender))
+            if AddOn:IsMasterLooter(sender) and self.enabled then
+                self:OnReRollReceived(sender, unpack(data))
+            end
         end
     })
 end
 
 
--- target, session, response, extra (k/v pairs)
+--- target, session, response, extra (k/v pairs)
 --- @param target string|Models.Player
 --- @param session number
 --- @param response string

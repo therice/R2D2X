@@ -56,4 +56,31 @@ describe("Util", function()
             assert(#AddOn.playerData.gear > 0)
         end)
     end)
+
+    describe("Alarm", function()
+        local invoked, completed, alarm = 0, 0
+
+        local function AlarmFn()
+            invoked = invoked + 1
+            if not alarm:Fired() then return end
+            completed = completed + 1
+        end
+
+        it("functions", function()
+            alarm = AddOn.Alarm(500, AlarmFn)
+            alarm:Start()
+            AlarmFn()
+            WoWAPI_FireUpdate(GetTime() + 100)
+            AlarmFn()
+            WoWAPI_FireUpdate(GetTime() + 100)
+            AlarmFn()
+            WoWAPI_FireUpdate(GetTime() + 200)
+            AlarmFn()
+            assert(invoked == 4)
+            assert(completed == 0)
+            WoWAPI_FireUpdate(GetTime() + 200)
+            assert(invoked == 5)
+            assert(completed == 1)
+        end)
+    end)
 end)

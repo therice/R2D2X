@@ -7,9 +7,9 @@ local Logging =  AddOn:GetLibrary("Logging")
 local Util =  AddOn:GetLibrary("Util")
 --- @type LibGuildStorage
 local GuildStorage  = AddOn:GetLibrary("GuildStorage")
--- @type Models.Award
+--- @type Models.Award
 local Award = AddOn.Package('Models').Award
--- @type Models.Subject
+--- @type Models.Subject
 local Subject = AddOn.Package('Models').Subject
 
 --- @class Standings
@@ -43,23 +43,28 @@ function Standings:EnableOnStartup()
     return false
 end
 
+local function Name(name)
+    return Util.Objects.IsString(name) and name or name:GetName()
+end
+
 function Standings:_AddEntry(name, entry)
-    self.subjects[name] = entry
+    self.subjects[Name(name)] = entry
     self.pendingUpdate = true
 end
 
 function Standings:_RemoveEntry(name)
-    self.subjects[name] = nil
+    self.subjects[Name(name)] = nil
     self.pendingUpdate = true
 end
 
+--- @return Models.Subject
 function Standings:GetEntry(name)
-    return self.subjects[name]
+    return self.subjects[Name(name)]
 end
 
 function Standings.Points(name)
     local e = Standings:GetEntry(name)
-    Logging:Trace("Points(%s) : %s", name, tostring(e and true or false))
+    -- Logging:Trace("Points(%s) : %s", name, tostring(e and true or false))
     if e then return e:Points() end
     -- todo : just nil?
     return 0, 0, 0

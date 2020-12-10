@@ -24,7 +24,6 @@ function AddOn:SubscribeToEvents()
     self.eventSubscriptions = Event:BulkSubscribe(events)
 end
 
-
 function AddOn:UnsubscribeFromEvents()
     Logging:Debug("UnsubscribeFromEvents(%s)", self:GetName())
     if self.eventSubscriptions then

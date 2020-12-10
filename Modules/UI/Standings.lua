@@ -82,7 +82,7 @@ function Standings:GetFrame()
         st:SetFilter(Standings.FilterFunc)
         st:EnableSelection(true)
 
-        MI.EmbedWidgets(self:GetName(), frame, AddOn.UpdateMoreInfo)
+        MI.EmbedWidgets(self:GetName(), frame, AddOn.UpdateMoreInfoWithLootStats)
 
         local close = UI:NewNamed('Button', frame.content, "Close")
         close:SetText(_G.CLOSE)
@@ -435,7 +435,7 @@ function Standings:GetAdjustFrame()
         EmbedErrorTooltip(f)
 
         f.subjectTooltip = UI:NewNamed('GameTooltip', f, 'SubjectTooltip')
-        f.UpdateSubjectTooltip = function (subjects)
+        f.UpdateSubjectTooltip = function(subjects)
             local tip = f.subjectTooltip
             tip:SetOwner(f, "ANCHOR_LEFT")
             tip:AddLine(UIUtil.ColoredDecorator(1, 1, 1):decorate(L["characters"]))

@@ -1,9 +1,13 @@
+--- @type AddOn
 local _, AddOn = ...
-local L, C, Logging, Util =
-    AddOn.Locale, AddOn.Constants, AddOn:GetLibrary('Logging'), AddOn:GetLibrary('Util')
-local UIPackage, UIUtilPackage, UI =
-    AddOn.Package('UI'), AddOn.Package('UI.Util'), AddOn.Require('UI.Native')
-
+local L, C = AddOn.Locale, AddOn.Constants
+--- @type LibLogging
+local Logging =  AddOn:GetLibrary("Logging")
+--- @type LibUtil
+local Util = AddOn:GetLibrary("Util")
+local UIPackage, UIUtilPackage = AddOn.Package('UI'), AddOn.Package('UI.Util')
+-- @type UI.Native
+local UI = AddOn.Require('UI.Native')
 --- @type Models.Award
 local Award = AddOn.Package('Models').Award
 
@@ -18,7 +22,7 @@ end
 
 -- generic builder which handles entries of attributes
 --- @class UI.Util.Builder
-local Builder =  UIUtilPackage:Class('Builder')
+local Builder = UIUtilPackage:Class('Builder')
 function Builder:initialize(entries)
     self.entries = entries
     self.pending = nil
@@ -103,7 +107,7 @@ function ColoredDecorator:initialize(r, g, b)
         self.r, self.g, self.b = r, g, b
     end
 
-    -- Logging:Debug("%s, %s, %s", tostring(self.r), tostring(self.g), tostring(self.b))
+    --Logging:Trace("%s, %s, %s", tostring(self.r), tostring(self.g), tostring(self.b))
 end
 
 function ColoredDecorator:decorate(...)
@@ -164,6 +168,13 @@ function U:CreateHypertip(link)
     GameTooltip:SetHyperlink(link)
 end
 
+function U.CreateGameTooltip(module, parent)
+    local itemTooltip = CreateFrame("GameTooltip", AddOn:Qualify(module, "GameTooltip"), parent, "GameTooltipTemplate")
+    itemTooltip:SetClampedToScreen(false)
+    itemTooltip:SetScale(parent and parent:GetScale()*.95 or 1)
+    return itemTooltip
+end
+
 function U.GetClassColorRGB(class)
     local c = U.GetClassColor(class)
     return U.RGBToHex(c.r,c.g,c.b)
@@ -219,18 +230,24 @@ function U.ItemQualityDecorator(rarity)
     return ColoredDecorator(GetItemQualityColor(rarity))
 end
 
+local GP = Util.Memoize.Memoize(function() return AddOn:GearPointsModule() end)
+
+function U.AwardReasonDecorator(award)
+    return ColoredDecorator(GP():GetAwardColor(award))
+end
+
 local Colors = {
     ResourceTypes = {
         [Award.ResourceType.Ep] = C.Colors.ItemArtifact,
         [Award.ResourceType.Gp] = C.Colors.ItemLegendary,
     },
-    SubjectTypes = {
+    SubjectTypes  = {
         [Award.SubjectType.Character] = C.Colors.ItemCommon,
         [Award.SubjectType.Guild]     = C.Colors.ItemUncommon,
         [Award.SubjectType.Raid]      = C.Colors.ItemLegendary,
         [Award.SubjectType.Standby]   = C.Colors.ItemRare,
     },
-    ActionTypes = {
+    ActionTypes   = {
         [Award.ActionType.Add]      = C.Colors.Evergreen,
         [Award.ActionType.Subtract] = C.Colors.PaladinPink,
         [Award.ActionType.Reset]    = C.Colors.RogueYellow,
@@ -251,4 +268,32 @@ end
 function U.GetActionTypeColor(actionTYpe)
     if Util.Objects.IsString(actionTYpe) then actionTYpe = Award.ActionType[actionTYpe] end
     return Colors.ActionTypes[actionTYpe]
+end
+
+function U.ClassIconFn()
+    return function(frame, class)
+        local coords = CLASS_ICON_TCOORDS[Util.Strings.Upper(class)]
+        if coords then
+            frame:SetNormalTexture("Interface\\GLUES\\CHARACTERCREATE\\UI-CHARACTERCREATE-CLASSES")
+            frame:GetNormalTexture():SetTexCoord(unpack(coords))
+        else
+            frame:SetNormalTexture("Interface/ICONS/INV_Misc_QuestionMark.png")
+        end
+    end
+end
+
+function U.ItemIconFn()
+    return function(frame, link, texture)
+        if not texture and link then
+            texture = select(5, GetItemInfoInstant(link))
+        end
+        frame:SetNormalTexture(texture or "Interface/ICONS/INV_Misc_QuestionMark.png")
+        frame:SetScript("OnEnter", function() U:CreateHypertip(link) end)
+        frame:SetScript("OnLeave", function() U:HideTooltip() end)
+        frame:SetScript("OnClick", function()
+            if link and IsModifiedClick() then
+                HandleModifiedItemClick(link)
+            end
+        end)
+    end
 end

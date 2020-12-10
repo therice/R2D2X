@@ -15,7 +15,7 @@ local Dialog = AddOn:GetLibrary("Dialog")
 --- @class EffortPoints
 local EP = AddOn:NewModule('EffortPoints')
 
-EP.Defaults = {
+EP.defaults = {
 	profile = {
 		enabled = true,
 		-- this is the minimum amount of EP needed to qualify for awards
@@ -167,7 +167,7 @@ EP.Defaults = {
 }
 
 do
-	local defaults = EP.Defaults.profile.raid.maps
+	local defaults = EP.defaults.profile.raid.maps
 	-- update defaults to set scaling off for all raids
 	for mapId, _ in pairs(Encounter.Maps) do
 		defaults[tostring(mapId)] = {
@@ -180,7 +180,7 @@ end
 
 function EP:OnInitialize()
 	Logging:Debug("OnInitialize(%s)", self:GetName())
-	self.db = AddOn.db:RegisterNamespace(self:GetName(), EP.Defaults)
+	self.db = AddOn.db:RegisterNamespace(self:GetName(), EP.defaults)
 end
 
 function EP:OnEnable()
@@ -220,20 +220,11 @@ function EP:ScaleIfRequired(value, mapId)
 		end
 	end
 
-	-- todo
-	--[[
-	local raidScalingSettings
-	if next(AddOn.mlDb) and not Util.Objects.IsEmpty(AddOn:GetMasterLooterDbValue('raid', tostring(mapId))) then
-		raidScalingSettings = AddOn:GetMasterLooterDbValue('raid', tostring(mapId))
-		Logging:Debug("EP:ScaleIfRequired() : Scaling settings obtained from ML DB")
-	else
-		raidScalingSettings = self.db.profile.raid[tostring(mapId)]
-		Logging:Debug("EP:ScaleIfRequired() : Scaling settings obtained from Effort Points Module")
-	end
-	--]]
+	local raidScalingSettings =
+		AddOn:HaveMasterLooterDb() and
+		AddOn:MasterLooterDbValue('raid', tostring(mapId)) or
+		self:GetDbValue('raid.maps', tostring(mapId))
 
-	-- todo : remove after todo above is fixed
-	local raidScalingSettings = self.db.profile.raid.maps[tostring(mapId)]
 	Logging:Debug("ScaleIfRequired() : mapId = %s, scaling_settings = %s", tostring(mapId), Util.Objects.ToString(raidScalingSettings))
 	if raidScalingSettings then
 		local scaleAward = raidScalingSettings.scaling or false
@@ -412,7 +403,7 @@ local Options = Util.Memoize.Memoize(function(self)
 	local creature_ep = Util.Tables.New()
 
 	-- iterate all the creatures and group by map (instance)
-	for id, _ in pairs(EP.Defaults.profile.raid.creatures) do
+	for id, _ in pairs(EP.defaults.profile.raid.creatures) do
 		-- if you don't convert to number, library calls will fail
 		local creature_id, creature, map = tonumber(id)
 		-- also need to account for multi-creature encounters wherein display name

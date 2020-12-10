@@ -8,6 +8,7 @@ function Entry:text(text) return self:set('text', text) end
 function Entry:checkable(val) return self:set('notCheckable', not val) end
 function Entry:arrow(val) return self:set('hasArrow',val) end
 function Entry:value(val) return self:set('value',val) end
+function Entry:disabled(val) return self:set('disabled', val) end
 function Entry:fn(fn) return self:set('func', fn)  end
 
 --- @class UI.AceConfig.EntryBuilder
@@ -27,6 +28,7 @@ function EntryBuilder:_InsertPending()
     tinsert(self.entries[self.level], self.pending.attrs)
 end
 
+--- @return UI.AceConfig.EntryBuilder
 function EntryBuilder:nextlevel()
     self:_CheckPending()
     self.level = self.level + 1
@@ -34,6 +36,7 @@ function EntryBuilder:nextlevel()
     return self
 end
 
+--- @return UI.AceConfig.EntryBuilder
 function EntryBuilder:add()
     return self:entry(Entry)
 end
@@ -74,7 +77,7 @@ function DropDown.RightClickMenu(predicate, entries, callback)
         if not predicate() then return end
         if not menu or not level then return end
 
-        local candidateName, el = menu.name, menu.entry
+        local candidateName, el, module = menu.name, menu.entry, menu.module
         local value = _G.MSA_DROPDOWNMENU_MENU_VALUE
         local levelEntries = entries[level]
         if not levelEntries then return end
@@ -87,12 +90,12 @@ function DropDown.RightClickMenu(predicate, entries, callback)
                     if (entry.hidden and Util.Objects.IsFunction(entry.hidden) and not entry.hidden(candidateName, el)) or not entry.hidden then
                         for name, val in pairs(entry) do
                             -- custom attributes with support for callbacks
-                            -- the paramters are attributes on the menu itself, which must be manually specified
+                            -- the parameters are attributes on the menu itself, which must be manually specified
                             -- typically done in the OnClick event, see Standings.lua for example
                             if name == "func" then
-                                info[name] = function() return val(candidateName, el) end
+                                info[name] = function() return val(candidateName, el, module) end
                             elseif Util.Objects.IsFunction(val) then
-                                info[name] = val(candidateName, el)
+                                info[name] = val(candidateName, el, module)
                             else
                                 info[name] = val
                             end

@@ -95,8 +95,8 @@ local ModulePrototype = {
     -- will provide the default value used for bootstrapping a module's db
     -- will only return a value if the module has a 'Defaults' attribute
     GetDefaultDbValue = function(self, ...)
-        if self.Defaults then
-            return Util.Tables.Get(self.Defaults, Util.Strings.Join('.', ...))
+        if self.defaults then
+            return Util.Tables.Get(self.defaults, Util.Strings.Join('.', ...))
         end
         return nil
     end,

@@ -3,9 +3,10 @@ local _, AddOn = ...
 local Logging, L, C, Util = AddOn:GetLibrary('Logging'), AddOn.Locale, AddOn.Constants, AddOn:GetLibrary('Util')
 local UIUtil = AddOn.Require('UI.Util')
 
-function AddOn.UpdateMoreInfo(enabled, frame, data, row)
-    if not frame and frame.moreInfo then return end
-    Logging:Debug('UpdateMoreInfo(%s) : %s', tostring(enabled), tostring(frame.moreInfo:GetName()))
+local function UpdateMoreInfo(frame, data, row)
+    if not frame and frame.moreInfo then
+        return false, nil
+    end
 
     local name
     if data and row then
@@ -19,16 +20,35 @@ function AddOn.UpdateMoreInfo(enabled, frame, data, row)
     end
 
     if Util.Strings.IsEmpty(name) then
-        return frame.moreInfo:Hide()
+        frame.moreInfo:Hide()
+        return false, nil
     end
 
-    local class = AddOn:UnitClass(name)
-    --Logging:Debug('UpdateMoreInfo(%s) : %s', tostring(name), tostring(class))
-    local c = UIUtil.GetClassColor(class)
-    local tip = frame.moreInfo
-    tip:SetOwner(frame, "ANCHOR_RIGHT")
-    tip:AddLine(AddOn.Ambiguate(name), c.r, c.g, c.b)
-    tip:AddLine(L["no_entries_in_loot_history"])
-    tip:Show()
-    tip:SetAnchorType("ANCHOR_RIGHT", 0, -tip:GetHeight())
+    return true, name
+end
+
+function AddOn.UpdateMoreInfoWithLootStats(frame, data, row)
+    local proceed, name = UpdateMoreInfo(frame, data, row)
+    if proceed then
+        local class = AddOn:UnitClass(name)
+        local c = UIUtil.GetClassColor(class)
+        local tip = frame.moreInfo
+        tip:SetOwner(frame, "ANCHOR_RIGHT")
+        tip:AddLine(AddOn.Ambiguate(name), c.r, c.g, c.b)
+        -- todo
+        tip:AddLine(L["no_entries_in_loot_history"])
+        tip:Show()
+        tip:SetAnchorType("ANCHOR_RIGHT", 0, -tip:GetHeight())
+    end
+end
+
+function AddOn:GetResponseColor(name)
+    return self:GetResponse(name).color:GetRGBA()
+end
+
+function AddOn.GetDiffColor(num)
+    if not num or num == "" then num = 0 end
+    if num > 0 then return C.Colors.Green:GetRGBA() end
+    if num < 0 then return C.Colors.LuminousOrange:GetRGBA() end
+    return C.Colors.Aluminum:GetRGBA()
 end

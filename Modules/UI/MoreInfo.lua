@@ -37,7 +37,7 @@ local function SetTextures(module, miButton)
 end
 
 -- fn : function(enabled [is more info enabled], frame [frame on which widget was embedded])
-function MI.EmbedWidgets(module,frame, fn)
+function MI.EmbedWidgets(module, frame, fn)
     if not Util.Objects.IsFunction(fn) then error("no function provided for updating more info") end
 
     local miButton = UI:NewNamed('Button', frame.content, "MoreInfoButton")
@@ -64,8 +64,10 @@ function MI.EmbedWidgets(module,frame, fn)
         local enabled = Enabled(module)
         -- not enabled, just hide and return
         if not enabled then return frame.moreInfo:Hide() end
-        fn(enabled, frame, ...)
+        fn(frame, ...)
     end
+
+    frame:HookScript("OnHide", function() frame.moreInfo:Hide() end)
     frame.moreInfo = mi
 end
 

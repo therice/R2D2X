@@ -16,7 +16,7 @@ local UIUtil = AddOn.Require('UI.Util')
 --- @class GearPoints
 local GP = AddOn:NewModule('GearPoints', "AceBucket-3.0", "AceHook-3.0")
 
-GP.Defaults = {
+GP.defaults = {
     profile = {
         enabled = true,
         -- this is the minimum value for GP
@@ -102,10 +102,12 @@ GP.Defaults = {
     }
 }
 
+GP.DefaultAwardColor = GP.defaults.profile.award_scaling.ms_need.color
+
 function GP:OnInitialize()
     Logging:Debug("OnInitialize(%s)", self:GetName())
     LibGP:SetToStringFn(Util.Objects.ToString)
-    self.db = AddOn.db:RegisterNamespace(self:GetName(), GP.Defaults)
+    self.db = AddOn.db:RegisterNamespace(self:GetName(), GP.defaults)
 end
 
 function GP:OnEnable()
@@ -129,6 +131,54 @@ function GP:ConfigureLibGP()
             self.db.profile.formula.gp_coefficient_base,
             self.db.profile.formula.gp_multiplier
     )
+end
+
+--- @param award Models.Item.ItemAward
+function GP:OnAwardItem(award)
+    if not award then error('no item award provided') end
+    Logging:Debug("OnAwardItem : %s", Util.Objects.ToString(award:toTable(), 3))
+
+end
+
+function GP:GetAwardSettings(award)
+    Logging:Trace("GetAwardSettings(%s)", tostring(award))
+
+    if Util.Objects.IsEmpty(award) then return nil end
+
+    local settings =
+        AddOn:HaveMasterLooterDb() and
+        AddOn:MasterLooterDbValue('award_scaling', award) or
+        self:GetDbValue('award_scaling', award)
+
+    if not settings then
+        Logging:Warn("GetAwardSettings(%s) : could not locate settings", tostring(award))
+    end
+
+    return settings
+end
+
+function GP:GetAwardColor(award)
+    local settings = self:GetAwardSettings(award)
+    -- Logging:Debug("GetAwardColor(%s) : %s", tostring(award), Util.Objects.ToString(settings))
+    return settings and settings.color or GP.DefaultAwardColor
+end
+
+function GP:GetAwardScale(award)
+    local settings = self:GetAwardSettings(award)
+    return settings and tonumber(settings.scale) or 1
+end
+
+--- @param item Models.Item.Item
+--- @param awardReason string the award reason key for award_scaling table (can be nil)
+function GP:GetGpTextColored(item, awardReason)
+    -- Logging:Debug("GetGpTextColored(%s, %s)", tostring(item.link), Util.Objects.ToString(awardReason))
+    local baseGp, awardGp = item:GetGp(awardReason)
+    local text = UIUtil.ColoredDecorator(GP.DefaultAwardColor):decorate(tostring(baseGp))
+    if awardGp then
+        awardGp = UIUtil.AwardReasonDecorator(awardReason):decorate(tostring(awardGp))
+        text = awardGp .. "(" .. text .. ")"
+    end
+    return text
 end
 
 local function OnTooltipSetItemAddGp(tooltip, ...)
@@ -165,7 +215,6 @@ function GP:HookItemToolTip()
         f = EnumerateFrames(f)
     end
 end
-
 
 function GP:ConfigTableChanged(msg)
     Logging:Debug("ConfigTableChanged() : %s", Util.Objects.ToString(msg))
@@ -239,7 +288,7 @@ local Options = Util.Memoize.Memoize(function ()
 
     -- set path to awards group arguments
     builder:SetPath(GP:GetName() .. '.args.awards.args')
-    local awardScalingDefaults, order = GP.Defaults.profile.award_scaling, 4
+    local awardScalingDefaults, order = GP.defaults.profile.award_scaling, 4
     for award, _ in pairs(awardScalingDefaults) do
         builder
             :range('award_scaling.' .. award .. '.scale', UIUtil.ColoredDecorator(awardScalingDefaults[award].color):decorate(L[award]), 0, 1, 0.01):order(order)
@@ -249,7 +298,7 @@ local Options = Util.Memoize.Memoize(function ()
     end
 
     builder:SetPath(GP:GetName() .. '.args.slots.args')
-    local slotScalingKeys = Util(Util.Tables.Keys(GP.Defaults.profile.slot_scaling)):Sort(function(a,b) return a < b end)()
+    local slotScalingKeys = Util(Util.Tables.Keys(GP.defaults.profile.slot_scaling)):Sort(function(a,b) return a < b end)()
     order = 4
     for _, slot in pairs(slotScalingKeys) do
         local slotDisplayKey = Util.Strings.UcFirst(slot)

@@ -242,25 +242,70 @@ function MasterLooterDb:ForTransmit()
     return self:toTable()
 end
 
-local _build = function(self, mlSettings, epSettings)
+local _build = function(self, ml, ep, gp)
     Logging:Trace("MasterLooterDb:_build(BEFORE) : %d", Util.Tables.Count(self.db))
 
-    mlSettings = mlSettings or {}
-    epSettings = epSettings or {}
+    local mlSettings, mlDefaults =
+        ml.db and ml.db.profile or {}, ml.defaults and ml.defaults.profile or {}
+    local epSettings, epDefaults =
+        ep.db and ep.db.profile or {}, ep.defaults and ep.defaults.profile or {}
+    local gpSettings, gpDefaults =
+        gp.db and gp.db.profile or {}, gp.defaults and gp.defaults.profile or {}
 
-    -- do not support custom buttons and responses currently
-    -- so nothing to be done with checking for changes
+    -- do not support custom buttons and responses currently, only the default
+    -- so don't send them unnecessarily
+
     local raids = {}
     for mapId, raidSettings in pairs(epSettings.raid and epSettings.raid.maps or {}) do
-        -- scaling and scaling_pct
-        raids[mapId] = raidSettings
+        local default = Util.Tables.Get(epDefaults, 'raid.maps.' .. mapId)
+        if  not default or
+            not Util.Objects.Equals(default.scale, raidSettings.scale) or
+            not Util.Objects.Equals(default.scaling_pct, raidSettings.scaling_pct)
+        then
+            raids[mapId] = raidSettings
+        end
     end
 
+    local award_scaling = {}
+    for award, scalingSettings in pairs(gpSettings.award_scaling or {}) do
+        local default = Util.Tables.Get(gpDefaults, 'award_scaling.' .. award)
+        if  not default or
+            not Util.Objects.Equals(default.scale, scalingSettings.scale)
+        then
+            award_scaling[award] = scalingSettings
+        end
+    end
+
+    local slot_scaling = {}
+    for slot, scale in pairs(gpSettings.slot_scaling or {}) do
+        local default = Util.Tables.Get(gpDefaults, 'slot_scaling.' .. slot)
+        if  not default or
+            not Util.Objects.Equals(default, scale)
+        then
+            slot_scaling[slot] = scale
+        end
+    end
+
+    local numButtons =
+            Util.Tables.Get(mlSettings, 'buttons.numButtons') or
+            Util.Tables.Get(mlDefaults, 'buttons.numButtons') or
+            0
+
+    local buttons = {
+        numButtons = numButtons
+    }
+
+    -- there are additional settings we could consider sending for GP calcuation
+    -- which aren't currently included, such as slot_scaling
+
     self.db = {
-        outOfRaid           =   mlSettings.outOfRaid,
-        timeout             =   mlSettings.timeout,
-        showLootResponses   =   mlSettings.showLootResponses,
-        raid                =   raids,
+        outOfRaid         = mlSettings.outOfRaid,
+        timeout           = mlSettings.timeout,
+        showLootResponses = mlSettings.showLootResponses,
+        buttons           = buttons,
+        raid              = raids,
+        slot_scaling      = slot_scaling,
+        award_scaling     = award_scaling,
     }
 
     Logging:Trace("MasterLooterDb:_build(AFTER) : %d", Util.Tables.Count(self.db))
@@ -279,7 +324,7 @@ local MasterLooterDbSingleton = AddOn.Instance(
 )
 
 local _settings = function()
-    local ML, EP = AddOn:MasterLooterModule(), AddOn:EffortPointsModule()
+    local ML, EP, GP = AddOn:MasterLooterModule(), AddOn:EffortPointsModule(), AddOn:GearPointsModule()
     if not ML or not ML.db or not ML.db.profile then
         error("MasterLooter module DB is not available")
     end
@@ -287,7 +332,11 @@ local _settings = function()
         error("EffortPoints module DB is not available")
     end
 
-    return ML.db.profile, EP.db.profile
+    if not GP or not GP.db or not GP.db.profile then
+        error("GearPoints module DB is not available")
+    end
+
+    return ML, EP, GP
 end
 
 ---@return table
@@ -325,7 +374,7 @@ function MasterLooterDbSingleton:Send(target)
 end
 
 if AddOn._IsTestContext('Models_Db') then
-    function MasterLooterDb:Build(mlSettings, epSettings)
-        _build(self, mlSettings, epSettings)
+    function MasterLooterDb:Build(ml, ep, gp)
+        _build(self, ml, ep, gp)
     end
 end

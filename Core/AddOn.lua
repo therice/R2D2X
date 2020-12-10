@@ -46,8 +46,12 @@ function AddOn:OnInitialize()
     self.inCombat = false
     -- the current encounter
     self.encounter = Encounter.None
+    ---@type table<number, Models.Item.ItemRef>
+    self.lootTable = {}
+    ---@type table<string, boolean>
+    self.group = {}
 
-    self.db = self:GetLibrary("AceDB"):New(self:Qualify('DB'), self.Defaults)
+    self.db = self:GetLibrary("AceDB"):New(self:Qualify('DB'), self.defaults)
     if not AddOn._IsTestContext() then Logging:SetRootThreshold(self.db.profile.logThreshold) end
 
     -- register slash commands
@@ -60,6 +64,8 @@ function AddOn:OnInitialize()
     self:SubscribeToPermanentComms()
 end
 
+-- todo : check RegisterBucketMessage
+-- todo : check
 function AddOn:OnEnable()
     Logging:Debug("OnEnable(%s)", self:GetName())
 
@@ -113,6 +119,8 @@ function AddOn:OnEnable()
 
     -- register events
     self:SubscribeToEvents()
+    self:RegisterBucketEvent("GROUP_ROSTER_UPDATE", 5, "UpdateGroupMembers")
+
     -- register configuration
     self:RegisterConfig()
     -- add minimap button
@@ -128,6 +136,7 @@ end
 
 function AddOn:OnDisable()
     Logging:Debug("OnDisable(%s)", self:GetName())
+    self:UnregisterAllBuckets()
     self:UnsubscribeFromEvents()
     SlashCommands:Unregister()
 end

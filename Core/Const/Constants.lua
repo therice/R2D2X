@@ -58,6 +58,7 @@ AddOn.Constants = {
         DeathKnightRed  =   CreateColor(0.77,0.12,0.23,1),
         Evergreen       =   CreateColor(0, 1, 0.59, 1),
         Fuchsia         =   CreateColor(1, 0, 1, 1),
+        Green           =   CreateColor(0, 1, 0, 1),
         ItemArtifact    =   _G.ITEM_QUALITY_COLORS[6].color,
         ItemCommon      =   _G.ITEM_QUALITY_COLORS[1].color,
         ItemEpic        =   _G.ITEM_QUALITY_COLORS[4].color,
@@ -79,6 +80,8 @@ AddOn.Constants = {
     },
     
     Commands = {
+        Awarded                 =   "awd",
+        ChangeResponse          =   "cr",
         PlayerInfo              =   "pi",
         PlayerInfoRequest       =   "pir",
         HandleLootStart         =   "hlst",
@@ -89,11 +92,19 @@ AddOn.Constants = {
         LootTableAdd            =   "lta",
         MasterLooterDb          =   "mldb",
         MasterLooterDbRequest   =   "mldbr",
+        OfflineTimer            =   "ot",
         Reconnect               =   "rct",
         Response                =   "rsp",
+        ReRoll                  =   "rer",
+        Roll                    =   "roll",
+        Rolls                   =   "rolls",
+        StandbyPingAck          =   "sbpa",
     },
 
     DropDowns = {
+        AllocateRightClick      = name .. "_Allocate_RightClick",
+        AllocateFilter          = name .. "_Allocate_Filter",
+        Enchanters              = name .. "_EnchantersMenu",
         StandingsRightClick     = name .. "_Standings_RightClick",
         StandingsFilter         = name .. "_Standings_Filter",
     },
@@ -172,7 +183,10 @@ AddOn.Constants = {
     },
 
     Messages = {
+        AwardSuccess            =   name .. "_AwardFailed",
+        AwardFailed             =   name .. "_AwardSuccess",
         ConfigTableChanged      =   name .. "_ConfigTableChanged",
+        LootTableAddition       =   name .. "_LootTableAddition",
         MasterLooterAddItem     =   name .. "_MasterLooterAddItem",
     },
 
@@ -184,14 +198,29 @@ AddOn.Constants = {
     },
     
     Popups = {
+        ConfirmAbort            =   name .. "_ConfigAbort",
         ConfirmAdjustPoints     =   name .. "_ConfirmAdjustPoints",
+        ConfirmAward            =   name .. "_ConfirmAward",
         ConfirmDecayPoints      =   name .. "_ConfirmDecayPoints",
         ConfirmDeleteItem       =   name .. "_ConfirmDeleteItem",
+        ConfirmReannounceItems  =   name .. "_ConfirmReannounceItems",
         ConfirmUsage            =   name .. "_ConfirmUsage",
     },
 
     Responses = {
-        Disabled    =   "D",
+        Announced    = "ANNOUNCED",
+        AutoPass     = "AUTOPASS",
+        Awarded      = "AWARDED",
+        Default      = "DEFAULT",
+        Disabled     = "DISABLED",
+        NotAnnounced = "NOTANNOUNCED",
+        Nothing      = "NOTHING",
+        NotInRaid    = "NOTINRAID",
+        Pass         = "PASS",
+        Removed      = "REMOVED",
+        Roll         = "ROLL",
+        Timeout      = "TIMEOUT",
+        Wait         = "WAIT",
     },
 
     VersionStatus = {

@@ -319,6 +319,8 @@ function FrameClass:SetBackdropBorderColor(r, g, b) end
 
 function FrameClass:SetFontObject(font) end
 
+function FrameClass:SetFont(x, y, z) end
+
 function FrameClass:EnableMouseWheel() end
 
 function FrameClass:SetFading() end
@@ -373,6 +375,8 @@ function FrameClass:SetMinResize() end
 
 function FrameClass:GetFontObject() return "" end
 
+function FrameClass:GetTextWidth() return 10 end
+
 function CreateFrame(kind, name, parent, template)
     local frame = FrameClass:New(name)
     frame.type = kind
@@ -389,6 +393,11 @@ function CreateFrame(kind, name, parent, template)
             frame.scrollBar = CreateFrame("Frame", name .. "ScrollBar", frame)
         elseif template == "OptionsFrameTabButtonTemplate" then
             frame.text = CreateFrame("Frame", name .. "Text", frame)
+        elseif template == "TextStatusBar" then
+            frame.SetStatusBarTexture = function() end
+            frame.SetStatusBarColor = function() end
+            frame.SetMinMaxValues = function() end
+            frame.text = CreateFrame("Frame", (name or "TextStatusBar") .. "Text", frame)
         end
     end
 
@@ -541,6 +550,7 @@ function WoWAPI_FireUpdate(forceNow)
             -- reset back in case we reset the clock for more testing
             if now == 0 then frame.timer = 0 end
             _G.arg1 = now - frame.timer
+            -- print('OnUpdate(' .. tostring(frame:GetName()).. ') => ' .. tostring(now - frame.timer))
             frame.scripts.OnUpdate(frame, now - frame.timer)
             frame.timer = now
         end
@@ -562,3 +572,5 @@ function EnumerateFrames(f)
         return frames[nextIdx]
     end
 end
+
+function FauxScrollFrame_OnVerticalScroll(...) end

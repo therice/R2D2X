@@ -14,6 +14,16 @@ local Attributes = AddOn.Package('UI.Util').Attributes
 --- @type UI.Util.Builder
 local Builder = AddOn.Package('UI.Util').Builder
 
+--- @class UI.ScrollingTable
+local ScrollingTable = AddOn.Instance(
+        'UI.ScrollingTable',
+        function()
+            return {
+                Lib = ST
+            }
+        end
+)
+
 --- @class Column
 local Column = AddOn.Class('Column', Attributes)
 -- ST column entry
@@ -24,6 +34,7 @@ function Column:sort(sort) return self:set('sort', sort) end
 function Column:defaultsort(sort) return self:set('defaultsort', sort) end
 function Column:sortnext(next) return self:set('sortnext', next) end
 function Column:comparesort(fn) return self:set('comparesort', fn) end
+function Column:align(align) return self:set('align', align) end
 
 -- ST column builder, for creating ST columns
 --- @class UI.ScrollingTable.ColumnBuilder
@@ -44,23 +55,13 @@ function Cell:initialize(value)
 end
 
 function Cell:color(color) return self:set('color', color) end
-function Cell:DoCellUpdate(fn) return self:set('DoCellUpdate', fn)end
+function Cell:DoCellUpdate(fn) return self:set('DoCellUpdate', fn) end
 
 --- @class ClassIconCell
 local ClassIconCell = AddOn.Class('ClassIconCell', Cell)
 function ClassIconCell:initialize(value, class)
     Cell.initialize(self, value)
-    self:DoCellUpdate(
-        function(_, frame)
-            local coords = CLASS_ICON_TCOORDS[Util.Strings.Upper(class)]
-            if coords then
-                frame:SetNormalTexture("Interface\\GLUES\\CHARACTERCREATE\\UI-CHARACTERCREATE-CLASSES")
-                frame:GetNormalTexture():SetTexCoord(unpack(coords))
-            else
-                frame:SetNormalTexture("Interface/ICONS/INV_Misc_QuestionMark.png")
-            end
-        end
-    )
+    self:DoCellUpdate(function(_, frame) UIUtil.ClassIconFn()(frame, class) end)
 end
 
 --- @class ClassColoredCell
@@ -102,14 +103,7 @@ end
 local ItemIconCell = AddOn.Class('ItemIconCell', Cell)
 function ItemIconCell:initialize(link, texture)
     Cell.initialize(self, nil)
-    self:DoCellUpdate(
-            function(_, frame)
-                frame:SetNormalTexture(texture or "Interface/ICONS/INV_Misc_QuestionMark.png")
-                frame:SetScript("OnEnter", function() UIUtil:CreateHypertip(link) end)
-                frame:SetScript("OnLeave", function() UIUtil:HideTooltip() end)
-                frame:SetScript("OnClick", function() if link and IsModifiedClick() then HandleModifiedItemClick(link) end end)
-            end
-    )
+    self:DoCellUpdate(function(_, frame) UIUtil.ItemIconFn()(frame, link, texture) end)
 end
 
 --- @class TextCell
@@ -172,16 +166,6 @@ end
 local DefaultRowCount, DefaultRowHeight, DefaultHighlight =
     20, 25, { ["r"] = 1.0, ["g"] = 0.9, ["b"] = 0.0, ["a"] = 0.5 }
 
---- @class UI.ScrollingTable
-local ScrollingTable = AddOn.Instance(
-        'UI.ScrollingTable',
-        function()
-            return {
-                Lib = ST
-            }
-        end
-)
-
 --- @return UI.ScrollingTable.ColumnBuilder
 function ScrollingTable.ColumnBuilder()
     return ColumnBuilder()
@@ -211,6 +195,32 @@ function ScrollingTable.New(cols, rows, rowHeight, highlight, frame)
 end
 
 --- @return function
+function ScrollingTable.DoCellUpdateFn(fn)
+    local function after(rowFrame, _, _, cols, _, realrow, column, _, table, ...)
+        local rowdata = table:GetRow(realrow)
+        local celldata = table:GetCell(rowdata, column)
+
+        local highlight
+        if type(celldata) == "table" then
+            highlight = celldata.highlight
+        end
+
+        if table.fSelect then
+            if table.selected == realrow then
+                table:SetHighLightColor(rowFrame, highlight or cols[column].highlight or rowdata.highlight or table:GetDefaultHighlight())
+            else
+                table:SetHighLightColor(rowFrame, table:GetDefaultHighlightBlank())
+            end
+        end
+    end
+
+    return function(rowFrame, cellFrame, data, cols, row, realrow, column, fShow, table, ...)
+        fn(rowFrame, cellFrame, data, cols, row, realrow, column, fShow, table, ...)
+        after(rowFrame, cellFrame, data, cols, row, realrow, column, fShow, table, ...)
+    end
+end
+
+--- @return function
 function ScrollingTable.SortFn(valueFn)
     return function(table, rowa, rowb, sortbycol)
         return ScrollingTable.Sort(table, rowa, rowb, sortbycol, valueFn)
@@ -219,6 +229,7 @@ end
 
 --- @return boolean
 function ScrollingTable.Sort(table, rowa, rowb, sortbycol, valueFn)
+    -- Logging:Trace("Sort(%s)", tostring(sortbycol))
     local column = table.cols[sortbycol]
     local row1, row2 = table:GetRow(rowa), table:GetRow(rowb)
     local v1, v2 = valueFn(row1), valueFn(row2)

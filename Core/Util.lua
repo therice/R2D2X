@@ -4,7 +4,7 @@ local L, C = AddOn.Locale, AddOn.Constants
 --- @type LibLogging
 local Logging =  AddOn:GetLibrary("Logging")
 --- @type LibUtil
-local Util =  AddOn:GetLibrary("Util")
+local Util = AddOn:GetLibrary("Util")
 --- @type LibItemUtil
 local ItemUtil = AddOn:GetLibrary("ItemUtil")
 --- @type Models.Player
@@ -47,7 +47,7 @@ function Mode:__tostring()
 end
 
 function AddOn:Qualify(...)
-    return Util.Strings.Join('_', self.Constants.name, ...)
+    return Util.Strings.Join('_', C.name, ...)
 end
 
 function AddOn:IsInNonInstance()
@@ -60,6 +60,8 @@ function AddOn:IsInNonInstance()
 end
 
 function AddOn.Ambiguate(name)
+    if Util.Objects.IsTable(name) then name = name.name end
+    if Util.Objects.IsEmpty(name) then error("name not specified") end
     return Ambiguate(name, "none")
 end
 
@@ -152,6 +154,12 @@ function AddOn.ItemIsItem(item1, item2)
     return ItemUtil:NeutralizeItem(item1) ==  ItemUtil:NeutralizeItem(item2)
 end
 
+function AddOn.TransmittableItemString(item)
+    local transmit = ItemUtil:ItemLinkToItemString(item)
+    transmit = ItemUtil:NeutralizeItem(transmit)
+    return AddOn.SanitizeItemString(transmit)
+end
+
 ---@param item string any value to be prefaced with 'item:'
 function AddOn.DeSanitizeItemString(item)
     return "item:" .. (item or "0")
@@ -230,7 +238,7 @@ end
 
 local function GetAverageItemLevel()
     local sum, count = 0, 0
-    for i= INVSLOT_FIRST_EQUIPPED, INVSLOT_LAST_EQUIPPED do
+    for i = INVSLOT_FIRST_EQUIPPED, INVSLOT_LAST_EQUIPPED do
         local link = GetInventoryItemLink(C.player, i)
         if not Util.Strings.IsEmpty(link)  then
             local ilvl = select(4, GetItemInfo(link)) or 0
@@ -357,4 +365,81 @@ function AddOn:GetItemLevelDifference(item, g1, g2)
     end
 
     return diff
+end
+
+--- @param subscriptions table<number, rx.Subscription>
+function AddOn.Unsubscribe(subscriptions)
+    if Util.Objects.IsSet(subscriptions) then
+        for _, subscription in pairs(subscriptions) do
+            subscription:unsubscribe()
+        end
+    end
+end
+
+function AddOn.GetItemTextWithCount(link, count)
+    return link .. (count and count > 1 and (" x" .. count) or "")
+end
+
+local GuildRanks = Util.Memoize.Memoize(
+    function()
+        local ranks = {}
+        if IsInGuild() then
+            GuildRoster()
+            for i = 1, GuildControlGetNumRanks() do
+                ranks[GuildControlGetRankName(i)] = i
+            end
+        end
+        return ranks
+    end
+)
+function AddOn.GetGuildRanks()
+    return GuildRanks()
+end
+
+
+local Alarm = AddOn.Class('Alarm')
+function Alarm:initialize(interval, fn)
+    self.interval = interval
+    self.fn = fn
+    self.elapsed = 0
+    self.fired = false
+    self.frame = CreateFrame('Frame', 'AlarmFrame')
+    self.frame:Hide()
+end
+
+function Alarm:OnUpdate(elapsed)
+    self.elapsed = self.elapsed + elapsed
+    -- Logging:Debug("OnUpdate(%.2f) : %.2f, %.2f", elapsed, self.elapsed, self.interval)
+    if self.elapsed > self.interval then
+        -- Logging:Debug("OnUpdate(%.2f) : %.2f, %.2f", elapsed, self.elapsed, self.interval)
+        self.fired = true
+        self.fn()
+        self:Restart()
+    end
+end
+
+function Alarm:Fired()
+    return self.fired
+end
+
+function Alarm:Start()
+    Logging:Debug('Start')
+    self.elapsed = 0
+    self.frame:Show()
+end
+
+function Alarm:Stop()
+    Logging:Debug('Stop')
+    self.frame:Hide()
+end
+
+function Alarm:Restart()
+    -- Logging:Debug('Restart')
+    self.elapsed, self.fired = 0, false
+end
+
+function AddOn.Alarm(interval, fn)
+    local alarm = Alarm(interval, fn)
+    alarm.frame:SetScript("OnUpdate", function(_, elapsed) alarm:OnUpdate(elapsed) end)
+    return alarm
 end

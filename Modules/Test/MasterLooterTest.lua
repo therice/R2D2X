@@ -102,13 +102,15 @@ describe("MasterLooter", function()
 		end)
 	end)
 
-	describe("commands", function()
+	describe("functionality", function()
+		--- @type MasterLooter
 		local ml
 		setup(function()
 			_G.IsInRaidVal = true
 			_G.UnitIsGroupLeaderVal = true
 			_G.UnitIsUnit = function(unit1, unit2) return true end
 			AddOn.player = Player:Get("Player1")
+			-- AddOn.masterLooter = AddOn.player
 			AddOn:CallModule("MasterLooter")
 			ml = AddOn:MasterLooterModule()
 			ml.db.profile.autoStart = true
@@ -143,6 +145,63 @@ describe("MasterLooter", function()
 			WoWAPI_FireUpdate(GetTime()+10)
 			assert(AddOn.lootTable)
 			assert(#AddOn.lootTable >= 1)
+		end)
+
+		it("handles Reconnect", function ()
+			AddOn:Send(AddOn.masterLooter, C.Commands.Reconnect)
+			_G.UnitIsUnit = function(unit1, unit2) return false end
+			WoWAPI_FireUpdate(GetTime()+10)
+			_G.UnitIsUnit = function(unit1, unit2) return true end
+		end)
+
+		it("HaveUnawardedItems", function()
+			assert(ml:HaveUnawardedItems())
+		end)
+
+		it("UpdateLootSlots", function()
+			ml:_UpdateLootSlots()
+		end)
+
+		it("CanGiveLoot", function()
+			ml.lootOpen = false
+			local ok, cause = ml:CanGiveLoot(1, nil, AddOn.player:GetName())
+			assert(not ok)
+			assert(cause == ml.AwardStatus.Failure.LootNotOpen)
+			ml.lootOpen = true
+			ok, cause = ml:CanGiveLoot(1, nil, AddOn.player:GetName())
+			assert(not ok)
+			assert(cause == ml.AwardStatus.Failure.LootGone)
+			_G.GetContainerNumFreeSlots = function(bag) return 0, 0 end
+			ok, cause = ml:CanGiveLoot(1, ml.lootSlots[1].item, AddOn.player:GetName())
+			assert(not ok)
+			assert(cause == ml.AwardStatus.Failure.MLInventoryFull)
+			_G.GetContainerNumFreeSlots = function(bag) return 4, 0 end
+			_G.UnitIsUnit = function(unit1, unit2) return false end
+			_G.UnitIsConnected = function(unit) return false end
+			ok, cause = ml:CanGiveLoot(1, ml.lootSlots[1].item, AddOn.player:GetName())
+			assert(not ok)
+			assert(cause == ml.AwardStatus.Failure.Offline)
+			_G.UnitIsConnected = function(unit) return true end
+			ok, cause = ml:CanGiveLoot(1, ml.lootSlots[1].item, AddOn.player:GetName())
+			assert(not ok)
+			assert(cause == ml.AwardStatus.Failure.NotBop)
+			_G.UnitIsUnit = function(unit1, unit2) return true end
+			ok, cause = ml:CanGiveLoot(1, ml.lootSlots[1].item, AddOn.player:GetName())
+			assert(ok)
+			assert(cause == nil)
+		end)
+
+		it("Award", function()
+			AddOn:SendResponse(C.group, 1, 1)
+			WoWAPI_FireUpdate(GetTime() + 10)
+			local award = AddOn:LootAllocateModule():GetItemAward(1, AddOn.player:GetName())
+			ml:Award(award)
+			WoWAPI_FireEvent("LOOT_SLOT_CLEARED", 1)
+		end)
+
+		it("ends session", function()
+			ml:EndSession()
+			assert(not ml.running)
 		end)
 	end)
 end)

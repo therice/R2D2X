@@ -1,7 +1,7 @@
 local AddOnName, AddOn, Util
 
 
-describe("Standings", function()
+describe("LootSession", function()
     setup(function()
         AddOnName, AddOn = loadfile("Test/TestSetup.lua")(true, 'Modules_LootSession')
         Util = AddOn:GetLibrary('Util')
@@ -13,6 +13,10 @@ describe("Standings", function()
     end)
 
     describe("lifecycle", function()
+        teardown(function()
+            AddOn:YieldModule("LootSession")
+        end)
+
         it("is disabled on startup", function()
             local standings = AddOn:LootSessionModule()
             assert(standings)
@@ -31,66 +35,52 @@ describe("Standings", function()
             assert(not standings:IsEnabled())
         end)
     end)
-    --
-    --describe("operations", function()
-    --    local standings
-    --
-    --    before_each(function()
-    --        AddOn:ToggleModule("Standings")
-    --        standings = AddOn:StandingsModule()
-    --        PlayerEnteredWorld()
-    --        GuildRosterUpdate()
-    --    end)
-    --
-    --    teardown(function()
-    --        AddOn:ToggleModule("Standings")
-    --        standings = nil
-    --    end)
-    --
-    --    it("builds data", function()
-    --        standings:BuildData()
-    --        local ep, gp, pr = standings.Points('Player101-Realm1')
-    --        assert(ep == 1240)
-    --        assert(gp == 34)
-    --        assert(pr == Util.Numbers.Round(ep/gp, 2))
-    --    end)
-    --
-    --    it("performs adjustment", function()
-    --        local award = Award()
-    --        award:SetAction(Award.ActionType.Add)
-    --        award:SetResource(Award.ResourceType.Ep, 50)
-    --        award:SetSubjects(Award.SubjectType.Character, 'Player102-Realm1')
-    --        standings:Adjust(award)
-    --        local ep, gp, pr = standings.Points('Player102-Realm1')
-    --        assert(ep == 1290)
-    --        assert(gp == 34)
-    --        assert(pr == Util.Numbers.Round(ep/gp, 2))
-    --    end)
-    --
-    --    it("performs bulk adjustment", function()
-    --        local awards = {}
-    --        local award = Award()
-    --        award:SetAction(Award.ActionType.Decay)
-    --        award:SetResource(Award.ResourceType.Ep, 0.10)
-    --        award:SetSubjects(Award.SubjectType.Guild)
-    --        tinsert(awards, award)
-    --        award = award:clone()
-    --        award:SetResource(Award.ResourceType.Gp, 0.10)
-    --        tinsert(awards, award)
-    --        standings:BulkAdjust(unpack(awards))
-    --
-    --        local ep, gp, pr = standings.Points('Player101-Realm1')
-    --        --print(format('%d, %d, %d', ep, gp, pr))
-    --        assert(ep == 1116)
-    --        assert(gp == 31)
-    --        assert(pr == Util.Numbers.Round(ep/gp, 2))
-    --        ep, gp, pr = standings.Points('Player107-Realm1')
-    --        assert(ep == 1116)
-    --        assert(gp == 31)
-    --        assert(pr == Util.Numbers.Round(ep/gp, 2))
-    --    end)
-    --end)
-    --
+
+    describe("operations", function()
+        local module
+
+        before_each(function()
+            AddOn:ToggleModule("LootSession")
+            module = AddOn:LootSessionModule()
+            PlayerEnteredWorld()
+            GuildRosterUpdate()
+        end)
+
+        teardown(function()
+            AddOn:ToggleModule("LootSession")
+            module = nil
+        end)
+
+        it("fails to start when loading items", function()
+            module.loadingItems = true
+            module:Start()
+        end)
+        it("fails to start without loot table", function()
+            module.loadingItems = false
+            module:Start()
+        end)
+        it("fails to start in combat lockdown", function()
+            module.loadingItems = false
+            module.ml.lootTable = {1, 2, 3}
+            _G.InCombatLockdown = function() return true end
+            module:Start()
+        end)
+        it("disables after starting", function()
+            module.loadingItems = false
+            module.ml.lootTable = {1, 2, 3}
+            _G.InCombatLockdown = function() return false end
+            module.ml.StartSession = function() end
+            module:Start()
+            assert(not module:IsEnabled())
+        end)
+        it("disables after cacnel", function()
+            module:Enable()
+            assert(module:IsEnabled())
+            module:Cancel()
+            assert(not module:IsEnabled())
+        end)
+    end)
+
     --describe("ui", function()
     --    local standings
     --

@@ -78,6 +78,7 @@ _G.strlower = string.lower
 _G.strupper = string.upper
 _G.mod = function(a,b) return a - math.floor(a/b) * b end
 _G.max = math.max
+_G.ceil = math.ceil
 
 -- https://wowwiki.fandom.com/wiki/API_strsplit
 -- A list of strings. Not a table. If the delimiter is not found in the string, the whole subject string will be returned.
@@ -107,6 +108,17 @@ _G.strchar = string.char
 _G.pack = table.pack
 _G.unpack = table.unpack
 _G.sort = table.sort
+
+_G.tDeleteItem = function(tbl, item)
+    local index = 1;
+    while tbl[index] do
+        if ( item == tbl[index] ) then
+            tremove(tbl, index);
+        else
+            index = index + 1;
+        end
+    end
+end
 
 --[[ Test code for debugprofilestop
 
@@ -196,7 +208,7 @@ end
 
 function GetAddOnMetadata(name, attr)
     if string.lower(attr) == 'version' then
-        return "2.0.0-beta"
+        return "2021.1.0-dev"
     else
         return nil
     end
@@ -232,7 +244,7 @@ function UnitInParty() return _G.IsInGroupVal end
 -- https://wow.gamepedia.com/API_UnitIsUnit
 function UnitIsUnit(a, b)
     -- extremely rudimentary, doesnt' handle things like resolving targettarget, player, etc
-    -- print(tostring(a) .. '/' .. tostring(b))
+    -- print('UnitIsUnit -> ' .. tostring(a) .. '/' .. tostring(b))
     if a == b then return 1 else return nil end
 end
 
@@ -399,6 +411,10 @@ function UnitRace(unit)
     end
 end
 
+function UnitPosition(unit)
+    return 0, 0, 0, 531
+end
+
 function Ambiguate(name, context)
     if context == "short" then
         name = gsub(name, "%-.+", "")
@@ -435,7 +451,11 @@ function UnitHealthMax() return 100  end
 
 function UnitHealth() return 50 end
 
-function GetNumRaidMembers() return 40 end
+_G.MAX_RAID_MEMBERS = 40
+
+function GetNumRaidMembers() return _G.MAX_RAID_MEMBERS  end
+
+function GetMasterLootCandidate(slot, i) return "Player" ..  i end
 
 function GetNumPartyMembers() return 5 end
 
@@ -466,6 +486,24 @@ function GetPlayerInfoByGUID (guid)
     end
 end
 
+function GetInventorySlotInfo(slot)
+
+end
+
+function GetItemFamily(item)
+    return "INVTYPE_BAG"
+end
+
+function GetContainerNumFreeSlots(bag)
+    return 4, 0
+
+end
+_G.BACKPACK_CONTAINER = 0
+_G.NUM_BAG_SLOTS = 4
+
+function escapePatternSymbols(value)
+    return value
+end
 
 FACTION_HORDE = "Horde"
 FACTION_ALLIANCE = "Alliance"
@@ -491,6 +529,10 @@ end
 
 function GetInventoryItemLink(unit, slotId)
   return "item:" .. random(50000) ..":0:0:0:0:0:0:0:" .. random(60)
+end
+
+function GiveMasterLoot(slot, i)
+
 end
 
 function ChatFrame_AddMessageEventFilter(event, fn)  end
@@ -626,6 +668,7 @@ local Color = {}
 function Color:New(r, g, b, a)
     local c = {r=r, g=g, b=b, a=a}
     c['GetRGB'] = function() return c.r, c.g, c.b end
+    c['GetRGBA'] = function() return c.r, c.g, c.b, c.a end
     c.hex = string.format("%02x%02x%02x", math.floor(255*c.r), math.floor(255*c.g), math.floor(255*c.b))
     return c
 end
@@ -633,6 +676,8 @@ end
 _G.CreateColor = function(r, g, b, a)
     return Color:New(r, g, b, a)
 end
+
+_G.NORMAL_FONT_COLOR = Color:New(1, 1, 1, 1)
 
 _G.ITEM_QUALITY_COLORS = {
     {color = Color:New(1, 0, 0, 0)},
@@ -743,6 +788,15 @@ _G.INVSLOT_FIRST_EQUIPPED = _G.INVSLOT_HEAD
 _G.INVSLOT_LAST_EQUIPPED  = _G.INVSLOT_TABARD
 
 _G.RANDOM_ROLL_RESULT = "%s rolls %d (%d-%d)"
+
+_G.RandomRoll = function(low, high)
+    local result = random(low, high)
+    SendChatMessage(
+            format(_G.RANDOM_ROLL_RESULT, UnitName('player'), result, low, high),
+            'SYSTEM'
+    )
+end
+
 _G.RETRIEVING_ITEM_INFO = "Retrieving item information"
 
 _G.TOOLTIP_DEFAULT_BACKGROUND_COLOR = {
@@ -760,7 +814,9 @@ _G.LE_ITEM_BIND_ON_EQUIP = 2
 _G.LE_ITEM_BIND_ON_ACQUIRE = 1
 
 _G.AUTO_LOOT_DEFAULT_TEXT = "Auto Loot"
+_G.ITEM_LEVEL_ABBR = "Item Level"
 
+_G.ROLL = "Roll"
 _G.GENERAL = "General"
 _G.UNKNOWNOBJECT = "Unknown"
 _G.StaticPopup_DisplayedFrames = {}
@@ -771,7 +827,8 @@ _G.FauxScrollFrame_Update = function() end
 _G.FauxScrollFrame_GetOffset = function() return 0 end
 _G.CLASS_ICON_TCOORDS = {}
 _G.ENABLE = "Enable"
-
+_G.CLOSES_IN = "Time remaining"
+_G.FRIENDS_FRIENDS_CHOICE_EVERYONE = "Everyone"
 
 -- https://wow.gamepedia.com/API_GetItemSubClassInfo
 function GetItemSubClassInfo(classId, subClassId)

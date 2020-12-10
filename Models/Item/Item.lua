@@ -6,6 +6,8 @@ local Util = AddOn:GetLibrary("Util")
 local Logging = AddOn:GetLibrary("Logging")
 --- @type LibItemUtil
 local ItemUtil = AddOn:GetLibrary("ItemUtil")
+--- @type LibGearPoints
+local GP = AddOn:GetLibrary('GearPoints')
 --- @type table<number, Models.Item.Item>
 local cache = {}
 
@@ -67,10 +69,10 @@ end
 -- item can be a number, name, itemString, or itemLink
 -- https://wow.gamepedia.com/API_GetItemInfo
 local function ItemQuery(item)
-	Logging:Trace("ItemQuery(%s)", tostring(item))
+	Logging:Debug("ItemQuery(%s)", tostring(item))
 
 	local name, link, rarity, ilvl, _, type, subType, _, equipLoc, texture, _,
-		typeId, subTypeId, bindType, _, _, _ = GetItemInfo(item)
+		typeId, subTypeId, bindType  = GetItemInfo(item)
 	local id = link and ItemUtil:ItemLinkToId(link)
 	if name then
 		-- check to see if a custom item has been setup for the id
@@ -84,6 +86,8 @@ local function ItemQuery(item)
 			subType = nil
 			subTypeId = nil
 		end
+
+		Logging:Debug("ItemQuery(%s) : results available", tostring(item))
 
 		return Item:new(
 				id,
@@ -101,6 +105,7 @@ local function ItemQuery(item)
 		)
 	end
 
+	Logging:Debug("ItemQuery(%s) : NO results available", tostring(item))
 	return nil
 end
 
@@ -140,6 +145,32 @@ function Item:GetTypeText()
 	end
 end
 
+
+--- @param awardReason string an (optional) value which will be used for calculating GP based upon reason
+--- @return number, number BASE_GP, AWARD_GP
+function Item:GetGp(awardReason)
+	if not self.gp then
+		self.gp = GP:GetValue(self.link)
+	end
+
+	local awardGp
+	if self.gp and Util.Objects.IsSet(awardReason) then
+		local awardScale = AddOn:GearPointsModule():GetAwardScale(awardReason)
+		if awardScale then
+			awardGp = Util.Numbers.Round(self.gp * awardScale)
+		end
+	end
+
+	-- now apply any additional scaling required (such as raid reduction)
+	--
+	-- this also relies upon the award being completed in the instance where the item dropped
+	-- otherwise, it will not be able to infer the raid (map id) for which any scaling should be applied
+	--
+	awardGp = AddOn:EffortPointsModule():ScaleIfRequired(awardGp and awardGp or self.gp)
+
+	return self.gp or 0, awardGp or 0
+end
+
 -- accepts same input types (except itemName) as https://wow.gamepedia.com/API_GetItemInfo
 -- itemId : number - Numeric ID of the item. e.g. 30234 for  [Nordrassil Wrath-Kilt]
 -- itemName : string - Name of an item owned by the player at some point during this play session, e.g. "Nordrassil Wrath-Kilt".
@@ -156,7 +187,7 @@ function Item.Get(item)
 		itemId = ItemUtil:NeutralizeItem(ItemUtil:ItemLinkToItemString(item))
 	end
 
-	Logging:Trace('Get(%s) : %s', tostring(item), tostring(itemId))
+	-- Logging:Debug('Get(%s) : %s', tostring(item), tostring(itemId))
 	if not itemId then error(format("item '%s' couldn't be parsed into a cache key", tostring(item))) end
 
 	local instance = cache[itemId]
@@ -167,7 +198,7 @@ function Item.Get(item)
 			cache[itemId] = instance
 		end
 	end
-	-- Logging:Trace('Get(%s) : %s', tostring(item), cached and "cached" or "not cached")
+
 	return instance
 end
 
@@ -195,6 +226,39 @@ function ItemRef:GetItem()
 	return Item.Get(self.item)
 end
 
+--- invokes passed function (e.g. a class constructor) with varargs
+--- followed by embedding the referenced item's attributes into the
+--- value returned by the function
+---
+--- @param into function
+function ItemRef:Embed(into, ...)
+	local item = self:GetItem()
+	local embed = into(...)
+	for k, v in pairs(item:toTable()) do
+		embed[k] = v
+	end
+	for attr, value in pairs(self:toTable()) do
+		if not Util.Objects.In(attr, 'ref') then
+			embed[attr] = value
+		end
+	end
+	return embed
+end
+
+--- @return Models.Item.ItemRef if passed instance is an ItemRef, returns "as is". if the passed instance is a table and has a
+--- 'ref' attribute, it will return an new ItemRef  based upon that value. otherwise, returns nil
+function ItemRef.Resolve(i)
+	if ItemRef:isInstanceOf(i, ItemRef) then
+		return i
+	end
+
+	if Util.Objects.IsTable(i) and i.ref then
+		return Util.Strings.StartsWith(i.ref, "item:") and ItemRef(i.ref) or ItemRef.FromTransmit(i.ref)
+	end
+
+	return nil
+end
+
 --[[
 |cff9d9d9d|Hitem:18832:2564:0:0:0:0:0:0:60:0:0:0:0|h[Brutality Blade]|h|r ->
 |cff9d9d9d|Hitem:18832:2564:0:0:0:0:0:::0:0:0:0|h[Brutality Blade]|h|r ->
@@ -220,10 +284,7 @@ function ItemRef:ForTransmit()
 		error(format("cannot represent ItemRef '%s' for transmission", tostring(self.item)))
 	end
 
-	transmit = ItemUtil:ItemLinkToItemString(transmit)
-	transmit = ItemUtil:NeutralizeItem(transmit)
-	transmit = AddOn.SanitizeItemString(transmit)
-	return transmit
+	return AddOn.TransmittableItemString(transmit)
 end
 
 function ItemRef.FromTransmit(ref)

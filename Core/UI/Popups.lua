@@ -3,6 +3,8 @@ local _, AddOn = ...
 local L, C  = AddOn.Locale, AddOn.Constants
 --- @type LibUtil
 local Util =  AddOn:GetLibrary("Util")
+--- @type LibLogging
+local Logging =  AddOn:GetLibrary("Logging")
 --- @type LibDialog
 local Dialog = AddOn:GetLibrary("Dialog")
 ---@type UI.Util
@@ -26,6 +28,26 @@ Dialog:Register(C.Popups.ConfirmUsage, {
     show_while_dead = true,
 })
 
+Dialog:Register(C.Popups.ConfirmAbort, {
+    text = L["confirm_abort"],
+    on_show = function(self) UIUtil.DecoratePopup(self) end,
+    buttons = {
+        {
+            text = _G.YES,
+            on_click = function()
+                AddOn:MasterLooterModule():EndSession()
+                CloseLoot()
+                AddOn:LootAllocateModule():EndSession(true)
+            end,
+        },
+        {
+            text = _G.NO,
+        },
+    },
+    hide_on_escape = true,
+    show_while_dead = true,
+})
+
 Dialog:Register(C.Popups.ConfirmAdjustPoints, {
     text = MachuPicchu,
     on_show = AddOn:StandingsModule().AdjustOnShow,
@@ -33,6 +55,24 @@ Dialog:Register(C.Popups.ConfirmAdjustPoints, {
         {
             text = _G.YES,
             on_click = AddOn:StandingsModule().AdjustOnClickYes,
+        },
+        {
+            text = _G.NO,
+            on_click = Util.Functions.Noop
+        },
+    },
+    hide_on_escape = true,
+    show_while_dead = true,
+})
+
+Dialog:Register(AddOn.Constants.Popups.ConfirmAward, {
+    text = MachuPicchu,
+    icon = "",
+    on_show = AddOn:MasterLooterModule().AwardOnShow,
+    buttons = {
+        {
+            text = _G.YES,
+            on_click = AddOn:MasterLooterModule().AwardOnClickYes
         },
         {
             text = _G.NO,
@@ -76,3 +116,29 @@ Dialog:Register(C.Popups.ConfirmDeleteItem, {
     hide_on_escape = true,
     show_while_dead = true,
 })
+
+Dialog:Register(AddOn.Constants.Popups.ConfirmReannounceItems, {
+    text = MachuPicchu,
+    on_show = function(self, data)
+        UIUtil.DecoratePopup(self)
+        if data.isRoll then
+            self.text:SetText(format(L["confirm_rolls"], data.target))
+        else
+            self.text:SetText(format(L["confirm_unawarded"], data.target))
+        end
+    end,
+    buttons = {
+        {
+            text = _G.YES,
+            on_click = function(_, data)
+                data.func()
+            end,
+        },
+        {
+            text = _G.NO,
+        },
+    },
+    hide_on_escape = true,
+    show_while_dead = true,
+})
+

@@ -16,7 +16,7 @@ local ACR = AddOn:GetLibrary('AceConfigRegistry')
 --- @class GearPointsCustom
 local GpCustom = AddOn:NewModule("GearPointsCustom", "AceBucket-3.0")
 
-GpCustom.Defaults = {
+GpCustom.defaults = {
 	profile = {
 		enabled = true,
 		custom_items = {
@@ -32,7 +32,7 @@ local NoGuild = "No Guild"
 
 function GpCustom:OnInitialize()
 	Logging:Debug("OnInitialize(%s)", self:GetName())
-	self.db = AddOn.Libs.AceDB:New('R2D2X_CustomItems', GpCustom.Defaults, NoGuild)
+	self.db = AddOn.Libs.AceDB:New('R2D2X_CustomItems', GpCustom.defaults, NoGuild)
 end
 
 function GpCustom:OnEnable()

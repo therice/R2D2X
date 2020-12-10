@@ -161,9 +161,10 @@ function AddOn:RegisterChatCommands()
     )
 end
 
-function AddOn:IsMasterLooter()
-    Logging:Debug("IsMasterLooter(%s) : ml=%s, player=%s", self:GetName(), tostring(self.masterLooter), tostring(self.player))
-    return self.masterLooter and self.player and Util.Objects.Equals(self.masterLooter, self.player)
+function AddOn:IsMasterLooter(unit)
+    unit = Util.Objects.Default(unit, self.player)
+    Logging:Trace("IsMasterLooter() : unit=%s, ml=%s", tostring(unit), tostring(self.masterLooter))
+    return self.masterLooter and AddOn.UnitIsUnit(unit, self.masterLooter)
 end
 
 function AddOn:GetMasterLooter()
@@ -239,14 +240,17 @@ function AddOn:NewMasterLooterCheck()
 
     local ML = self:MasterLooterModule()
     -- settings say to never use
-    if ML:GetDbValue('usage.never') then return end
+    if ML:GetDbValue('usage.never') then
+        Logging:Trace("NewMasterLooterCheck() : Configuration specifies to never use")
+        return
+    end
 
     -- request ML DB if not received within 15 seconds
     self:ScheduleTimer(
         function()
             if Util.Objects.IsSet(self.masterLooter) then
                 -- base check on an attribute that should be present
-                if not self.mlDb.raid then
+                if not self:HaveMasterLooterDb() then
                     self:Send(self.masterLooter, C.Commands.MasterLooterDbRequest)
                 end
             end
@@ -255,13 +259,22 @@ function AddOn:NewMasterLooterCheck()
     )
 
     -- Someone else has become ML, nothing additional to do
-    if not isML and Util.Objects.IsSet(self.masterLooter) then return end
+    if not isML and Util.Objects.IsSet(self.masterLooter) then
+        Logging:Trace("NewMasterLooterCheck() : Another player is the Master Looter")
+        return
+    end
 
-    -- not in raid and setting is to only use in traids
-    if not IsInRaid() and ML:GetDbValue('onlyUseInRaids') then return end
+    -- not in raid and setting is to only use in raids
+    if not IsInRaid() and ML:GetDbValue('onlyUseInRaids') then
+        Logging:Trace("NewMasterLooterCheck() : Not in raid and configuration specifies not to use")
+        return
+    end
 
     -- already handling loot, just bail
-    if self.handleLoot then return end
+    if self.handleLoot then
+        Logging:Trace("NewMasterLooterCheck() : Already handling loot")
+        return
+    end
 
     local _, type = IsInInstance()
     -- don't use in arena an PVP
@@ -310,7 +323,7 @@ function AddOn:StopHandleLoot()
 end
 
 function AddOn:HaveMasterLooterDb()
-    return self.mlDb and Util.Tables.Count(self.mlDb) ~= 0
+    return self.mlDb and next(self.mlDb) ~= nil
 end
 
 function AddOn:MasterLooterDbValue(...)
@@ -318,32 +331,89 @@ function AddOn:MasterLooterDbValue(...)
 end
 
 function AddOn:OnMasterLooterDbReceived(mlDb)
-    Logging:Debug("OnMasterLooterDbReceived()")
+    Logging:Debug("OnMasterLooterDbReceived(%s)", Util.Tables.Count(mlDb))
+    local ML, EP, GP = self:MasterLooterModule(), self:EffortPointsModule(), self:GearPointsModule()
+
     self.mlDb = mlDb
+
+    if not self.mlDb.responses then self.mlDb.responses = {} end
+    setmetatable(self.mlDb.responses, {__index = ML:GetDefaultDbValue('profile.responses')})
+
+    if not self.mlDb.buttons then self.mlDb.buttons = {} end
+    setmetatable(self.mlDb.buttons, {__index = ML:GetDefaultDbValue('profile.buttons')})
+
+    if not self.mlDb.raid then self.mlDb.raid = {} end
+    setmetatable(self.mlDb.raid, {__index = EP:GetDefaultDbValue('profile.raid.maps')})
+
+    if not self.mlDb.slot_scaling then self.mlDb.slot_scaling = {} end
+    setmetatable(self.mlDb.slot_scaling, {__index = GP:GetDefaultDbValue('profile.slot_scaling')})
+
+    if not self.mlDb.award_scaling then self.mlDb.award_scaling = {} end
+    setmetatable(self.mlDb.award_scaling, {__index = GP:GetDefaultDbValue('profile.award_scaling')})
 end
 
-function AddOn:OnLootTableReceived(lt)
-    Logging:Debug("OnLootTableReceived() : %s", Util.Objects.ToString(lt))
+function AddOn:UpdateGroupMembers()
+    Logging:Trace("UpdateGroupMembers()")
+    for i = 1, GetNumGroupMembers() do
+        self.group[self:UnitName(GetRaidRosterInfo(i))] = true
+    end
+    -- make sure we are present
+    self.group[self.player.name] = true
 
+    --in test mode, add some other players to help with testing
+    --if AddOn:TestModeEnabled() then
+    --    self.group['Gnomechómsky-Atiesh'] = true
+    --    self.group['Cerrendel-Atiesh'] = true
+    --end
+
+    return self.group
+end
+
+function AddOn:GroupIterator()
+    Logging:Trace("GroupIterator()")
+    local groupMembers, index = {}, 1
+    for name, _ in pairs(self:UpdateGroupMembers()) do
+        groupMembers[index] = name
+        index = index + 1
+    end
+
+    index = 0
+    local total = #groupMembers
+    return function()
+        index = index + 1
+        if index <= total then return groupMembers[index] end
+    end
+end
+
+--- @return boolean, table<number, Models.Item.ItemRef>
+function AddOn:_PreProcessLootTable(lt, uncachedCallback)
+    Logging:Debug("_PreProcessLootTable(%d)", Util.Tables.Count(lt))
+
+    --- return continue, lt
     if not self.enabled then
         for i = 1, #lt do
             self:SendResponse(self.masterLooter, i, C.Responses.Disabled)
         end
         Logging:Trace("Sent 'disabled' response for all loot table entries")
-        return
+        return false, nil
     end
 
-    -- lt will an array of session to LootTableEntry representations
+    -- lootTable will a table of session to LootTableEntry (as ItemRef) representations
     -- each representations will be generated via LootTableEntry:ForTransmit()
     -- ref = ItemRef:ForTransmit()
     -- E.G.
     -- {{ref = 15037:0:0:0:0:0:0::}, {ref = 25798:0:0:0:0:0:0::}}
 
-    -- convert transmitted reference into an ItemRef
+    -- convert transmitted reference into a LootTableEntry
     local interim = Util.Tables.Map(
             Util.Tables.Copy(lt),
-            function(e) return LootTableEntry.ItemRefFromTransmit(e) end
+            function(e, session)
+                return LootTableEntry.ItemRefFromTransmit(e, session)
+            end,
+            true
     )
+
+    -- Logging:Debug("%s", Util.Objects.ToString(interim, 4))
     -- determine how many uncached items there are
     local uncached = Util.Tables.CountFn(
             interim,
@@ -352,17 +422,30 @@ function AddOn:OnLootTableReceived(lt)
             end
     )
 
+    Logging:Debug("_PreProcessLootTable(%d) : %d, %d", Util.Tables.Count(lt), Util.Tables.Count(interim), uncached)
+
+    -- uh, oh.. try again
     if uncached > 0 then
-        self:ScheduleTimer('OnLootTableReceived', 0, lt)
-        return
+        self:ScheduleTimer(uncachedCallback, 0, lt)
+        return false, nil
     end
 
-    -- index will be the session, entry will be an ItemRef
+    return true, interim
+end
+
+function AddOn:OnLootTableReceived(lt)
+    Logging:Debug("OnLootTableReceived() : %d", Util.Tables.Count(lt))
+    local continue, processed =
+        self:_PreProcessLootTable(lt, "OnLootTableReceived")
+    -- could not be pre-processed, will have been rescheduled
+    if not continue then return end
+
+    -- index will be the session, entry will be an LootTableEntry
     -- no need for additional processing, as the ItemRef will pointed to a cached item
     --
     -- these references may be augmented with additional attributes as needed
     -- but nothing else, by default, except the item reference
-    self.lootTable = interim
+    self.lootTable = processed
 
     -- received LootTable without having received MasterLooterDb, well...
     if not self:HaveMasterLooterDb() then
@@ -385,7 +468,7 @@ function AddOn:OnLootTableReceived(lt)
         Util.Tables.Call(
             self.lootTable,
             function(_ , session)
-                self:SendResponse(self.masterLooter, session,  C.Responses.NotInRaid)
+                self:SendResponse(self.masterLooter, session, C.Responses.NotInRaid)
             end,
             true -- need the index for session id
         )
@@ -401,15 +484,83 @@ function AddOn:OnLootTableReceived(lt)
     Logging:Debug("OnLootTableReceived() : %d", Util.Tables.Count(self.lootTable))
 end
 
+function AddOn:OnLootTableAddReceived(lt)
+    Logging:Debug("OnLootTableAddReceived() : %d", Util.Tables.Count(lt))
+
+    local continue, processed =
+        self:_PreProcessLootTable(lt, "OnLootTableAddReceived")
+    -- could not be pre-processed, will have been rescheduled
+    if not continue then return end
+
+    Logging:Debug("OnLootTableAddReceived() : %s", Util.Objects.ToString(processed, 4))
+
+    self:DoAutoPass(processed)
+    self:SendLootAck(processed)
+
+    local oldLen = #self.lootTable
+    for session, entry in pairs(processed) do
+        Logging:Debug("OnLootTableAddReceived() : adding %s to loot table at index %d", Util.Objects.ToString(entry:toTable()), session)
+        self.lootTable[session] = entry
+    end
+
+    local Loot = AddOn:LootModule()
+    for i = oldLen + 1, #self.lootTable do
+        Logging:Debug("OnLootTableAddReceived() : AddSingleItem(%d)", i)
+        Loot:AddSingleItem(self.lootTable[i])
+    end
+
+    self:SendMessage(C.Messages.LootTableAddition, processed)
+end
+
+function AddOn:OnLootSessionEnd()
+    if not self.enabled then return end
+    self:Print(format(L["player_ended_session"], self.Ambiguate(self.masterLooter:GetName())))
+    self:LootModule():Disable()
+    self:LootAllocateModule():EndSession(false)
+    self.lootTable = {}
+end
+
+function AddOn:OnReRollReceived(sender, lt)
+    Logging:Debug("OnReRollReceived(%s) : %s", tostring(sender), Util.Objects.ToString(lt))
+
+    -- if we get a callback from 1st pass at pre-processing not succeeding
+    -- we won't pass back in sender, it only needs announced one time
+    if Util.Objects.IsSet(sender) then
+        AddOn:Print(format(L["player_requested_reroll"], self.Ambiguate(sender)))
+    end
+
+    local continue, processed =
+        self:_PreProcessLootTable(lt, "OnReRollReceived")
+
+    -- could not be pre-processed, will have been rescheduled
+    if not continue then return end
+
+    for _, entry in pairs(processed) do
+        Logging:Debug("OnReRollReceived() : %s", Util.Objects.ToString(entry:toTable()))
+    end
+
+    self:DoAutoPass(processed)
+    self:SendLootAck(processed)
+
+    self:CallModule("Loot")
+    self:LootModule():ReRoll(processed)
+end
+
 function AddOn:AutoPassCheck(class, equipLoc, typeId, subTypeId, classes)
+    --Logging:Debug(
+    --        "AutoPassCheck() : %s, %s, %s, %s, %s",
+    --        tostring(class), tostring(equipLoc), tostring(typeId), tostring(subTypeId), tostring(classes)
+    --)
     return not ItemUtil:ClassCanUse(class, classes, equipLoc, typeId, subTypeId)
 end
 
 function AddOn:DoAutoPass(lt, skip)
     skip = Util.Objects.Default(skip, 0)
-    Logging:Debug("DoAutoPass(%d)", skip)
-    for session, entry in ipairs(lt) do
-        if session > skip then
+    Logging:Debug("DoAutoPass(%d, %d)", Util.Tables.Count(lt), skip)
+    for session, entry in pairs(lt) do
+        session = entry.session or session
+        Logging:Debug("DoAutoPass(%d) : noAutoPass=%s", tonumber(session), tostring(entry.noAutoPass))
+        if session > (skip or 0) then
             if not Util.Objects.Default(entry.noAutoPass, false) then
                 --- @type Models.Item.Item
                 local item = entry:GetItem()
@@ -429,9 +580,11 @@ end
 
 function AddOn:SendLootAck(lt, skip)
     skip = Util.Objects.Default(skip, 0)
-    Logging:Debug("SendLootAck(%d)", skip)
+    Logging:Debug("SendLootAck(%d, %d)", Util.Tables.Count(lt), skip)
     local hasData, toSend = false, { gear1 = {}, gear2 = {}, diff = {}, response = {} }
-    for session, entry in ipairs(lt) do
+    for session, entry in pairs(lt) do
+        session = entry.session or session
+        Logging:Debug("SendLootAck(%d)", tonumber(session))
         if session > (skip or 0) then
             hasData = true
             --- @type Models.Item.Item
@@ -447,6 +600,48 @@ function AddOn:SendLootAck(lt, skip)
     end
 
     if hasData then
-        self:Send(self.masterLooter, C.Commands.LootAck, self.playerData.ilvl, toSend)
+        self:Send(self.masterLooter, C.Commands.LootAck, self.playerData.ilvl or 0, toSend)
     end
+end
+
+function AddOn:GetButtonCount()
+    if not self:HaveMasterLooterDb() or not self:MasterLooterDbValue('buttons') then
+        local buttons = self:MasterLooterModule():GetDbValue('buttons')
+        return buttons and buttons.numButtons or 0
+    end
+
+    return self:MasterLooterDbValue('buttons.numButtons') or 0
+end
+
+function AddOn:GetButtons()
+    return self:MasterLooterDbValue('buttons') or {}
+end
+
+--- Fetches a response for given name, based on the group leader's settings if possible
+--- @param name number|string the name or index of the response
+--- @see MasterLooterDb
+--- @return table a table of attributes for named response, if available
+function AddOn:GetResponse(name)
+    -- Logging:Trace('GetResponse(%s)', tostring(name))
+
+    -- this is the MasterLooter profile db, for use in fallback cases
+    -- it's not guaranteed to be consistent with the master looter in situations where
+    -- master looter's db has not been received
+    local ML = self:MasterLooterModule()
+
+    -- this uses the received master looter db
+    local function MasterLooterDbValue()
+        if self:HaveMasterLooterDb() then
+            return self:MasterLooterDbValue('responses')[name] or nil
+        end
+        return nil
+    end
+
+    -- this access the master looter module's db directly
+    local function MasterLooterModuleDbValue()
+        return ML:GetDbValue('responses')[name] or nil
+    end
+
+    local ResponseValue = Util.Functions.Dispatch(MasterLooterDbValue, MasterLooterModuleDbValue)
+    return ResponseValue() or {}
 end

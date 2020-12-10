@@ -92,7 +92,7 @@ function LootSession:AddItems(items)
 			if not entry.sent then
 				--- @type Models.Item.Item
 				local item = entry:GetItem()
-				-- check if is item available and valid, not because it must be at this moment
+				-- check if item is available and valid, not because it must be at this moment
 				-- but rather it will send a query meaning results should be available when needed
 				if not item or not item:IsValid() then
 					Logging:Warn("AddItems(%s) : referenced item not available, will re-try querying later", tostring(entry.item))
