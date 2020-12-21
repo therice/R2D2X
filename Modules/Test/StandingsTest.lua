@@ -1,10 +1,11 @@
-local AddOnName, AddOn, Util, Award
+local AddOnName, AddOn, Util, Award, Subject
 
 
 describe("Standings", function()
     setup(function()
         AddOnName, AddOn = loadfile("Test/TestSetup.lua")(true, 'Modules_Standings')
         Util, Award = AddOn:GetLibrary('Util'), AddOn.Package('Models').Award
+        Subject =  AddOn.Package('Models').Subject
         AddOnLoaded(AddOnName, true)
     end)
 
@@ -137,11 +138,15 @@ describe("Standings", function()
             assert(award)
             assert(#errors > 0)
             f.UpdateSubjectTooltip({{'Player101-Realm1', 'ROGUE'}})
-            f.Update(Award.SubjectType.Character, Award.ResourceType.Ep, 'Player101-Realm1')
+            f.Update(Award.SubjectType.Character, Award.ResourceType.Ep, {{'Player101-Realm1'}})
             assert(f:IsVisible())
             standings.AdjustOnShow(Popup(), NewAward())
             assert(f:IsVisible())
-            standings:AdjustAction(Award.SubjectType.Character, Award.ResourceType.Ep, {name='Player101-Realm1'})
+            standings:AdjustAction(Award.SubjectType.Character, Award.ResourceType.Ep, Subject('Player101-Realm1', 'WARRIOR', nil, 0, 100, 100))
+            assert(f:IsVisible())
+            standings:AdjustAction(Award.SubjectType.Character, Award.ResourceType.Ep, {{'Player101-Realm1'}})
+            assert(f:IsVisible())
+            standings:AdjustAction(Award.SubjectType.Character, Award.ResourceType.Ep, {{'Player101-Realm1', 'ROGUE'}, {'Player102-Realm1', 'WARLOCK'}})
             assert(f:IsVisible())
         end)
         it("builds decay frame", function()

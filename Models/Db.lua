@@ -7,13 +7,28 @@ local Util = AddOn:GetLibrary("Util")
 local Logging = AddOn:GetLibrary("Logging")
 ---@type LibBase64
 local Base64 = AddOn:GetLibrary("Base64")
-local Serialize = AddOn:GetLibrary("AceSerializer")
 ---@type LibUtil.Compression.Compressor
 local Compressor = Util.Compression.GetCompressors(Util.Compression.CompressorType.LibDeflate)[1]
 
+-- This is only for testing during development, cannot change it at runtime
+-- 'A' = AceSerializer, 'M' = LibMessagePack
+local SerializerType = 'M'
+local Serializer, Serialize, Deserialize
+if SerializerType == 'A' then
+    Serializer = AddOn:GetLibrary('AceSerializer')
+    Serialize = function(d) return Serializer:Serialize(d) end
+    Deserialize = function(s) return Serializer:Deserialize(s) end
+elseif SerializerType == 'M' then
+    --- @type LibMessagePack
+    Serializer = AddOn:GetLibrary('MessagePack')
+    Serialize = function(d) return Serializer.pack(d) end
+    Deserialize = function(s) return pcall(function() return Serializer.unpack(s) end) end
+end
+
+
 local function compress(data)
     if data == nil then return nil end
-    local serialized = Serialize:Serialize(data)
+    local serialized = Serialize(data)
     local compressed = Compressor:compress(serialized)
     local encoded = Base64:Encode(compressed)
     return encoded
@@ -27,7 +42,7 @@ local function decompress(data)
         error('Could not de-compress decoded data : ' .. message)
         return
     end
-    local success, raw = Serialize:Deserialize(decompressed)
+    local success, raw = Deserialize(decompressed)
     if not success then
         error('Could not de-serialize de-compressed data : ' .. tostring(raw))
     end
@@ -71,6 +86,7 @@ end
 --]]
 
 
+--[[
 local function compact(db)
     local count, maxn = Util.Tables.Count(db), table.maxn(db)
 
@@ -134,6 +150,7 @@ local function compact(db)
 
     return db
 end
+--]]
 
 -- be warned, everything under the namespace for DB passed to this constructor
 -- needs to be compressed, there is no mixing and matching
@@ -149,8 +166,7 @@ local CompressionSettingsKey = '__CompressionSettings'
 --- @class Models.CompressedDb
 local CompressedDb = AddOn.Package('Models'):Class('CompressedDb')
 function CompressedDb:initialize(db)
-    -- todo : we could axe this since regression that introduced need not present in new version
-    self.db = compact(db)
+    self.db = db
 end
 
 function CompressedDb:decompress(data)
@@ -272,7 +288,10 @@ local _build = function(self, ml, ep, gp)
         if  not default or
             not Util.Objects.Equals(default.scale, scalingSettings.scale)
         then
-            award_scaling[award] = scalingSettings
+            local settings = Util.Tables.Copy(scalingSettings)
+            -- need to send raw data, not the object with function refs
+            settings.color = settings.color:GetRGBA()
+            award_scaling[award] = settings
         end
     end
 

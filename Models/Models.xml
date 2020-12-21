@@ -6,6 +6,7 @@
     <Script file="Player.lua"/>
     <Script file="Point.lua"/>
     <Script file="Encounter.lua"/>
+    <Script file="Standby.lua"/>
     <Script file="Item\Item.lua"/>
     <Script file="Item\Loot.lua"/>
     <Script file="History\History.lua"/>

@@ -12,11 +12,14 @@ function Button:Create()
     b:SetText("")
     b:SetSize(100,20)
 
-    b.text = b:CreateFontString(nil,"ARTWORK","GameFontNormalSmall")
-    b.text:SetPoint("TOPLEFT",b,"TOPRIGHT",4,0)
-    b.text:SetPoint("BOTTOMLEFT",b,"BOTTOMRIGHT",4,0)
+    b.text = b:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+    -- b.text:SetPoint("TOPLEFT",b,"TOPRIGHT",4,0)
+    -- b.text:SetPoint("BOTTOMLEFT",b,"BOTTOMRIGHT",4,0)
+    b.text:SetPoint("CENTER", b, "CENTER")
     b.text:SetJustifyV("MIDDLE")
     b.Text = b.text
+
+    b:SetFontString(b.Text)
 
     b.HighlightTexture = b:CreateTexture()
     b.HighlightTexture:SetColorTexture(1,1,1,.3)

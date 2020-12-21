@@ -1,3 +1,4 @@
+--- @type AddOn
 local _, AddOn = ...
 local Util, Logging, ItemUtil, GuildStorage =
     AddOn:GetLibrary("Util"), AddOn:GetLibrary("Logging"), AddOn:GetLibrary("ItemUtil"), AddOn:GetLibrary("GuildStorage")
@@ -239,7 +240,7 @@ function Award:SetSubjects(type, ...)
     --Logging:Debug("%s", Util.Objects.ToString(self.subjects))
     -- todo
     Util.Tables.Map(self.subjects, function(subject)
-        Logging:Debug("%s => %s", subject, tostring(AddOn:UnitClass(subject) or "UNKNOWN"))
+        Logging:Trace("%s => %s", subject, tostring(AddOn:UnitClass(subject) or "UNKNOWN"))
         return {subject, AddOn:UnitClass(subject)}
     end)
     --Logging:Debug("%s", Util.Objects.ToString(self.subjects))

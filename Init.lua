@@ -4,7 +4,7 @@ local AddOnName, AddOn = ...
 --- @class AddOn
 AddOn = AceAddon:NewAddon(AddOn, AddOnName, 'AceConsole-3.0', 'AceEvent-3.0', "AceSerializer-3.0", "AceHook-3.0", "AceTimer-3.0", "AceBucket-3.0")
 AddOn:SetDefaultModuleState(false)
-_G.R2D2X = AddOn
+_G[AddOnName] = AddOn
 
 -- just capture version here, it will be turned into semantic version later
 -- as we don't have access to that model yet here
@@ -23,6 +23,7 @@ do
     AddOn:AddLibrary('Deflate', 'LibDeflate')
     AddOn:AddLibrary('Base64', 'LibBase64-1.0')
     AddOn:AddLibrary('Rx', 'LibRx-1.0')
+    AddOn:AddLibrary('MessagePack', 'LibMessagePack-1.0')
     AddOn:AddLibrary('AceAddon', AceAddon, AceAddonMinor)
     AddOn:AddLibrary('AceEvent', 'AceEvent-3.0')
     AddOn:AddLibrary('AceTimer', 'AceTimer-3.0')
@@ -52,6 +53,7 @@ end
 
 AddOn.Locale = AddOn:GetLibrary("AceLocale"):GetLocale(AddOn.Constants.name)
 
+--- @type Logging
 local Logging = AddOn:GetLibrary("Logging")
 ---@type LibUtil
 local Util = AddOn:GetLibrary("Util")

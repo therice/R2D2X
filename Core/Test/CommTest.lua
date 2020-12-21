@@ -261,11 +261,13 @@ describe("Comm", function()
                     assert.spy(s).was_called_with(nil, match.is_number(), match.is_number())
                 end)
                 it("with callback func multiple messages", function()
-                    local s = spy.new(function(...) --[[print('callback1 -> ' .. Util.Objects.ToString(...)) --]] end)
+                    --Comm:RegisterPrefix(C.CommPrefixes.Main)
+
+                    local s = spy.new(function(...) print('callback1 -> ' .. Util.Objects.ToString({...})) end)
                     -- Now to construct data that will produce two messages with LibDeflate :/
                     local data = {}
                     for i=1,150 do
-                        data[i] = {}
+                        data[i] = {string.char(i)}
                     end
                     Comm:Send({
                         prefix = C.CommPrefixes.Main,

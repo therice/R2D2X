@@ -142,3 +142,20 @@ Dialog:Register(AddOn.Constants.Popups.ConfirmReannounceItems, {
     show_while_dead = true,
 })
 
+
+Dialog:Register(AddOn.Constants.Popups.ConfirmRevert, {
+    text = MachuPicchu,
+    on_show = AddOn:StandingsModule().RevertOnShow,
+    buttons = {
+        {
+            text = _G.YES,
+            on_click = AddOn:StandingsModule().RevertOnClickYes,
+        },
+        {
+            text = _G.NO,
+            on_click = Util.Functions.Noop
+        },
+    },
+    hide_on_escape = true,
+    show_while_dead = true,
+})

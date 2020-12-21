@@ -20,6 +20,8 @@ local ST = AddOn.Require('UI.ScrollingTable')
 local DropDown =  AddOn.Require('UI.DropDown')
 --- @type Models.Award
 local Award = AddOn.Package('Models').Award
+--- @type Models.Subject
+local Subject = AddOn.Package('Models').Subject
 --- @type UI.ScrollingTable.ColumnBuilder
 local STColumnBuilder = AddOn.Package('UI.ScrollingTable').ColumnBuilder
 --- @type UI.ScrollingTable.CellBuilder
@@ -33,16 +35,17 @@ local DateFormat = AddOn.Package('Models').DateFormat
 
 --- @type Standings
 local Standings = AddOn:GetModule("Standings", true)
+
 local RightClickMenu, FilterMenu
 local ScrollColumns =
         STColumnBuilder()
-                :column(""):width(20) -- class (1)
-                :column(_G.NAME):width(120):defaultsort(STColumnBuilder.Ascending) -- name (2)
-                :column(_G.RANK):width(120):defaultsort(STColumnBuilder.Ascending):sortnext(6)  -- rank (3)
+                :column(""):width(20)                                                                   -- class (1)
+                :column(_G.NAME):width(120):defaultsort(STColumnBuilder.Ascending)                      -- name (2)
+                :column(_G.RANK):width(120):defaultsort(STColumnBuilder.Ascending):sortnext(6)          -- rank (3)
                     :comparesort(ST.SortFn(function(row) return row.entry.rankIndex end))
-                :column(L["ep_abbrev"]):width(60):defaultsort(STColumnBuilder.Descending):sortnext(5) -- ep (4)
-                :column(L["gp_abbrev"]):width(60):defaultsort(STColumnBuilder.Descending):sortnext(2) -- gp (5)
-                :column(L["pr_abbrev"]):width(60):sort(STColumnBuilder.Descending):sortnext(4) -- pr (6)
+                :column(L["ep_abbrev"]):width(60):defaultsort(STColumnBuilder.Descending):sortnext(5)   -- ep (4)
+                :column(L["gp_abbrev"]):width(60):defaultsort(STColumnBuilder.Descending):sortnext(2)   -- gp (5)
+                :column(L["pr_abbrev"]):width(60):sort(STColumnBuilder.Descending):sortnext(4)          -- pr (6)
                 :build()
 
 function Standings:GetFrame()
@@ -76,13 +79,17 @@ function Standings:GetFrame()
                 if row then
                     MI.Update(frame, data, realrow)
                 end
+                return false
             end,
-            ["OnLeave"] = function() MI.Update(frame, nil, nil) end
+            ["OnLeave"] = function()
+                MI.Update(frame, nil, nil)
+                return false
+            end
         })
         st:SetFilter(Standings.FilterFunc)
         st:EnableSelection(true)
 
-        MI.EmbedWidgets(self:GetName(), frame, AddOn.UpdateMoreInfoWithLootStats)
+        MI.EmbedWidgets(self:GetName(), frame, MI.UpdateMoreInfoWithLootStats)
 
         local close = UI:NewNamed('Button', frame.content, "Close")
         close:SetText(_G.CLOSE)
@@ -114,31 +121,36 @@ function Standings:BuildData()
         self.frame.rows = {}
         local row = 1
         for name, entry in pairs(self.subjects) do
-            if Util.Objects.IsTable(entry) then
-                self.frame.rows[row] = {
-                    num = row,
-                    name = name,
-                    entry = entry,
-                    cols =
-                        STCellBuilder()
-                            :classIconCell(entry.class)
-                            :classColoredCell(AddOn.Ambiguate(name), entry.class)
-                            :cell(entry.rank)
-                            :cell(entry.ep):color(UIUtil.GetResourceTypeColor(Award.ResourceType.Ep))
-                            :cell(entry.gp):color(UIUtil.GetResourceTypeColor(Award.ResourceType.Gp))
-                            :cell(entry:GetPR()):color(C.Colors.ItemHeirloom)
-                            :build()
-                }
-                row = row +1
-            end
+            self.frame.rows[row] = {
+                num = row,
+                name = name,
+                entry = entry,
+                cols =
+                    STCellBuilder()
+                        :classIconCell(entry.class)
+                        :classColoredCell(AddOn.Ambiguate(name), entry.class)
+                        :cell(entry.rank)
+                        :cell(entry.ep):color(UIUtil.GetResourceTypeColor(Award.ResourceType.Ep))
+                        :cell(entry.gp):color(UIUtil.GetResourceTypeColor(Award.ResourceType.Gp))
+                        :cell(entry:GetPR()):color(C.Colors.ItemHeirloom)
+                        :build()
+            }
+            row = row +1
+
         end
 
         self.frame.st:SetData(self.frame.rows)
-        self.pendingUpdate = false
     end
 end
 
 function Standings:Update(force)
+    force = Util.Objects.Default(force, false)
+    Logging:Trace("Update(%s)", tostring(force or false))
+
+    if not force and not self.alarm:Fired() then
+        return
+    end
+
     if not self:IsEnabled() then return end
     if not self.frame then return end
     self.frame.st:SortData()
@@ -459,7 +471,7 @@ function Standings:GetAdjustFrame()
                 Util.Tables.Push(validationErrors, format(L["x_unspecified_or_incorrect_type"], L["name"]))
             else
                 local subjectType = tonumber(f.subjectType)
-                if Util.Strings.IsEmpty(subjectType) then
+                if Util.Objects.IsEmpty(subjectType) then
                     Util.Tables.Push(validationErrors, format(L["x_unspecified_or_incorrect_type"], L["subject"]))
                 elseif subjectType== Award.SubjectType.Character then
                     award:SetSubjects(subjectType, subject)
@@ -511,11 +523,14 @@ function Standings:GetAdjustFrame()
         end
 
         f.Update = function(subjectType, resourceType, subjects)
+            Logging:Trace('Update(%d, %d) : %s', subjectType, resourceType, Util.Objects.ToString(subjects))
+
             local subjectColor, text
 
             if subjectType == Award.SubjectType.Character then
-                subjectColor = UIUtil.GetPlayerClassColor(subjects)
-                text = subjects
+                local subject = subjects[1][1]
+                subjectColor = UIUtil.GetPlayerClassColor(subject)
+                text = subject
             else
                 subjectColor = UIUtil.GetSubjectTypeColor(subjectType)
                 text = Award.TypeIdToSubject[subjectType]
@@ -561,8 +576,37 @@ end
 
 -- all 3 parameters are passed, but entry may not be applicable based upon subjectType
 function Standings:AdjustAction(subjectType, resourceType, entry)
-    Logging:Debug("AdjustAction() : %d, %d, %s", subjectType, resourceType, entry.name)
-    self:GetAdjustFrame().Update(subjectType, resourceType, AddOn.Ambiguate(entry.name))
+    Logging:Trace("AdjustAction() : %d, %d, %s", tostring(subjectType), tostring(resourceType), type(entry))
+
+    local subjects
+    -- plain table, expect input to be a table of tables of format {{PLAYER, CLASS}, {...}}
+    if Util.Objects.IsTable(entry) and not entry.clazz then
+        subjects = entry
+    -- an individual subject, convert to expected format
+    elseif entry:isInstanceOf(Subject) then
+        subjects = {{entry.name, entry.classTag}}
+    else
+        error("cannot handle entry of type : " .. type(entry))
+    end
+
+    self:GetAdjustFrame().Update(subjectType, resourceType, subjects)
+end
+
+--- @param entry Models.History.Traffic
+function Standings:AmendAction(entry)
+    -- i think it should be fine to apply revert to guild/raid, we have the list of subjects
+    --[[
+    if entry.subjectType == Award.SubjectType.Character then
+        error("Unsupported subject type for amending an award : " .. Award.TypeIdToSubject[entry.subjectType])
+    end
+    --]]
+
+    if not Util.Objects.In(entry.actionType, Award.ActionType.Add, Award.ActionType.Subtract) then
+        error("Unsupported resource type for amending an award : " .. Award.TypeIdToAction[entry.actionType])
+    end
+
+    self:AdjustAction(entry.subjectType, entry.resourceType, entry.subjects)
+    self.adjustFrame.desc:SetText(format(L['amend'] .. " '%s'", entry.description))
 end
 
 function Standings.AdjustOnShow(frame, award)
@@ -727,6 +771,33 @@ function Standings.DecayOnClickYes(_, awards)
     Logging:Debug("DecayOnClickYes(%d)", #awards)
     Standings:BulkAdjust(Util.Tables.Unpack(awards))
     Standings:HideAdjust()
+end
+
+function Standings.RevertOnShow(frame, entry)
+    UIUtil.DecoratePopup(frame)
+
+    local decoratedText
+
+    if entry.subjectType == Award.SubjectType.Character then
+        local subject = entry.subjects[1]
+        decoratedText = UIUtil.ClassColorDecorator(subject[2]):decorate(subject[1])
+    else
+        decoratedText = UIUtil.SubjectTypeDecorator(entry.subjectType):decorate(Award.TypeIdToSubject[entry.subjectType])
+    end
+
+    frame.text:SetText(
+            format(L["confirm_revert"],
+                   Award.TypeIdToAction[entry.actionType]:lower(),
+                   entry.resourceQuantity,
+                   Award.TypeIdToResource[entry.resourceType]:upper(),
+                   entry.actionType == Award.ActionType.Add and L["to"] or L["from"],
+                   decoratedText
+            )
+    )
+end
+
+function Standings.RevertOnClickYes(_, entry)
+    Standings:RevertAdjust(entry)
 end
 
 function Standings:Hide()

@@ -13,6 +13,7 @@ exclude = {
     "Libs/LibDeformat.*",
     "Libs/LibDialog.*",
     "Libs/LibJSON.*",
+    "Libs/LibMessagePack.*",
     "Libs/LibRx%-.*",
     "Libs/LibStub.*",
     "Libs/LibWindow.*",

@@ -398,6 +398,9 @@ function CreateFrame(kind, name, parent, template)
             frame.SetStatusBarColor = function() end
             frame.SetMinMaxValues = function() end
             frame.text = CreateFrame("Frame", (name or "TextStatusBar") .. "Text", frame)
+        elseif template == "GameTooltipTemplate" then
+            frame.AddDoubleLine = function() end
+            frame.AddLine = function() end
         end
     end
 

@@ -1,3 +1,4 @@
+--- @type AddOn
 local _, AddOn = ...
 local L, C  = AddOn.Locale, AddOn.Constants
 --- @type LibLogging
@@ -324,6 +325,10 @@ function EP:OnEncounterEnd(encounter)
 
 			creatureEp = self:ScaleIfRequired(creatureEp, mapId)
 			local award = Award()
+			-- track the instance and encounter, can be used later for determining
+			-- raid attendance and more neat stuff
+			award.instanceId = mapId
+			award.encounterId = encounter.id
 			-- implicitly to group/raid
 			award:SetSubjects(Award.SubjectType.Raid)
 			award:SetAction(Award.ActionType.Add)
@@ -341,12 +346,12 @@ function EP:OnEncounterEnd(encounter)
 				Dialog:Spawn(C.Popups.ConfirmAdjustPoints, award)
 			end
 
-			-- now look at standby
-			-- todo
-			--[[
+			-- now look at standby\
 			local standbyRoster, standbyAwardPct = AddOn:StandbyModule():GetAwardRoster()
-			if standbyRoster and Tables.Count(standbyRoster) > 0 and standbyAwardPct then
+			if standbyRoster and Util.Tables.Count(standbyRoster) > 0 and standbyAwardPct then
 				award = Award()
+				award.instanceId = mapId
+				award.encounterId = encounter.id
 				award:SetSubjects(Award.SubjectType.Standby, standbyRoster)
 				award:SetAction(Award.ActionType.Add)
 				award:SetResource(Award.ResourceType.Ep, Util.Numbers.Round(creatureEp * standbyAwardPct))
@@ -358,7 +363,6 @@ function EP:OnEncounterEnd(encounter)
 				-- todo : do we want to prompt for standby/bench awards?
 				AddOn:PointsModule():Adjust(award)
 			end
-			]] --
 		else
 			Logging:Warn("OnEncounterEnd(%s) : EP not found or awarded for creature id(s) %s, EP=%s",
 			             Util.Objects.ToString(encounter:toTable()),
@@ -376,7 +380,7 @@ local Options = Util.Memoize.Memoize(function(self)
 	-- base template upon which we'll be attaching additional options
 	local builder = AceUI.ConfigBuilder()
 
-	builder:group(EP:GetName(), L["ep"]):desc(L["ep_desc"])
+	builder:group(self:GetName(), L["ep"]):desc(L["ep_desc"])
 		:args()
 			:group('awards', L['awards']):desc(L['awards_desc']):set('childGroups', 'tab'):order(1)
 				:args()

@@ -1,14 +1,23 @@
+--- @type AddOn
 local _, AddOn = ...
-
+--- @type LibLogging
+local Logging =  AddOn:GetLibrary("Logging")
+--- @type LibUtil
 local Util = AddOn:GetLibrary("Util")
 local HistoryPkg = AddOn.ImportPackage('Models.History')
-local Award, History = AddOn.ImportPackage('Models').Award, HistoryPkg.History
+--- @type Models.Award
+local Award = AddOn.ImportPackage('Models').Award
+--- @type Models.Date
+local Date = AddOn.ImportPackage('Models').Date
+--- @type Models.History.History
+local History = HistoryPkg.History
 
 -- lazy memoization, only require once used
-local UI = AddOn.RequireOnUse('UI.Util')
+-- local UI = AddOn.RequireOnUse('UI.Util')
 
 --- @class Models.History.Traffic
 local Traffic = HistoryPkg:Class('Traffic', History)
+--- @param data Models.Award
 function Traffic:initialize(instant, data)
     History.initialize(self, instant)
     
@@ -24,8 +33,9 @@ function Traffic:initialize(instant, data)
     self.lootHistoryId = nil
     
     if data then
-        if not Award.isInstanceOf(data, Award) then
+        if not data.clazz or not data:isInstanceOf(Award) then
             -- type was table
+            Logging:Error("The specified data was not of the correct type - %s", Util.Objects.ToString(data))
             error("The specified data was not of the correct type : " .. type(data))
         end
         Util.Tables.CopyInto(self, data:toTable())
@@ -34,13 +44,86 @@ function Traffic:initialize(instant, data)
     end
     
     --[[
-    There are additional (optional) attributes which may be set based upon origin of traffic
-    
-    E.G. #1 map, instance, and boss will be set for GP/EP traffic from an instance encounter
-    E.G. #2 item, response, and responseId will be set for GP traffic from an item award
+    There are additional (optional) attributes which may be set based upon origin of traffic. Examples are below
+
+    E.G. EP/GP awards from encounter will have instanceId and encounterId attributes
+    E>G. GP award from an item allocation will have item (link), response attributes (id, text), before/after resource values, and id of loot history entry
     
     If a traffic entry is created from a user initiated action, such as manual award of GP/EP, then these
     attributes won't be present
+
+    {
+        resourceQuantity = 15,
+        description = Awarded 15 EP for Razorgore the Untamed (Victory),
+        instanceId = 469,
+        encounterId = 610,
+        id = 1602461696-0,
+        subjects = {{...}, {...}, ...},
+        resourceType = 1,
+        version = {minor = 0, patch = 0, major = 1},
+        subjectType = 3,
+        timestamp = 1602461696,
+        actionType = 1,
+        actor = Gnomechómsky-Atiesh,
+        actorClass = WARLOCK
+    }
+    {
+        resourceQuantity = 0.1,
+        description = Decay on 10/13/2020,
+        id = 1602616150-1904,
+        subjects = {{...}, {...}, ...},
+        resourceType = 1,
+        version = {minor = 0, patch = 0, major = 1},
+        subjectType = 2,
+        timestamp = 1602616150,
+        actionType = 4,
+        actor = Gnomechómsky-Atiesh,
+        actorClass = WARLOCK
+    }
+    {
+        baseGp = 34,
+        description = Awarded |cffa335ee|Hitem:16934::::::::60:::::::|h[Nemesis Bracers]|h|r for |cff3fc6eaDisenchant|r,
+        subjects = {{Avalona-Atiesh, WARLOCK}},
+        instanceId = 469,
+        encounterId = 610,
+        item = |cffa335ee|Hitem:16934::::::::60:::::::|h[Nemesis Bracers]|h|r,
+        resourceBefore = 68,
+        actorClass = WARLOCK,
+        resourceQuantity = 0,
+        id = 1602461756-1840,
+        responseId = 1,
+        timestamp = 1602461756,
+        response = Disenchant,
+        resourceType = 2,
+        lootHistoryId = 1602461756-1839,
+        version = {minor = 0, patch = 0, major = 1},
+        awardScale = 0, a
+        actor = Gnomechómsky-Atiesh,
+        actionType = 1,
+        subjectType = 1
+    }
+    {
+        baseGp = 52,
+        description = Awarded |cffa335ee|Hitem:19336::::::::60:::::::|h[Arcane Infused Gem]|h|r for |cfffff468Off-Spec (Greed)|r,
+        subjects = {{Keelut-Atiesh, HUNTER}},
+        instanceId = 469,
+        encounterId = 610,
+        item = |cffa335ee|Hitem:19336::::::::60:::::::|h[Arcane Infused Gem]|h|r,
+        resourceBefore = 15,
+        actorClass = WARLOCK,
+        resourceQuantity = 20,
+        id = 1602461770-3692,
+        responseId = 2,
+        timestamp = 1602461770,
+        response = Off-Spec (Greed),
+        resourceType = 2,
+        lootHistoryId = 1602461770-3691,
+        version = {minor = 0, patch = 0, major = 1},
+        awardScale = 0.5,
+        actor = Gnomechómsky-Atiesh,
+        actionType = 1,
+        subjectType = 1
+    }
     --]]
 end
 
@@ -59,6 +142,7 @@ function Traffic:Finalize()
     end
 end
 
+--[[
 function Traffic:Description()
     local subject = ""
     if self.subjectType == Award.SubjectType.Character then
@@ -74,15 +158,19 @@ function Traffic:Description()
             UI().ResourceTypeDecorator(self.resourceType):decorate(Award.TypeIdToResource[self.resourceType]:upper())
     )
 end
+--]]
 
 --- @class Models.History.TrafficStatistics
 local TrafficStatistics = HistoryPkg:Class('TrafficStatistics')
 --- @class Models.History.TrafficStatisticsEntry
 local TrafficStatisticsEntry = HistoryPkg:Class('TrafficStatisticsEntry')
--- Loot Statistics
+-- Traffic Statistics summary (useful for total raids)
+TrafficStatistics.Summary = "summary"
+
 function TrafficStatistics:initialize()
     -- mapping from character name to associated stats
     self.entries = {}
+    self.entries[TrafficStatistics.Summary] = TrafficStatisticsEntry()
 end
 
 function TrafficStatistics:Get(name)
@@ -108,13 +196,19 @@ end
 
 function TrafficStatistics:ProcessEntry(entry)
     -- force entry into class instance
-    if not Traffic.isInstanceOf(entry, Traffic) then
+    if not Traffic:isInstanceOf(entry) then
         entry = Traffic:reconstitute(entry)
     end
     
     local appliesTo = Util(entry.subjects):Copy(function(subject) return subject[1] end):Flip()()
     local stats = Util(appliesTo):Copy(function(_, name) return self:GetOrAdd(name) end, true)()
-    for _, si in pairs(stats) do si:AddAward(entry) end
+    for _, si in pairs(stats) do
+        si:AddAward(entry)
+        si:AddRaid(entry)
+    end
+
+    -- add to the summary, we don't do this with awards
+    self:Get(self.Summary):AddRaid(entry)
 end
 
 function TrafficStatisticsEntry:initialize()
@@ -122,12 +216,38 @@ function TrafficStatisticsEntry:initialize()
         [Award.ResourceType.Ep] = {},
         [Award.ResourceType.Gp] = {},
     }
+
+    self.raids = {
+
+    }
+
     self.totals = {
         awards = {
             [Award.ResourceType.Ep] = {},
             [Award.ResourceType.Gp] = {},
         },
+        raids = {
+
+        }
     }
+    self.totalled = false
+end
+
+function TrafficStatisticsEntry:AddRaid(award)
+    local instanceId = award.instanceId
+    -- not all awards will be from a raid
+    if instanceId then
+        if not self.raids[instanceId] then
+            self.raids[instanceId] = {}
+        end
+
+        -- consider combination of instance id and date as a raid occurrence
+        -- fuzzy as could be in the same raid across a change in day, but close neough
+        if not Util.Tables.ContainsValue(self.raids[instanceId], award:FormattedDate()) then
+            Util.Tables.Push(self.raids[instanceId], award:FormattedDate())
+        end
+    end
+
     self.totalled = false
 end
 
@@ -143,8 +263,7 @@ function TrafficStatisticsEntry:AddAward(award)
                 award.actionType,
                 award.resourceQuantity,
     })
-    
-    -- todo : do we want to track raids, bosses, etc? if so, it's there - just need to record it
+
     self.totalled = false
 end
 
@@ -160,8 +279,8 @@ function TrafficStatisticsEntry:CalculateTotals()
             local decays = 0
             local resets = 0
             
-            for _, oper in pairs(actions) do
-                local o, q = unpack(oper)
+            for _, op in pairs(actions) do
+                local o, q = unpack(op)
                 if o == Award.ActionType.Add then
                     totals = totals + q
                     awards = awards + 1
@@ -174,10 +293,10 @@ function TrafficStatisticsEntry:CalculateTotals()
                     decays = decays + 1
                 end
             end
-    
+
             self.totals.awards[rt] = {
-                count = 0,
-                total = 0,
+                count  = 0,
+                total  = 0,
                 resets = 0,
                 decays = 0,
             }
@@ -187,9 +306,19 @@ function TrafficStatisticsEntry:CalculateTotals()
             self.totals.awards[rt].resets = resets
             self.totals.awards[rt].decays = decays
         end
+
+        local totalRaids = 0
+        for raid, dates in pairs(self.raids) do
+            local raidCount = Util.Tables.Count(dates)
+            self.totals.raids[raid] = raidCount
+            totalRaids = totalRaids + raidCount
+        end
+
+        self.totals.raids.count = totalRaids
+        self.totalled = true
     end
     
-    -- index is the resource type (i.e. EP and GP)
-    -- {awards = {{total = 0, count = 3}, {total = 273, count = 25}}}
+    -- index for wards is the resource type (i.e. EP and GP)
+    -- {awards = {{decays = 1, total = 275, count = 16, resets = 0}, {decays = 1, total = 0, count = 0, resets = 0}}, raids = {count = 8, 533 = {count = 2}, 469 = {count = 2}, 409 = {count = 2}, 531 = {count = 2}}}
     return self.totals
 end

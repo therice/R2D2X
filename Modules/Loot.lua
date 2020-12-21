@@ -57,7 +57,7 @@ function Loot:SubscribeToComms()
 	self.commSubscriptions = Comm():BulkSubscribe(C.CommPrefixes.Main, {
 		[C.Commands.Response] = function(data, sender)
 			Logging:Debug("Response from %s", tostring(sender))
-			self:OnResponseReceived(sender, unpack(data))
+			self:OnResponseReceived(unpack(data))
 		end,
 	})
 end
@@ -84,7 +84,7 @@ function Loot:UnsubscribeFromComms()
 	self.commSubscriptions = nil
 end
 
-function Loot:OnResponseReceived(sender, session, data)
+function Loot:OnResponseReceived(session, candidate, data)
 	if Util.Tables.ContainsKey(data, 'response') then
 		---@type Models.Item.LootEntry
 		local _, item = Util.Tables.FindFn(
@@ -93,7 +93,7 @@ function Loot:OnResponseReceived(sender, session, data)
 		)
 
 		if item then
-			item:TrackResponse(sender, data.response)
+			item:TrackResponse(candidate, data.response)
 		end
 	end
 end

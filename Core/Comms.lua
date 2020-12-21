@@ -68,7 +68,13 @@ function AddOn:SubscribeToPermanentComms()
             if AddOn:IsMasterLooter(sender) and self.enabled then
                 self:OnReRollReceived(sender, unpack(data))
             end
+        end,
+        [C.Commands.StandbyPing] = function(data, sender)
+            if AddOn:IsMasterLooter(sender) then
+                self:Send(sender, C.Commands.StandbyPingAck, unpack(data))
+            end
         end
+
     })
 end
 
@@ -91,10 +97,15 @@ function AddOn:SendResponse(target, session, response, extra)
         Util.Tables.CopyInto(args, extra)
     end
 
-    self:Send(target, C.Commands.Response, session, args)
+    -- always send the player's name along with response, as other use cases
+    -- could potentially require the message is sent by another player (i.e. ML) on
+    -- behalf of the actual candidate. therefore, treat them consistently
+    -- for reference, see MasterLooter:GetItemsFromMessage()
+    self:Send(target, C.Commands.Response, session, self.player:GetName(), args)
 end
 
 
+--- @return string
 function AddOn:GetAnnounceChannel(channel)
     return channel == C.group and (IsInRaid() and C.Channels.Raid or C.Channels.Party) or channel
 end

@@ -20,7 +20,6 @@ function dump(...)
     return "<"..table.concat(t, "> <")..">"
 end
 
-
 require('bit')
 _G.bit = bit
 _G.tInvert = function(tbl)
@@ -70,7 +69,6 @@ _G.gsub = string.gsub
 _G.date = os.date
 _G.time = os.time
 _G.difftime = os.difftime
-_G.unpack = table.unpack
 _G.tinsert = table.insert
 _G.tremove = table.remove
 _G.floor = math.floor
@@ -79,6 +77,8 @@ _G.strupper = string.upper
 _G.mod = function(a,b) return a - math.floor(a/b) * b end
 _G.max = math.max
 _G.ceil = math.ceil
+_G.frexp = math.frexp
+_G.ldexp = math.ldexp
 
 -- https://wowwiki.fandom.com/wiki/API_strsplit
 -- A list of strings. Not a table. If the delimiter is not found in the string, the whole subject string will be returned.
@@ -535,6 +535,8 @@ function GiveMasterLoot(slot, i)
 
 end
 
+function CanEditOfficerNote() return true end
+
 function ChatFrame_AddMessageEventFilter(event, fn)  end
 
 -- dubious
@@ -798,7 +800,7 @@ _G.RandomRoll = function(low, high)
 end
 
 _G.RETRIEVING_ITEM_INFO = "Retrieving item information"
-
+_G.ERR_CHAT_PLAYER_NOT_FOUND_S = "No player named '%s' is currently playing."
 _G.TOOLTIP_DEFAULT_BACKGROUND_COLOR = {
     r = 0,
     g = 0,

@@ -8,5 +8,8 @@
     <Script file="MasterLooter.lua" />
     <Script file="LootAllocate.lua" />
     <Script file="Loot.lua" />
+    <Script file="Standby.lua" />
+    <Script file="VersionCheck.lua" />
     <Include file="UI\UI.xml"/>
+    <Include file="History\History.xml"/>
 </Ui>

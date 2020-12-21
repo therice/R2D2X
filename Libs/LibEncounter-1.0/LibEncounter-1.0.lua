@@ -11,6 +11,7 @@ local Util = LibStub("LibUtil-1.1")
 
 -- Boss localization
 local LB = LibBoss:GetLookupTable()
+local LBR = LibBoss:GetReverseLookupTable()
 -- Zone localization (e.g. raids)
 local LZ = LibSubZone:GetLookupTable()
 local LZR = LibSubZone:GetReverseLookupTable()
@@ -63,6 +64,22 @@ function lib:GetCreatureName(creatureId)
     return creatureName
 end
 
+function lib:GetCreatureId(creatureName)
+    -- reverse lookup based upon localized name into english
+    local creatureName, creatureId = LBR[creatureName], nil
+    if creatureName then
+        creatureId, _ = Util.Tables.FindFn(
+            lib.Creatures,
+                function(creature)
+                    return Util.Strings.Equal(creatureName, creature.name)
+                end,
+                true
+        )
+    end
+
+    return creatureId
+end
+
 function lib:GetMapName(mapId)
     local mapName
     --  map id to the map's name key, then look up from localization
@@ -84,6 +101,16 @@ function lib:GetMapId(mapName)
     
     return mapId
 end
+
+function lib:GetEncounterId(creatureId)
+    return Util.Tables.FindFn(
+            lib.Encounters,
+            function(e)
+                return Util.Tables.ContainsValue(e.creature_id, creatureId)
+            end
+    )
+end
+
 
 function lib:GetCreatureDetail(creatureId)
     local map_id = self:GetCreatureMapId(creatureId)

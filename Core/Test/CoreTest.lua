@@ -31,6 +31,7 @@ describe("Core", function()
 		end)
 		it("GetButtons", function()
 			local buttonCount, buttons = AddOn:GetButtonCount(), AddOn:GetButtons()
+			print(Util.Objects.ToString(buttons))
 			for i = 1, buttonCount do
 				assert(buttons[i])
 			end

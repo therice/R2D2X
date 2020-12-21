@@ -87,6 +87,7 @@ AddOn.Constants = {
         HandleLootStart         =   "hlst",
         HandleLootStop          =   "hlstp",
         LootAck                 =   "la",
+        LootHistoryAdd          =   "lha",
         LootSessionEnd          =   "lse",
         LootTable               =   "lt",
         LootTableAdd            =   "lta",
@@ -98,15 +99,25 @@ AddOn.Constants = {
         ReRoll                  =   "rer",
         Roll                    =   "roll",
         Rolls                   =   "rolls",
+        StandbyPing             =   "sbp",
         StandbyPingAck          =   "sbpa",
+        TrafficHistoryAdd       =   "tha",
+        VersionCheck            =   "vc",
+        VersionCheckReply       =   "vcr",
+        VersionPing             =   "vp",
+        VersionPingReply        =   "vpr",
     },
 
     DropDowns = {
-        AllocateRightClick      = name .. "_Allocate_RightClick",
-        AllocateFilter          = name .. "_Allocate_Filter",
-        Enchanters              = name .. "_EnchantersMenu",
-        StandingsRightClick     = name .. "_Standings_RightClick",
-        StandingsFilter         = name .. "_Standings_Filter",
+        AllocateRightClick       = name .. "_Allocate_RightClick",
+        AllocateFilter           = name .. "_Allocate_Filter",
+        Enchanters               = name .. "_EnchantersMenu",
+        LootHistoryFilter        = name .. "_LH_Filter",
+        StandbyRightClick        = name .. "_Standby_RightClick",
+        StandingsRightClick      = name .. "_Standings_RightClick",
+        StandingsFilter          = name .. "_Standings_Filter",
+        TrafficHistoryFilter     = name .. "_TH_Filter",
+        TrafficHistoryRightClick = name .. "_TH_RightClick",
     },
 
     Events = {
@@ -188,6 +199,7 @@ AddOn.Constants = {
         ConfigTableChanged      =   name .. "_ConfigTableChanged",
         LootTableAddition       =   name .. "_LootTableAddition",
         MasterLooterAddItem     =   name .. "_MasterLooterAddItem",
+        PlayerNotFound          =   name .. "_PlayerNotFound",
     },
 
     Modes = {
@@ -204,6 +216,7 @@ AddOn.Constants = {
         ConfirmDecayPoints      =   name .. "_ConfirmDecayPoints",
         ConfirmDeleteItem       =   name .. "_ConfirmDeleteItem",
         ConfirmReannounceItems  =   name .. "_ConfirmReannounceItems",
+        ConfirmRevert           =   name .. "_ConfirmRevert",
         ConfirmUsage            =   name .. "_ConfirmUsage",
     },
 
@@ -224,6 +237,7 @@ AddOn.Constants = {
     },
 
     VersionStatus = {
-
+        Current   = "c",
+        OutOfDate = "o"
     }
 }

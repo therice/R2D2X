@@ -10,6 +10,7 @@ function Entry:arrow(val) return self:set('hasArrow',val) end
 function Entry:value(val) return self:set('value',val) end
 function Entry:disabled(val) return self:set('disabled', val) end
 function Entry:fn(fn) return self:set('func', fn)  end
+function Entry:hidden(val) return self:set('hidden', val) end
 
 --- @class UI.AceConfig.EntryBuilder
 local EntryBuilder = AddOn.Package('UI.DropDown'):Class('EntryBuilder', Builder)

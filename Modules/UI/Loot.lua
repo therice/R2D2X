@@ -421,8 +421,7 @@ function Loot:Update()
 	self.EntryManager:Update()
 	self.frame:SetHeight(numEntries * ENTRY_HEIGHT + 7)
 
-	-- todo : alwaysShowTooltip
-	local first, alwaysShowTooltip = self.EntryManager.entries[1], false
+	local first, alwaysShowTooltip = self.EntryManager.entries[1], AddOn:ModuleSettings(self:GetName()).alwaysShowTooltip
 	if first and alwaysShowTooltip then
 		self.frame.itemTooltip:SetOwner(self.frame.content, "ANCHOR_NONE")
 		self.frame.itemTooltip:SetHyperlink(first.item.link)

@@ -176,16 +176,18 @@ function ScrollingTable.CellBuilder()
     return CellBuilder()
 end
 
+--- @param attach boolean should the scrolling table be attached to frame at 'st'
 --- @return table
-function ScrollingTable.New(cols, rows, rowHeight, highlight, frame)
+function ScrollingTable.New(cols, rows, rowHeight, highlight, frame, attach)
     cols = cols or {}
     rows = rows or DefaultRowCount
     rowHeight = rowHeight or DefaultRowHeight
     highlight = highlight or DefaultHighlight
+    attach = Util.Objects.Default(attach, true)
 
     local parent = (frame and frame.content) and frame.content or frame
     local st = ST:CreateST(cols, rows, rowHeight, highlight, parent)
-    if frame then
+    if frame and attach then
         st.frame:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 10, 10)
         frame.st = st
         frame:SetWidth(st.frame:GetWidth() + 20)

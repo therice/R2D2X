@@ -6,4 +6,6 @@
     <Script file="LootSession.lua" />
     <Script file="Loot.lua" />
     <Script file="LootAllocate.lua" />
+    <Script file="Standby.lua" />
+    <Script file="VersionCheck.lua" />
 </Ui>

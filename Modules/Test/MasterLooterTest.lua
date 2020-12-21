@@ -11,10 +11,10 @@ describe("MasterLooter", function()
 	end)
 
 	teardown(function()
-		print(Util.Objects.ToString( AddOn.Require('Core.Event').private.metricsRcv:Summarize()))
-		print(Util.Objects.ToString( AddOn.Require('Core.Comm').private.metricsSend:Summarize()))
-		print(Util.Objects.ToString( AddOn.Require('Core.Comm').private.metricsRecv:Summarize()))
-		print(Util.Objects.ToString( AddOn.Require('Core.Comm').private.metricsFired:Summarize()))
+		--print(Util.Objects.ToString( AddOn.Require('Core.Event').private.metricsRcv:Summarize()))
+		--print(Util.Objects.ToString( AddOn.Require('Core.Comm').private.metricsSend:Summarize()))
+		--print(Util.Objects.ToString( AddOn.Require('Core.Comm').private.metricsRecv:Summarize()))
+		--print(Util.Objects.ToString( AddOn.Require('Core.Comm').private.metricsFired:Summarize()))
 		After()
 	end)
 
@@ -105,6 +105,8 @@ describe("MasterLooter", function()
 	describe("functionality", function()
 		--- @type MasterLooter
 		local ml
+		--- @type LootAllocate
+		local la
 		setup(function()
 			_G.IsInRaidVal = true
 			_G.UnitIsGroupLeaderVal = true
@@ -116,12 +118,14 @@ describe("MasterLooter", function()
 			ml.db.profile.autoStart = true
 			ml.db.profile.autoAdd = true
 			ml.db.profile.outOfRaid = true
+			ml.db.profile.acceptWhispers = true
 			ml.db.profile.usage = {
 				never  = false,
 				ml     = true,
 				ask_ml = false,
 				state  = "ml",
 			}
+			la = AddOn:LootAllocateModule()
 			PlayerEnteredWorld()
 			assert(ml:IsEnabled())
 			assert(AddOn:IsMasterLooter())
@@ -136,7 +140,7 @@ describe("MasterLooter", function()
 			AddOn.masterLooter = nil
 			AddOn.player = nil
 			AddOn.handleLoot = false
-			ml = nil
+			ml, la = nil, nil
 		end)
 
 		it("sends LootTable", function()
@@ -192,11 +196,35 @@ describe("MasterLooter", function()
 		end)
 
 		it("Award", function()
+			local cbFired = false
+			local function Cb(awarded, session, winner, status, award, callback, ...)
+				cbFired = true
+				assert(awarded)
+				assert.equal(session, 1)
+				assert.equal(winner, "Player1-Realm1")
+				assert.equal(status, "Normal")
+				assert(award)
+				assert.equal(award.awardReason, "ms_need")
+			end
+
 			AddOn:SendResponse(C.group, 1, 1)
 			WoWAPI_FireUpdate(GetTime() + 10)
 			local award = AddOn:LootAllocateModule():GetItemAward(1, AddOn.player:GetName())
-			ml:Award(award)
+			ml:Award(award.session, award.winner, award:NormalizedReason().text, award.reason, Cb, award)
 			WoWAPI_FireEvent("LOOT_SLOT_CLEARED", 1)
+			assert(cbFired)
+			WoWAPI_FireUpdate(GetTime() + 10)
+		end)
+
+		it("handles whispers", function()
+			SendChatMessage("!help", "WHISPER")
+			SendChatMessage("!items", "WHISPER")
+			SendChatMessage("!item 2 3", "WHISPER")
+			WoWAPI_FireUpdate(GetTime() + 10)
+
+			local cr2 = la:GetCandidateResponse(2, AddOn.player:GetName())
+			assert(cr2)
+			assert.equal(cr2.response, 3)
 		end)
 
 		it("ends session", function()

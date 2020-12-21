@@ -79,6 +79,7 @@ end
 ---@param awarded boolean was entry cleared as  result of successful award
 ---@param reason string if not awarded, the reason for failure
 function LootQueueEntry:Cleared(awarded, reason)
+	-- Logging:Trace("Cleared() : %s, %s", tostring(awarded), tostring(reason))
 	if self.callback then
 		self.callback(awarded, reason, unpack(self.args))
 	end
@@ -206,13 +207,13 @@ function ItemAward:initialize(entry, candidate, reason)
 	end
 
 	--[[
-		Examples of response/reason permutations
+	Examples of response/reason permutations
 
-		Candidate responded with MS/Need, but awarded for 'Bank'
-			{ responseId = 1, reason = { color = {...}, text = 'Bank', sort = 403, award_scale = 'bank', ...}, awardReason = 'bank', ...
+	Candidate responded with MS/Need, but awarded for 'Bank'
+		{ responseId = 1, reason = { color = {...}, text = 'Bank', sort = 403, award_scale = 'bank', ...}, awardReason = 'bank', ...
 
-		Candidate responded with MS/Need and awarded for that reason
-			{ responseId = 1, reason = nil, awardReason = 'ms_need', ...
+	Candidate responded with MS/Need and awarded for that reason
+		{ responseId = 1, reason = nil, awardReason = 'ms_need', ...
 	--]]
 	local cr = entry:GetCandidateResponse(candidate)
 	local awardReason, baseGp, awardGp = nil, nil, nil

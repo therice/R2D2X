@@ -41,6 +41,7 @@ describe("DB", function()
         it("handles compress and decompress", function()
             for _, v in pairs(TestData) do
                 local c = CompressedDb.static:compress(v)
+                print(c)
                 local d = CompressedDb.static:decompress(c)
                 assert.is.same(v, d)
             end
@@ -165,6 +166,7 @@ describe("DB", function()
                 assert(Util.Tables.Equals(v, values2[k], true))
             end
         end)
+        --[[
         it("detects and removes nil values (numeric index)", function()
             local db, cdb = NewDb(TestSparseData)
 
@@ -196,6 +198,7 @@ describe("DB", function()
             assert(count == 6)
 
         end)
+        --]]
     end)
 
     describe("MasterLooterDb", function()

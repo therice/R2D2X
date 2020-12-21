@@ -6,7 +6,8 @@ local Logging = LibStub("LibLogging-1.0")
 -- The second magic key is ['**']. It works similar to the ['*'] key, except that it'll also be inherited by all the keys in the same table.
 AddOn.defaults = {
     global = {
-      cache = {}
+      cache = {},
+      versions = {},
     },
     profile = {
         logThreshold = Logging.Level.Trace,

@@ -98,9 +98,11 @@ local function _cycle_aware_copy(t, cache)
     local mt = getmetatable(t)
 
     for k,v in pairs(t) do
-        k = _cycle_aware_copy(k, cache)
-        v = _cycle_aware_copy(v, cache)
-        res[k] = v
+        if k ~= 'clazz' then
+            k = _cycle_aware_copy(k, cache)
+            v = _cycle_aware_copy(v, cache)
+            res[k] = v
+        end
     end
 
     return setmetatable(res,mt)
@@ -132,7 +134,9 @@ local DefaultMixin = {
 
     -- creates a clone of current instance, including metadata
     clone = function(self)
-        return _cycle_aware_copy(self, {})
+        local c = _cycle_aware_copy(self, {})
+        c.clazz = self.clazz
+        return c
     end,
 
     -- creates a copy of the current instance, but only the actual attributes

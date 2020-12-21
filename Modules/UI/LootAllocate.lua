@@ -63,11 +63,11 @@ function LA:GetFrame()
 		local st = ST.New(ScrollColumns, 15, 20, nil, f)
 		st:RegisterEvents({
 			["OnClick"] = function(_, cellFrame, data, _, row, realrow, _, _, button, ...)
-				if button == "RightButton" and row then
+				if button == C.Buttons.Right and row then
 					RightClickMenu.name = data[realrow].name
 					RightClickMenu.module = self
 					MSA_ToggleDropDownMenu(1, nil, RightClickMenu, cellFrame, 0, 0)
-				elseif button == "LeftButton" and row then
+				elseif button == C.Buttons.Left and row then
 					MI.Update(f, data, realrow)
 					f.Update(Util.Objects.Check((data and row), data[row].name, nil), true)
 					if IsAltKeyDown() then
@@ -95,7 +95,7 @@ function LA:GetFrame()
 		st:SetFilter(function (...) return self:FilterFunc(...) end)
 		st:EnableSelection(true)
 
-		MI.EmbedWidgets(self:GetName(), f, AddOn.UpdateMoreInfoWithLootStats)
+		MI.EmbedWidgets(self:GetName(), f, MI.UpdateMoreInfoWithLootStats)
 
 		local item = UI:NewNamed('IconBordered', f.content, "ItemIcon", "Interface/ICONS/INV_Misc_QuestionMark")
 		item:SetMultipleScripts({

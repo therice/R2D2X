@@ -17,8 +17,10 @@ local Standings = AddOn:NewModule('Standings',  "AceTimer-3.0")
 function Standings:OnInitialize()
     Logging:Debug("OnInitialize(%s)", self:GetName())
 
+    --- @type table<string, Models.Subject>
     self.subjects = {}
     self.pendingUpdate = false
+    self.alarm = AddOn.Alarm(0.50, function () self:Update() end)
 
     -- register callbacks with LibGuildStorage for events in which we are interested
     GuildStorage.RegisterCallback(self, GuildStorage.Events.GuildOfficerNoteChanged, "MemberModified")
@@ -29,6 +31,7 @@ end
 
 function Standings:OnEnable()
     Logging:Debug("OnEnable(%s)", self:GetName())
+    self.alarm:Start()
     self:GetFrame()
     self:BuildData()
     self:Show()
@@ -36,6 +39,7 @@ end
 
 function Standings:OnDisable()
     Logging:Debug("OnDisable(%s)", self:GetName())
+    self.alarm:Stop()
     self:Hide()
 end
 
@@ -49,12 +53,10 @@ end
 
 function Standings:_AddEntry(name, entry)
     self.subjects[Name(name)] = entry
-    self.pendingUpdate = true
 end
 
 function Standings:_RemoveEntry(name)
     self.subjects[Name(name)] = nil
-    self.pendingUpdate = true
 end
 
 --- @return Models.Subject
@@ -66,11 +68,9 @@ function Standings.Points(name)
     local e = Standings:GetEntry(name)
     -- Logging:Trace("Points(%s) : %s", name, tostring(e and true or false))
     if e then return e:Points() end
-    -- todo : just nil?
     return 0, 0, 0
 end
 
--- todo : need to handle addition and removal of members to scrolling table
 -- this is currently only invoked as part of officer's note changing, nothing else
 function Standings:MemberModified(_, name, note)
     Logging:Trace("MemberModified(%s) : '%s'", name, note)
@@ -84,9 +84,8 @@ function Standings:MemberDeleted(_, name)
     self._RemoveEntry(name)
 end
 
--- todo : maybe it's better to just fire from individual events
 function Standings:DataChanged(event, state)
-    Logging:Trace("DataChanged(%s) : %s, %s", event, tostring(state), tostring(self.pendingUpdate))
+    Logging:Trace("DataChanged(%s) : %s", event, tostring(state))
     -- will get this once everything settles
     -- individual events will have collected the appropriate point entries
     if event == GuildStorage.Events.Initialized then
@@ -98,21 +97,13 @@ function Standings:DataChanged(event, state)
     end
 end
 
--- todo : do we need to throttle refreshses?
-function Standings:Update(forceUpdate)
-    Logging:Trace("Update(%s)", tostring(forceUpdate or false))
-    -- if module isn't enabled, no need to perform update
-    if not self:IsEnabled() then return end
-    if not self.frame then return end
-    self.frame.st:SortData()
-end
-
 function Standings:ShouldPersist()
     -- don't apply to actual officer notes in test mode or if persistence mode is disabled
     -- it will also fail if we cannot edit officer notes
     return (not AddOn:TestModeEnabled() and AddOn:PersistenceModeEnabled()) and CanEditOfficerNote()
 end
 
+--- @param award Models.Award
 function Standings:Adjust(award)
     if not GuildStorage:IsStateCurrent() then
         Logging:Debug("Adjust() : GuildStorage state is not current, scheduling for near future and returning")
@@ -153,22 +144,17 @@ function Standings:Adjust(award)
         targetFn(amount)
     end
 
-    -- todo : if we want to record history entries after point adjustment then needs to be refactored to grab 'before' quantity
-    -- todo : could pass in the actual update to be performed before sending
-
+    -- todo : if we want to record history entries after point adjustment occurs, this needs to be refactored to grab
+    -- todo : 'before' quantity. could pass in the actual update to be performed before sending
     -- if the award is for GP and there is an associated item that was awarded, create it first
-    -- todo
-    --[[
     local lhEntry
     if award.resourceType == Award.ResourceType.Gp and award.item then
         lhEntry = AddOn:LootHistoryModule():CreateFromAward(award)
     end
-    --]]
 
     -- just one traffic history entry per award, regardless of number of subjects
     -- to which it applied
-    -- todo
-    -- AddOn:TrafficHistoryModule():CreateFromAward(award, lhEntry)
+    AddOn:TrafficHistoryModule():CreateFromAward(award, lhEntry)
 
     local shouldPersist = self:ShouldPersist()
     -- subject is a tuple of (name, class)
@@ -195,11 +181,8 @@ function Standings:Adjust(award)
     end
 
     -- announce what was done
-    -- todo
-    --[[
-    local check, _ = pcall(function() AddOn:SendAnnouncement(award:ToAnnouncement(), AddOn.Constants.group) end)
+    local check, _ = pcall(function() AddOn:SendAnnouncement(award:ToAnnouncement(), C.group) end)
     if not check then Logging:Warn("Award() : Unable to announce adjustment") end
-    --]]
 
     -- todo : check for visible
     self:BuildData()
@@ -249,7 +232,7 @@ function Standings:BulkAdjust(...)
 
             Standings:Adjust(award)
             -- if we were not persisting, the callbacks wont happen
-            -- do it manually, could pass a function to Adjust() for callback, but seems excssive
+            -- do it manually, could pass a function to Adjust() for callback, but seems excessive
             if not shouldPersist then
                 adjust(awards, index + 1)
             end
@@ -257,4 +240,29 @@ function Standings:BulkAdjust(...)
     end
 
     adjust(awards, 1)
+end
+
+function Standings:RevertAdjust(entry)
+    -- i think it should be fine to apply revert to guild/raid, we have the list of subjects
+    --[[
+    if entry.subjectType ~= Award.SubjectType.Character then
+        error("Unsupported subject type for reverting an award : " .. Award.TypeIdToSubject[entry.subjectType])
+    end
+    --]]
+
+    if not Util.Objects.In(entry.actionType, Award.ActionType.Add, Award.ActionType.Subtract) then
+        error("Unsupported resource type for reverting an award : " .. Award.TypeIdToAction[entry.actionType])
+    end
+
+    local award = Award(entry)
+    if award.actionType == Award.ActionType.Add then
+        award.actionType = Award.ActionType.Subtract
+    elseif award.actionType == Award.ActionType.Subtract then
+        award.actionType = Award.ActionType.Add
+    end
+
+    -- nil out item, this is a revert so no associated loot history record
+    award.item = nil
+    award.description = format(L['revert'] .. "'%s'", entry.description)
+    self:Adjust(award)
 end

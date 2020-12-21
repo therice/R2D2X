@@ -63,8 +63,7 @@ end
 function AddOn:PartyEvent(event, ...)
     Logging:Debug("PartyEvent(%s)", event)
     self:NewMasterLooterCheck()
-    -- todo : standby roster reset
-    -- if event == E.GroupLeft then self:StandbyModule():ResetRoster() end
+    if event == C.Events.GroupLeft then self:StandbyModule():ResetRoster() end
 end
 
 -- https://wow.gamepedia.com/LOOT_READY

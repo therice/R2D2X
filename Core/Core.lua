@@ -109,6 +109,26 @@ function AddOn:LootModule()
     return self:GetModule("Loot")
 end
 
+--- @return Standby
+function AddOn:StandbyModule()
+    return self:GetModule("Standby")
+end
+
+--- @return TrafficHistory
+function AddOn:TrafficHistoryModule()
+    return self:GetModule("TrafficHistory")
+end
+
+--- @return LootHistory
+function AddOn:LootHistoryModule()
+    return self:GetModule("LootHistory")
+end
+
+--- @return VersionCheck
+function AddOn:VersionCheckModule()
+    return self:GetModule("VersionCheck")
+end
+
 function AddOn:RegisterChatCommands()
     Logging:Debug("RegisterChatCommands(%s)", self:GetName())
     SlashCommands:BulkSubscribe(
@@ -152,10 +172,42 @@ function AddOn:RegisterChatCommands()
                 true
             },
             {
+                {'version', 'v', 'ver'},
+                L['chat_commands_version'],
+                function(showOutOfDate)
+                    if showOutOfDate then
+                        self:VersionCheckModule():DisplayOutOfDateClients()
+                    else
+                        self:CallModule('VersionCheck')
+                    end
+                end
+            },
+            {
                 {'test', 't'},
                 L['chat_commands_test'],
                 function(count)
                     self:Test(tonumber(count) or 2)
+                end
+            },
+            {
+                {'standby', 'bench', 'sb'},
+                L['chat_commands_standby'],
+                function()
+                    AddOn:CallModule("Standby")
+                end
+            },
+            {
+                {'traffich', 'th'},
+                L['chat_commands_traffich'],
+                function()
+                    AddOn:CallModule("TrafficHistory")
+                end
+            },
+            {
+                {'looth', 'lh'},
+                L['chat_commands_looth'],
+                function()
+                    AddOn:CallModule("LootHistory")
                 end
             }
     )

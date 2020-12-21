@@ -80,7 +80,9 @@ function LA:OnDisable()
 	Logging:Debug("OnDisable(%s)", self:GetName())
 	self.active = false
 	self.session = 1
-	wipe(self.lootTable)
+	-- intentionally don't wipe loot table on disable
+	-- as the UI may still be visible and doing so will make it unsuable
+	-- wipe(self.lootTable)
 	self.alarm:Stop()
 	self:UnregisterAllMessages()
 	self:UnregisterAllBuckets()
@@ -94,6 +96,7 @@ end
 function LA:EndSession(hide)
 	if self.active then
 		Logging:Debug("EndSession(%s)", tostring(hide))
+		self.active = false
 		self:Update(true)
 		self:Disable()
 	end
@@ -392,8 +395,8 @@ function LA:OnLootAckReceived(candidate, ilvl, sessionData)
 	self:Update()
 end
 
-function LA:OnResponseReceived(candidate, session, data)
-	Logging:Debug("OnResponseReceived(%s, %d)", tostring(candidate), tonumber(session))
+function LA:OnResponseReceived(session, candidate, data)
+	Logging:Debug("OnResponseReceived(%s, %d) : %s", tostring(candidate), tonumber(session), Util.Objects.ToString(data))
 	for key, val in pairs(data) do
 		self:SetCandidateData(session, candidate, key, val)
 	end
@@ -501,7 +504,7 @@ function LA:SubscribeToComms()
 		end,
 		[C.Commands.Response] = function(data, sender)
 			Logging:Debug("Response from %s", tostring(sender))
-			self:OnResponseReceived(sender, unpack(data))
+			self:OnResponseReceived(unpack(data))
 		end,
 		[C.Commands.ChangeResponse] = function(data, sender)
 			Logging:Debug("ChangeResponse from %s", tostring(sender))
