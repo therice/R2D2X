@@ -1,6 +1,15 @@
 local AddOnName, AddOn, Util, CDB
 
 
+local function NewTrafficHistoryDb(th, data)
+	local db = NewAceDb(th.defaults)
+	for k, history in pairs(data) do
+		db.factionrealm[k] = history
+	end
+	th.db = db
+	th.history = CDB(db.factionrealm)
+end
+
 describe("TrafficHistory", function()
 	setup(function()
 		AddOnName, AddOn = loadfile("Test/TestSetup.lua")(true, 'Modules_TrafficHistory')
@@ -39,12 +48,7 @@ describe("TrafficHistory", function()
 		setup(function()
 			AddOn:CallModule("TrafficHistory")
 			th = AddOn:TrafficHistoryModule()
-			local db =  NewAceDb(th.defaults)
-			for k, history in pairs(TrafficTestData_M) do
-				db.factionrealm[k] = history
-			end
-			th.db = db
-			th.history = CDB(th.db.factionrealm)
+			NewTrafficHistoryDb(th, TrafficTestData_M)
 		end)
 
 		teardown(function()
@@ -61,6 +65,27 @@ describe("TrafficHistory", function()
 			assert(th.frame.moreInfo:IsVisible())
 			th:UpdateMoreInfo(th.frame, th.frame.st.data, 49)
 			assert(th.frame.moreInfo:IsVisible())
+		end)
+	end)
+
+	describe("imports", function()
+		--- @type TrafficHistory
+		local th
+		--- @type Sync
+		local sync
+
+		setup(function()
+			AddOn:CallModule("TrafficHistory")
+			th = AddOn:TrafficHistoryModule()
+			NewTrafficHistoryDb(th, TrafficTestData_M)
+			sync = AddOn:SyncModule()
+		end)
+
+		it("from sync", function()
+			local handler = sync.handlers['TrafficHistory']
+			local data = handler.send()
+			NewTrafficHistoryDb(th, TrafficTestData_M2)
+			handler.receive(data)
 		end)
 	end)
 end)

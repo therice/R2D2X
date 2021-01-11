@@ -65,7 +65,7 @@ Dialog:Register(C.Popups.ConfirmAdjustPoints, {
     show_while_dead = true,
 })
 
-Dialog:Register(AddOn.Constants.Popups.ConfirmAward, {
+Dialog:Register(C.Popups.ConfirmAward, {
     text = MachuPicchu,
     icon = "",
     on_show = AddOn:MasterLooterModule().AwardOnShow,
@@ -117,7 +117,7 @@ Dialog:Register(C.Popups.ConfirmDeleteItem, {
     show_while_dead = true,
 })
 
-Dialog:Register(AddOn.Constants.Popups.ConfirmReannounceItems, {
+Dialog:Register(C.Popups.ConfirmReannounceItems, {
     text = MachuPicchu,
     on_show = function(self, data)
         UIUtil.DecoratePopup(self)
@@ -143,7 +143,7 @@ Dialog:Register(AddOn.Constants.Popups.ConfirmReannounceItems, {
 })
 
 
-Dialog:Register(AddOn.Constants.Popups.ConfirmRevert, {
+Dialog:Register(C.Popups.ConfirmRevert, {
     text = MachuPicchu,
     on_show = AddOn:StandingsModule().RevertOnShow,
     buttons = {
@@ -154,6 +154,23 @@ Dialog:Register(AddOn.Constants.Popups.ConfirmRevert, {
         {
             text = _G.NO,
             on_click = Util.Functions.Noop
+        },
+    },
+    hide_on_escape = true,
+    show_while_dead = true,
+})
+
+Dialog:Register(C.Popups.ConfirmSync, {
+    text = L['incoming_sync_request'],
+    on_show = AddOn:SyncModule().ConfirmSyncOnShow,
+    buttons = {
+        {
+            text = _G.YES,
+            on_click = function(_, data, ...) AddOn:SyncModule():OnSyncAccept(data) end,
+        },
+        {
+            text = _G.NO,
+            on_click = function(_, data, ...) AddOn:SyncModule():OnSyncDeclined(data) end,
         },
     },
     hide_on_escape = true,

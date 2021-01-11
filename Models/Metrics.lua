@@ -208,15 +208,21 @@ function Snapshot:Rate()
 	return self:Count() / math.max(delta, 1.0)
 end
 
+local NaN = "-nan(ind)"
+
 function Snapshot:Summarize()
+	local function ValueOrZero(v)
+		return Util.Objects.Check(tostring(v) == NaN, 0, v)
+	end
+
 	return {
 		[self.name] = {
 			count  = self:Count(),
 			sum    = self:Sum(),
-			mean   = self:Mean(),
-			median = self:Median(),
-			stddev = self:StdDev(),
-			rate   = self:Rate(),
+			mean   = ValueOrZero(self:Mean()),
+			median = ValueOrZero(self:Median()),
+			stddev = ValueOrZero(self:StdDev()),
+			rate   = ValueOrZero(self:Rate()),
 		}
 	}
 end

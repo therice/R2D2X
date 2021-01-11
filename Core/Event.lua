@@ -63,6 +63,10 @@ local Event = AddOn.Instance(
 
 AddOn:GetLibrary('AceEvent'):Embed(Event.private.AceEvent)
 
+function Event:GetMetrics()
+    return {self.private.metricsRcv}
+end
+
 --- @return rx.Subscription
 function Event:Subscribe(event, func)
     assert(Util.Strings.IsSet(event), "'event' was not provided")

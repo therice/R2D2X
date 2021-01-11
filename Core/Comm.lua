@@ -33,6 +33,8 @@ local function ScrubValue(value)
         return t
     elseif Util.Objects.IsTable(value) and value.clazz then
         return value:toTable()
+    elseif Util.Objects.IsFunction(value) then
+        return nil
     else
         return value
     end
@@ -225,6 +227,10 @@ local Comm = AddOn.Instance(
 )
 
 AddOn:GetLibrary('AceComm'):Embed(Comm.private.AceComm)
+
+function Comm:GetMetrics()
+    return {self.private.metricsRecv, self.private.metricsFired, self.private.metricsSend}
+end
 
 --- @return rx.Subscription
 function Comm:Subscribe(prefix, command, func)

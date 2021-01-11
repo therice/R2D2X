@@ -1,5 +1,13 @@
 local AddOnName, AddOn, Util, CDB
 
+local function NewLootHistoryDb(lh, data)
+	local db = NewAceDb(lh.defaults)
+	for player, history in pairs(data) do
+		db.factionrealm[player] = history
+	end
+	lh.db = db
+	lh.history = CDB(db.factionrealm)
+end
 
 describe("LootHistory", function()
 	setup(function()
@@ -39,12 +47,7 @@ describe("LootHistory", function()
 		setup(function()
 			AddOn:CallModule("LootHistory")
 			lh = AddOn:LootHistoryModule()
-			local db = NewAceDb(lh.defaults)
-			for k, history in pairs(LootHistoryTestData_M) do
-				db.factionrealm[k] = history
-			end
-			lh.db = db
-			lh.history = CDB(lh.db.factionrealm)
+			NewLootHistoryDb(lh, LootHistoryTestData_M)
 		end)
 
 		teardown(function()
@@ -59,11 +62,31 @@ describe("LootHistory", function()
 			assert.equal(#lh.frame.name.data, 13)
 		end)
 
-		--it("updates more info", function()
-		--	lh:UpdateMoreInfo(lh.frame, lh.frame.st.data, 23)
-		--	assert(lh.frame.moreInfo:IsVisible())
-		--	lh:UpdateMoreInfo(lh.frame, lh.frame.st.data, 49)
-		--	assert(lh.frame.moreInfo:IsVisible())
-		--end)
+		it("updates more info", function()
+			lh:UpdateMoreInfo(lh.frame, lh.frame.st.data, 23)
+			assert(lh.frame.moreInfo:IsVisible())
+			lh:UpdateMoreInfo(lh.frame, lh.frame.st.data, 49)
+			assert(lh.frame.moreInfo:IsVisible())
+		end)
+	end)
+
+	describe("imports", function()
+		--- @type LootHistory
+		local lh
+		--- @type Sync
+		local sync
+
+		setup(function()
+			AddOn:CallModule("LootHistory")
+			lh = AddOn:LootHistoryModule()
+			sync = AddOn:SyncModule()
+		end)
+
+		it("from sync", function()
+			local handler = sync.handlers['LootHistory']
+			local data = handler.send()
+			NewLootHistoryDb(lh, LootHistoryTestData_M2)
+			handler.receive(data)
+		end)
 	end)
 end)

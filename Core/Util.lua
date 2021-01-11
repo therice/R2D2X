@@ -396,6 +396,9 @@ function AddOn.GetGuildRanks()
     return GuildRanks()
 end
 
+function AddOn.GetDateTime()
+    return date("%m/%d/%y %H:%M:%S", time())
+end
 
 local Alarm = AddOn.Class('Alarm')
 function Alarm:initialize(interval, fn)

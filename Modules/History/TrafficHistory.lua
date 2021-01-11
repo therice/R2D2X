@@ -33,6 +33,12 @@ function TrafficHistory:OnInitialize()
 	self.history = CDB(self.db.factionrealm)
 	self.stats = {stale = true, value = nil}
 	self:SubscribeToPermanentComms()
+	AddOn:SyncModule():AddHandler(
+			self:GetName(),
+			L['traffic_history'],
+			function () return self:GetDataForSync() end,
+			function(data) self:ImportDataFromSync(data) end
+	)
 end
 
 function TrafficHistory:OnEnable()
@@ -141,3 +147,104 @@ function TrafficHistory:GetStatistics()
 	end
 end
 
+function TrafficHistory:GetDataForSync()
+	Logging:Debug("TrafficHistory:GetDataForSync()")
+	if AddOn:DevModeEnabled() then
+		Logging:Debug("TrafficHistory:GetDataForSync() : count=%d", Util.Tables.Count(self.db.factionrealm))
+
+		local db = self.db.factionrealm
+		local send = {}
+
+		while Util.Tables.Count(send) < math.min(10, Util.Tables.Count(db)) do
+			local v = Util.Tables.Random(db)
+			if Util.Objects.IsString(v) then
+				table.insert(send, v)
+			end
+		end
+
+
+		Logging:Debug("TrafficHistory:GetDataForSync() : randomly selected entries count is %d", #send)
+		return send
+	else
+		return self.db.factionrealm
+	end
+end
+
+function TrafficHistory:ImportDataFromSync(data)
+	Logging:Debug("TrafficHistory:ImportDataFromSync() : current history count is %d, import history count is %d",
+	              Util.Tables.Count(self.db.factionrealm),
+	              Util.Tables.Count(data)
+	)
+
+	local persist = (not AddOn:DevModeEnabled() and AddOn:PersistenceModeEnabled()) or AddOn._IsTestContext()
+	if Util.Tables.Count(data) > 0 then
+		-- make a copy of current history and sort it by timestamp
+		-- will take a one time hit here, but will make searching able to be short circuited when
+		-- timestamp of existing history is past any import entry
+		local orderedHistory = {}
+		for _, e in cpairs(self.history) do table.insert(orderedHistory, e) end
+		Util.Tables.Sort(orderedHistory, function(a, b) return a.timestamp < b.timestamp end)
+
+		local function FindExistingEntry(importe)
+			for i , e in pairs(orderedHistory) do
+				-- if we've gone further into future than import record, it won't be found
+				if e.timestamp > importe.timestamp then
+					Logging:Debug(
+							"TrafficHistory:FindExistingEntry(%s) : current history ts '%d' is after import ts '%d', aborting search...",
+							e.id, e.timestamp, importe.timestamp
+					)
+					break
+				end
+
+				if e.timestamp == importe.timestamp then
+					Logging:Debug(
+							"TrafficHistory:FindExistingEntry(%s) : current history ts '%d' is equal to import ts '%d', performing final evaluation",
+							e.id, e.timestamp, importe.timestamp
+					)
+
+					-- possibly too precise checking all of these, but ...
+					if  (e.subjectType == importe.subjectType) and
+						(e.resourceType == importe.resourceType) and
+						(e.actionType == importe.actionType) and
+						(#e.subjects == #importe.subjects) then
+						return i, e
+					end
+				end
+			end
+		end
+
+		local cdb = CDB(data)
+		local imported, skipped = 0, 0
+		for _, entryTable in cpairs(cdb) do
+			Logging:Debug("TrafficHistory:ImportDataFromSync(%s) : examining import entry", entryTable.id)
+			local _, existing = FindExistingEntry(entryTable)
+			if existing then
+				Logging:Debug("TrafficHistory:ImportDataFromSync(%s) : found existing entry in history, skipping...", entryTable.id)
+				skipped = skipped + 1
+			else
+				Logging:Debug("TrafficHistory:ImportDataFromSync(%s) : entry does not exist in history, adding...", entryTable.id)
+				if persist then
+					self.history:insert(entryTable)
+				end
+				imported = imported + 1
+			end
+		end
+
+		if imported > 0 then
+			self.stats.stale = true
+			if self:IsEnabled() and self.frame and self.frame:IsVisible() then
+				self:BuildData()
+			end
+		end
+
+		Logging:Debug("TrafficHistory:ImportDataFromSync(%s) : imported %s history entries, skipped %d import history entries, new history entry count is %d",
+		              tostring(persist),
+		              imported,
+		              skipped,
+		              Util.Tables.Count(self.db.factionrealm)
+		)
+		AddOn:Print(format(L['import_successful_with_count'], AddOn.GetDateTime(), self:GetName(), imported))
+	else
+		AddOn:Print(format(L['import_successful_with_count'], AddOn.GetDateTime(), self:GetName(), 0))
+	end
+end

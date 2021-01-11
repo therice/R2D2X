@@ -101,6 +101,10 @@ AddOn.Constants = {
         Rolls                   =   "rolls",
         StandbyPing             =   "sbp",
         StandbyPingAck          =   "sbpa",
+        Sync                    =   "sync",
+        SyncACK                 =   "sack",
+        SyncNACK                =   "snack",
+        SyncSYN                 =   "ssyn",
         TrafficHistoryAdd       =   "tha",
         VersionCheck            =   "vc",
         VersionCheckReply       =   "vcr",
@@ -217,6 +221,7 @@ AddOn.Constants = {
         ConfirmDeleteItem       =   name .. "_ConfirmDeleteItem",
         ConfirmReannounceItems  =   name .. "_ConfirmReannounceItems",
         ConfirmRevert           =   name .. "_ConfirmRevert",
+        ConfirmSync             =   name .. "_ConfirmSync",
         ConfirmUsage            =   name .. "_ConfirmUsage",
     },
 

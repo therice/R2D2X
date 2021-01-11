@@ -129,6 +129,11 @@ function AddOn:VersionCheckModule()
     return self:GetModule("VersionCheck")
 end
 
+--- @return Sync
+function AddOn:SyncModule()
+    return self:GetModule("Sync")
+end
+
 function AddOn:RegisterChatCommands()
     Logging:Debug("RegisterChatCommands(%s)", self:GetName())
     SlashCommands:BulkSubscribe(
@@ -180,6 +185,20 @@ function AddOn:RegisterChatCommands()
                     else
                         self:CallModule('VersionCheck')
                     end
+                end
+            },
+            {
+                {'sync', 's'},
+                L['chat_commands_sync'],
+                function()
+                   AddOn:CallModule("Sync")
+                end
+            },
+            {
+                {'metrics', 'm'},
+                L['chat_commands_metrics'],
+                function()
+                    AddOn:CallModule("Metrics")
                 end
             },
             {

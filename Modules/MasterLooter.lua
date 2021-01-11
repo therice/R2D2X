@@ -171,6 +171,12 @@ function ML:OnInitialize()
 	Logging:Debug("OnInitialize(%s)", self:GetName())
 	self.db = AddOn.db:RegisterNamespace(self:GetName(), ML.defaults)
 	self.Send = Comm():GetSender(C.CommPrefixes.Main)
+	AddOn:SyncModule():AddHandler(
+			self:GetName(),
+			format("%s %s", L['ml'], L['settings']),
+			function() return self.db.profile end,
+			function(data) self:ImportData(data) end
+	)
 end
 
 function ML:OnEnable()
@@ -1715,7 +1721,7 @@ function ML:ConfigTableChanged(msg)
 
 			if not updateDb then
 				for key in pairs(AddOn.mlDb) do
-					Logging:Debug("ConfigTableChanged() : examining %s, %s, %s", module, key, val)
+					Logging:Debug("ConfigTableChanged() : examining %s, %s, %s", tostring(module), tostring(key), tostring(val))
 					if Util.Strings.StartsWith(val, key) or Util.Strings.Equal(val, key)then
 						updateDb = true
 						break

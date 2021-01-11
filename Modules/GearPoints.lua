@@ -108,6 +108,12 @@ function GP:OnInitialize()
     Logging:Debug("OnInitialize(%s)", self:GetName())
     LibGP:SetToStringFn(Util.Objects.ToString)
     self.db = AddOn.db:RegisterNamespace(self:GetName(), GP.defaults)
+    AddOn:SyncModule():AddHandler(
+            self:GetName(),
+            format("%s %s", L['gp'], L['settings']),
+            function() return self.db.profile end,
+            function(data) self:ImportData(data) end
+    )
 end
 
 function GP:OnEnable()

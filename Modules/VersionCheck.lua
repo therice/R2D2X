@@ -9,8 +9,6 @@ local Util =  AddOn:GetLibrary("Util")
 local Comm = AddOn.RequireOnUse('Core.Comm')
 --- @type Models.SemanticVersion
 local SemanticVersion = AddOn.ImportPackage('Models').SemanticVersion
---- @type Models.Date
-local Date = AddOn.ImportPackage('Models').Date
 --- @type Core.Mode
 local Mode = Util.Memoize.Memoize(function() return AddOn.ImportPackage('Core').Mode end)
 --- @type Models.Player

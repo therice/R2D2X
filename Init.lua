@@ -118,11 +118,20 @@ local ModulePrototype = {
     end,
     -- implement to provide data import functionality for a module
     ImportData = function(self, data)
+        Logging:Debug("ImportData(%s)", self:GetName())
+        if not self.db then return end
+
+        for k, v in pairs(data) do
+            self.db.profile[k]  = v
+        end
+
         -- fire message that the configuration table has changed (this is handled on per module basis, as necessary)
-        -- AddOn:ConfigTableChanged(self:GetName())
+        AddOn:ConfigChanged(self:GetName())
         -- notify config registry of change as well, this updates configuration UI if displayed
-        -- AddOn:GetLibrary('AceConfigRegistry'):NotifyChange(AddOnName)
+        AddOn:GetLibrary('AceConfigRegistry'):NotifyChange(AddOnName)
+        AddOn:Print(format(AddOn.Locale['import_successful'], AddOn.GetDateTime(), self:GetName()))
     end,
+
     ModuleSettings = function(self)
         return AddOn:ModuleSettings(self:GetName())
     end

@@ -46,9 +46,7 @@ function VersionCheck:GetFrame()
 		st.frame:SetWidth(320)
 		f:SetWidth(st.frame:GetWidth() + 20)
 
-
 		local close = UI:New('Button', f.content)
-		--close:SetSize(75, 25)
 		close:SetText(_G.CLOSE)
 		close:SetPoint("TOPRIGHT", f, "TOPRIGHT", -10, -20)
 		close:SetScript("OnClick", function() self:Disable() end)
