@@ -25,8 +25,8 @@ local LibStub = _G.LibStub
 local MAJOR = "LibDialog-1.0"
 
 _G.assert(LibStub, MAJOR .. " requires LibStub")
-
-local MINOR = 8 -- Should be manually increased
+-- RCLC: Note bumped minor +1 to avoid incompabilities with old addons.
+local MINOR = 9 -- Should be manually increased
 ---@class LibDialog
 local lib, oldminor = LibStub:NewLibrary(MAJOR, MINOR)
 
@@ -34,7 +34,7 @@ if not lib then
     return
 end -- No upgrade needed
 
-local dialog_prototype = _G.CreateFrame("Frame", nil, _G.UIParent)
+local dialog_prototype = _G.CreateFrame("Frame", nil, _G.UIParent, "BackdropTemplate")
 local dialog_meta = {
     __index = dialog_prototype
 }
@@ -262,7 +262,7 @@ local function _Dialog_OnHide(dialog)
         local delegate
         repeat
             delegate = _ProcessQueue()
-            until not delegate
+        until not delegate
     end
 end
 

@@ -241,7 +241,6 @@ function Standings.FilterMenu(_, level)
         local classes =
             Util(ItemUtil.ClassDisplayNameToId)
                     :Keys()
-                    :Filter(AddOn.FilterClassesByFactionFn)
                     :Sort()
                     :Copy()()
 
@@ -321,14 +320,14 @@ Standings.RightClickEntries =
                 :add():text(UIUtil.ResourceTypeDecorator(Award.ResourceType.Ep):decorate(L["ep_abbrev"]))
                     :checkable(false):arrow(false)
                     :fn(function(_, entry)
-                            Standings:AdjustAction(MSA_DROPDOWNMENU_MENU_VALUE, Award.ResourceType.Ep, entry)
+                            Standings:AdjustAction(MSA_DROPDOWNMENU_MENU_VALUE, Award.ResourceType.Ep, (MSA_DROPDOWNMENU_MENU_VALUE == Award.SubjectType.Character) and entry or {})
                         end
                     )
                 :add():text(UIUtil.ResourceTypeDecorator(Award.ResourceType.Gp):decorate(L["gp_abbrev"]))
                    :checkable(false):arrow(false)
                     :fn(
                         function(_, entry)
-                            Standings:AdjustAction(MSA_DROPDOWNMENU_MENU_VALUE, Award.ResourceType.Gp, entry)
+                            Standings:AdjustAction(MSA_DROPDOWNMENU_MENU_VALUE, Award.ResourceType.Gp, (MSA_DROPDOWNMENU_MENU_VALUE == Award.SubjectType.Character) and entry or {})
                         end
                     )
             :build()
@@ -523,7 +522,7 @@ function Standings:GetAdjustFrame()
         end
 
         f.Update = function(subjectType, resourceType, subjects)
-            Logging:Trace('Update(%d, %d) : %s', subjectType, resourceType, Util.Objects.ToString(subjects))
+            Logging:Debug('Update(%d, %d) : %s', subjectType, resourceType, Util.Objects.ToString(subjects))
 
             local subjectColor, text
 
@@ -536,7 +535,7 @@ function Standings:GetAdjustFrame()
                 text = Award.TypeIdToSubject[subjectType]
             end
 
-            if subjectType ~= Award.SubjectType.Character and Util.Objects.IsTable(subjects) then
+            if subjectType ~= Award.SubjectType.Character and Util.Objects.IsTable(subjects) and #subjects > 0 then
                 f.subjects = subjects
 
                 text = text .. "(" .. Util.Tables.Count(subjects) .. ")"
@@ -576,7 +575,7 @@ end
 
 -- all 3 parameters are passed, but entry may not be applicable based upon subjectType
 function Standings:AdjustAction(subjectType, resourceType, entry)
-    Logging:Trace("AdjustAction() : %d, %d, %s", tostring(subjectType), tostring(resourceType), type(entry))
+    Logging:Trace("AdjustAction(%d, %d, %s)", tostring(subjectType), tostring(resourceType), type(entry))
 
     local subjects
     -- plain table, expect input to be a table of tables of format {{PLAYER, CLASS}, {...}}

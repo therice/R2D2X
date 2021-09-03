@@ -19,28 +19,71 @@ lib.Maps = {
     [309] = {
         name = 'Ancient Zul\'Gurub',
     },
+    -- JournalInstance.ID = 743
     [509] = {
         name = 'Ruins of Ahn\'Qiraj',
     },
+    -- JournalInstance.ID = 741
     [409] = {
         name = 'Molten Core',
     },
+    -- JournalInstance.ID = 760
     [249] = {
         name = 'Onyxia\'s Lair',
     },
+    -- JournalInstance.ID = 742
     [469] = {
         name = 'Blackwing Lair',
     },
+    -- JournalInstance.ID = 744
     [531] = {
         name = 'Temple of Ahn\'Qiraj',
     },
     [533] = {
         name = 'Naxxramas',
     },
+    -- JournalInstance.ID = 751
+    --[[
+    [564] = {
+        name = 'Black Temple',
+    },
+    --]]
+    -- JournalInstance.ID = 746
+    [565] = {
+        name = 'Gruul\'s Lair',
+    },
+    -- JournalInstance.ID = 750
+    --[[
+    [534] = {
+        name = 'Hyjal Summit',
+    },
+    --]]
+    -- JournalInstance.ID = 745
+    [532] = {
+        name = 'Karazhan',
+    },
+    -- JournalInstance.ID = 747
+    [544] = {
+        name = 'Magtheridon\'s Lair',
+    },
+    -- JournalInstance.ID = 748
+    [548] = {
+        name = 'Serpentshrine Cavern',
+    },
+    -- JournalInstance.ID = 752
+    --[[
+    [580] = {
+        name = 'Sunwell Plateau',
+    },
+    --]]
+    -- JournalInstance.ID = 749
+    [550] = {
+        name = 'Tempest Keep',
+    },
 }
 
-
 -- Mapping from creature id to details (name will be used as index for localization)
+-- key is Creature.ID
 lib.Creatures = {
     [15348] = {
         name = 'Kurinnaxx',
@@ -246,9 +289,79 @@ lib.Creatures = {
     [15990] = {
         name = 'Kel\'Thuzad'
     },
+    [18831] = {
+        name = 'High King Maulgar'
+    },
+    [18832] = {
+        name = 'Krosh Firehand'
+    },
+    [18834] = {
+        name = 'Olm the Summoner'
+    },
+    [18835] = {
+        name = 'Kiggler the Crazed'
+    },
+    [18836] = {
+        name = 'Blindeye the Seer'
+    },
+    [19044] = {
+        name = 'Gruul the Dragonkiller'
+    },
+    [17257] = {
+        name = 'Magtheridon'
+    },
+    [16151] = {
+        name = 'Midnight'
+    },
+    [16152] = {
+        name = 'Attumen the Huntsman'
+    },
+    [15687] = {
+        name = 'Moroes'
+    },
+    [16457] = {
+        name = 'Maiden of Virtue'
+    },
+    [17521] = {
+        name = 'The Big Bad Wolf'
+    },
+    [17533] = {
+        name = 'Romulo'
+    },
+    [17534] = {
+        name = 'Julianne'
+    },
+    [18168] = {
+        name = 'The Crone'
+    },
+    [15691] = {
+        name = 'The Curator'
+    },
+    [21752] = {
+        name = 'Warchief Blackhand Piece'
+    },
+    [21684] = {
+        name = 'King Llane Piece'
+    },
+    [15688] = {
+        name = 'Terestian Illhoof'
+    },
+    [16524] = {
+        name = 'Shade of Aran'
+    },
+    [15689] = {
+        name = 'Netherspite'
+    },
+    [17225] = {
+        name = 'Nightbane'
+    },
+    [15690] = {
+        name = 'Prince Malchezaar'
+    },
 }
 
 -- Mapping from encounter id to details
+-- key is DungeonEncounter.ID
 lib.Encounters = {
     -- Kurinaxx
     [718] = {
@@ -545,4 +658,79 @@ lib.Encounters = {
         map_id = 533,
         creature_id = {15990},
     },
+    -- High King Maulgar
+    [649] = {
+        map_id = 565,
+        creature_id = {18831, 18832, 18834, 18835, 18836},
+    },
+    -- Gruul the Dragonkiller
+    [650] = {
+        map_id = 565,
+        creature_id = {19044},
+    },
+    -- Magtheridon
+    [651] = {
+        map_id = 544,
+        creature_id = {17257},
+    },
+    -- Attumen the Huntsman
+    [652] = {
+        map_id = 532,
+        creature_id = {16151, 16152},
+    },
+    -- Moroes
+    [653] = {
+        map_id = 532,
+        creature_id = {15687},
+    },
+    -- Maiden of Virtue
+    [654] = {
+        map_id = 532,
+        creature_id = {16457},
+    },
+    -- The Opera Event
+    [655] = {
+        map_id = 532,
+        creature_id = {17521, 17533, 17534, 18168},
+    },
+    -- Curator
+    [656] = {
+        map_id = 532,
+        creature_id = {15691},
+    },
+    -- Chess Event
+    [660] = {
+        map_id = 532,
+        creature_id = {21752, 21684},
+    },
+    -- Terestian Illhoof
+    [657] = {
+        map_id = 532,
+        creature_id = {15688},
+    },
+    -- Shade of Aran
+    [658] = {
+        map_id = 532,
+        creature_id = {16524},
+    },
+    -- Netherspite
+    [659] = {
+        map_id = 532,
+        creature_id = {15689},
+    },
+    -- Nightbane
+    [662] = {
+        map_id = 532,
+        creature_id = {17225},
+    },
+    -- Prince Malchezaar
+    [661] = {
+        map_id = 532,
+        creature_id = {15690},
+    },
+
+    --[] = {
+    --    map_id = ,
+    --    creature_id = {},
+    --},
 }

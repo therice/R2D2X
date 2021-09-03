@@ -170,16 +170,6 @@ function AddOn.SanitizeItemString(link)
     return gsub(ItemUtil:ItemLinkToItemString(link), "item:", "")
 end
 
-AddOn.FilterClassesByFactionFn = function(class)
-    local faction =  UnitFactionGroup(AddOn.Constants.player)
-    if faction== 'Alliance' then
-        return class ~= "Shaman"
-    elseif faction == 'Horde' then
-        return class ~= "Paladin"
-    end
-    return true
-end
-
 function AddOn:ExtractCreatureId(guid)
     if not guid then return nil end
     local id = guid:match(".+(%b--)")

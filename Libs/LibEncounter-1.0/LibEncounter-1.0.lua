@@ -1,5 +1,5 @@
 local MAJOR_VERSION = "LibEncounter-1.0"
-local MINOR_VERSION = 11303
+local MINOR_VERSION = 20502
 
 --- @class LibEncounter
 local lib, _ = LibStub:NewLibrary(MAJOR_VERSION, MINOR_VERSION)

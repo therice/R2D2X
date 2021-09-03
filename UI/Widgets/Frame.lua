@@ -105,7 +105,7 @@ function Frame:Create()
 end
 
 function Frame:CreateTitle(f)
-    local tf = CreateFrame("Frame", AddOn:Qualify(self.name, 'Title'), f)
+    local tf = CreateFrame("Frame", AddOn:Qualify(self.name, 'Title'), f, BackdropTemplateMixin and "BackdropTemplate")
     tf:SetToplevel(true)
     tf:SetBackdrop({
         bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
@@ -144,7 +144,7 @@ function Frame:CreateTitle(f)
 end
 
 function Frame:CreateContent(f)
-    local c = CreateFrame("Frame", AddOn:Qualify(self.name, 'Content'), f)
+    local c = CreateFrame("Frame", AddOn:Qualify(self.name, 'Content'), f, BackdropTemplateMixin and "BackdropTemplate")
     c:SetBackdrop({
         bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
         edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",

@@ -36,129 +36,159 @@ EP.defaults = {
 			creatures          = {
 				-- AQ20
 				-- Kurinaxx
-				['15348']            = 7,
+				['15348']             = 7,
 				-- Rajaxx
-				['15341']            = 7,
+				['15341']             = 7,
 				-- Moam
-				['15340']            = 7,
+				['15340']             = 7,
 				-- Buru
-				['15370']            = 7,
+				['15370']             = 7,
 				-- Ayamiss
-				['15369']            = 7,
+				['15369']             = 7,
 				-- Ossirian
-				['15339']            = 10,
+				['15339']             = 10,
 				-- ZG
 				-- Venoxis
-				['14507']            = 5,
+				['14507']             = 5,
 				-- Jeklik
-				['14517']            = 5,
+				['14517']             = 5,
 				-- Marli
-				['14510']            = 5,
+				['14510']             = 5,
 				-- Thekal
-				['14509']            = 5,
+				['14509']             = 5,
 				-- Arlokk
-				['14515']            = 5,
+				['14515']             = 5,
 				-- Mandokir
-				['11382']            = 7,
+				['11382']             = 7,
 				-- Gahzranka
-				['15114']            = 5,
+				['15114']             = 5,
 				-- Edge of Madness
-				['edge_of_madness']  = 5,
+				['edge_of_madness']   = 5,
 				-- Jindo
-				['11380']            = 7,
+				['11380']             = 7,
 				-- Hakkar
-				['14834']            = 8,
+				['14834']             = 8,
 				-- MC
 				-- Lucifron
-				['12118']            = 10,
+				['12118']             = 10,
 				-- Magmadar
-				['11982']            = 10,
+				['11982']             = 10,
 				-- Gehennas
-				['12259']            = 10,
+				['12259']             = 10,
 				-- Garr
-				['12057']            = 10,
+				['12057']             = 10,
 				-- Geddon
-				['12056']            = 10,
+				['12056']             = 10,
 				-- Shazzrah
-				['12264']            = 10,
+				['12264']             = 10,
 				-- Sulfuron
-				['12098']            = 10,
+				['12098']             = 10,
 				-- Golemagg
-				['11988']            = 10,
+				['11988']             = 10,
 				-- Domo
-				['12018']            = 12,
+				['12018']             = 12,
 				-- Ragnaros
-				['11502']            = 14,
+				['11502']             = 14,
 				-- Onyxia's Lair
 				-- Onyxia
-				['10184']            = 12,
+				['10184']             = 12,
 				-- BWL
 				-- Razorgore
-				['12435']            = 20,
+				['12435']             = 20,
 				-- Vaelastrasz
-				['13020']            = 20,
+				['13020']             = 20,
 				-- Broodlord
-				['12017']            = 20,
+				['12017']             = 20,
 				-- Firemaw,
-				['11983']            = 20,
+				['11983']             = 20,
 				-- Ebonroc
-				['14601']            = 20,
+				['14601']             = 20,
 				-- Flamegor
-				['11981']            = 20,
+				['11981']             = 20,
 				-- Chromaggus
-				['14020']            = 24,
+				['14020']             = 24,
 				-- Nefarian
-				['11583']            = 28,
+				['11583']             = 28,
 				-- AQ40
 				-- Skeram
-				['15263']            = 26,
+				['15263']             = 26,
 				-- Silithid Royalty (Three Bugs)
-				['silithid_royalty'] = 26,
+				['silithid_royalty']  = 26,
 				-- Battleguard Sartura
-				['15516']            = 26,
+				['15516']             = 26,
 				-- Fankriss the Unyielding
-				['15510']            = 26,
+				['15510']             = 26,
 				-- Viscidus
-				['15299']            = 26,
+				['15299']             = 26,
 				-- Princess Huhuran
-				['15509']            = 26,
+				['15509']             = 26,
 				-- Ouro
-				['15517']            = 26,
+				['15517']             = 26,
 				-- Twin Emperors
-				['twin_emperors']    = 32,
+				['twin_emperors']     = 32,
 				-- C'Thun
-				['15727']            = 38,
+				['15727']             = 38,
 				-- Naxx
 				-- Anub'Rekhan
-				['15956']            = 30,
+				['15956']             = 30,
 				-- Faerlina
-				['15953']            = 30,
+				['15953']             = 30,
 				--  Maexxna
-				['15952']            = 33,
+				['15952']             = 33,
 				-- Noth
-				['15954']            = 30,
+				['15954']             = 30,
 				-- Heigan
-				['15936']            = 30,
+				['15936']             = 30,
 				-- Loatheb
-				['16011']            = 33,
+				['16011']             = 33,
 				-- Razuvious
-				['16061']            = 30,
+				['16061']             = 30,
 				-- Gothik
-				['16060']            = 30,
+				['16060']             = 30,
 				-- Four Horsemen
-				['four_horsemen']    = 36,
+				['four_horsemen']     = 36,
 				-- Patchwerk
-				['16028']            = 30,
+				['16028']             = 30,
 				-- Grobbulus
-				['15931']            = 30,
+				['15931']             = 30,
 				-- Gluth
-				['15932']            = 30,
+				['15932']             = 30,
 				-- Thaddius
-				['15928']            = 33,
+				['15928']             = 33,
 				-- Sapphiron
-				['15989']            = 42,
+				['15989']             = 42,
 				-- Kel'Thuzad
-				['15990']            = 50,
+				['15990']             = 50,
+				-- Gruul's Lair
+				-- High King Maulgar
+				['high_king_maulgar'] = 10,
+				-- Gruul the Dragonkiller
+				['19044']             = 15,
+				-- Magtheridon's Lair
+				['17257']             = 20,
+				-- Karazhan
+				-- Attumen
+				['attumen_huntsman']  = 5,
+				-- Moroes
+				['15687']            = 5,
+				-- Maiden of Virtue
+				['16457']             = 5,
+				-- The Opera Event
+				['opera_event']       = 5,
+				-- Curator
+				['15691']             = 5,
+				-- Chess Event
+				['chess_event']       = 5,
+				-- Terestian Illhoof
+				['15688']             = 5,
+				-- Shade of Aran
+				['16524']             = 7,
+				-- Netherspite
+				['15689']             = 9,
+				-- Nightbane
+				['17225']             = 11,
+				-- Prince Malchezaar
+				['15690']             = 7,
 			},
 			maps = {
 
@@ -201,10 +231,15 @@ end
 
 -- Mapping from translation key to actual creatures are part of encounter
 local MultiCreatureEncounters = {
-	['edge_of_madness']  = Encounter:GetEncounterCreatureId(788),
-	['silithid_royalty'] = Encounter:GetEncounterCreatureId(710),
-	['twin_emperors']    = Encounter:GetEncounterCreatureId(715),
-	['four_horsemen']    = Encounter:GetEncounterCreatureId(1121),
+	['edge_of_madness']     = Encounter:GetEncounterCreatureId(788),
+	['silithid_royalty']    = Encounter:GetEncounterCreatureId(710),
+	['twin_emperors']       = Encounter:GetEncounterCreatureId(715),
+	['four_horsemen']       = Encounter:GetEncounterCreatureId(1121),
+	['high_king_maulgar']   = Encounter:GetEncounterCreatureId(649),
+	['attumen_huntsman']    = Encounter:GetEncounterCreatureId(652),
+	['opera_event']         = Encounter:GetEncounterCreatureId(655),
+	['chess_event']         = Encounter:GetEncounterCreatureId(660),
+
 }
 
 --- @param value number

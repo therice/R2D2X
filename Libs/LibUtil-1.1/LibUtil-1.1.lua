@@ -1,5 +1,5 @@
 local MAJOR_VERSION = "LibUtil-1.1"
-local MINOR_VERSION = 11305
+local MINOR_VERSION = 20502
 
 --- @class LibUtil
 --- @field public Tables LibUtil.Tables

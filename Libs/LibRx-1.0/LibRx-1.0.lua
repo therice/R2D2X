@@ -1,5 +1,5 @@
 local MAJOR_VERSION = "LibRx-1.0"
-local MINOR_VERSION = 11305
+local MINOR_VERSION = 20502
 
 --- @class LibRx
 local Lib = LibStub:NewLibrary(MAJOR_VERSION, MINOR_VERSION)

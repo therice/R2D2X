@@ -19,7 +19,8 @@ function ScrollingMessageFrame:Create()
     local smf = CreateFrame(
             "ScrollingMessageFrame",
             self.parent:GetName() .. '_' .. self.name,
-            self.parent
+            self.parent,
+            BackdropTemplateMixin and "BackdropTemplate"
     )
     smf:SetFading(false)
     smf:SetFontObject(GameFontHighlightLeft)

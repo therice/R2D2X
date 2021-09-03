@@ -368,7 +368,6 @@ function LootHistory.FilterMenu(_, level)
 			local classes =
 				Util(ItemUtil.ClassDisplayNameToId)
 						:Keys()
-						:Filter(AddOn.FilterClassesByFactionFn)
 						:Sort()
 						:Copy()()
 

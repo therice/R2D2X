@@ -106,7 +106,7 @@ function Player.Create(guid, info)
     local _, class, _, _, _, name, realm = GetPlayerInfoByGUID(guid)
     Logging:Trace("Create(%s) : info query -> class=%s, name=%s, realm=%s", guid, tostring(class), tostring(name), tostring(realm))
     -- if the name is not set, means the query did not complete. likely because the player was not
-    -- encountered. therefore, just return nil if thats the case
+    -- encountered. therefore, just return nil
     if Util.Objects.IsEmpty(name) then
         Logging:Warn("Create(%s) : Unable to obtain player information via GetPlayerInfoByGUID", guid)
         if info and Util.Strings.IsSet(info.name) then

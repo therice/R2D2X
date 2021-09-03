@@ -1,5 +1,5 @@
 local MAJOR_VERSION = "LibLogging-1.0"
-local MINOR_VERSION = 11305
+local MINOR_VERSION = 20502
 
 ---@class LibLogging
 local lib, _ = LibStub:NewLibrary(MAJOR_VERSION, MINOR_VERSION)
@@ -119,7 +119,10 @@ end
 
 local function GetCaller()
     local trace = debugstack(4, 1, 0)
-    return trace:match("([^\\/]-): in [function|method]") or trace
+    -- E.G.
+    -- [12:16:42 PM] [string "@Interface\AddOns\R2D2X\Libs\LibGearPoints-1.2\LibGearPoints-1.2.lua"]:266: in function `GetValue'
+    -- the 'gsub' should not be needed if I could write a better regex
+    return trace:match("([^\\/]-): in [function|method]"):gsub('"]', '') or trace
 end
 
 local function Log(writer, level, fmt, ...)

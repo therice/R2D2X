@@ -1,5 +1,5 @@
 local MAJOR_VERSION = "LibJSON-1.0"
-local MINOR_VERSION = 11305
+local MINOR_VERSION = 20502
 
 local lib, minor = LibStub:NewLibrary(MAJOR_VERSION, MINOR_VERSION)
 if not lib or (minor or 0) > MINOR_VERSION then return end

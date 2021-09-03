@@ -17,7 +17,7 @@ local function NormalizeGp(gp)
     return math.max(gp, MinimumGp())
 end
 
-local function DecodeNode(note)
+local function DecodeNote(note)
     if Util.Objects.IsSet(note) then
         local ep, gp = string.match(note, "^(%d+),(%d+)$")
         if ep and gp then
@@ -71,7 +71,7 @@ end
 
 -- bridge from LibGuildStorage instance
 function Subject:FromGuildMember(member)
-    local ep, gp = DecodeNode(member.officerNote)
+    local ep, gp = DecodeNote(member.officerNote)
     return Subject:new(member.name, member.class, member.rank, member.rankIndex, ep, gp)
 end
 

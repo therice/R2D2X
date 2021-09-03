@@ -12,7 +12,8 @@ function IconBordered:Create()
     local b = CreateFrame(
             "Button",
             self.parent:GetName() .. '_' .. self.name,
-            self.parent
+            self.parent,
+            BackdropTemplateMixin and "BackdropTemplate"
     )
     b:SetSize(40,40)
     b:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square")

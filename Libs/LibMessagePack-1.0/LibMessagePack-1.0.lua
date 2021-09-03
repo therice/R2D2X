@@ -1,7 +1,7 @@
 -- Adapted from https://framagit.org/fperrad/lua-MessagePack
 
 local MAJOR_VERSION = "LibMessagePack-1.0"
-local MINOR_VERSION = 11306
+local MINOR_VERSION = 20502
 
 --- @class LibMessagePack
 local Lib = LibStub:NewLibrary(MAJOR_VERSION, MINOR_VERSION)

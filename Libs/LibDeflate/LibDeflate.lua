@@ -73,6 +73,7 @@ licenses shall be comply when used.
 	Project Version: 1.0.1-release
 --]]
 
+--- @class LibDeflate
 local LibDeflate
 
 do

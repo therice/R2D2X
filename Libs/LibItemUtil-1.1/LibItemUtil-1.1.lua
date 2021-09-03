@@ -1,5 +1,5 @@
 local MAJOR_VERSION = "LibItemUtil-1.1"
-local MINOR_VERSION = 11305
+local MINOR_VERSION = 20502
 
 --- @class LibItemUtil
 local lib, _ = LibStub:NewLibrary(MAJOR_VERSION, MINOR_VERSION)

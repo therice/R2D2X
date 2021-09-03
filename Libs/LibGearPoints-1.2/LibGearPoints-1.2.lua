@@ -1,5 +1,5 @@
 local MAJOR_VERSION = "LibGearPoints-1.2"
-local MINOR_VERSION = 11305
+local MINOR_VERSION = 20502
 
 --- @class LibGearPoints
 local lib, _ = LibStub:NewLibrary(MAJOR_VERSION, MINOR_VERSION)

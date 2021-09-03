@@ -1,5 +1,5 @@
 local MAJOR_VERSION = "LibUtil-1.1"
-local MINOR_VERSION = 11305
+local MINOR_VERSION = 20502
 
 local lib, minor = LibStub(MAJOR_VERSION, true)
 if not lib or next(lib.Compression) or (minor or 0) > MINOR_VERSION then return end
@@ -8,7 +8,9 @@ local Util = lib
 --- @class LibUtil.Compression
 local Self = Util.Compression
 local Class = LibStub("LibClass-1.0")
+--- @type LibLogging
 local Logging = LibStub("LibLogging-1.0")
+--- @type LibDeflate
 local LibDeflate = LibStub("LibDeflate")
 
 local Encoder = Class('Encoder')

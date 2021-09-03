@@ -39,8 +39,8 @@ function absolutepath(file)
     return normalized:sub(1, endAt - 1)
 end
 
--- this doesn't now how to handle includes within an XML file, FYI
--- the adon parser in WowAddonParser.lua does though
+-- this doesn't know how to handle includes within an XML file, FYI
+-- the addon parser in WowAddonParser.lua does though
 function Load(files, addOnName, addOnNamespace)
     addOnName = addOnName or 'TestAddOn'
     addOnNamespace = addOnNamespace or {}

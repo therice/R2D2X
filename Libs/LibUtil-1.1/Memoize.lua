@@ -1,5 +1,5 @@
 local MAJOR_VERSION = "LibUtil-1.1"
-local MINOR_VERSION = 11305
+local MINOR_VERSION = 20502
 
 local lib, minor = LibStub(MAJOR_VERSION, true)
 if not lib or next(lib.Memoize) or (minor or 0) > MINOR_VERSION then return end
