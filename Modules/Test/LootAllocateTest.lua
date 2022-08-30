@@ -73,7 +73,6 @@ describe("Standings", function()
 			assert.equal(#la.lootTable, 2)
 
 		end)
-
 		it("adds to loot table", function()
 			WoWAPI_FireUpdate(GetTime() + 10)
 			AddOn:OnLootTableAddReceived({
@@ -85,7 +84,6 @@ describe("Standings", function()
 			})
 			assert.equal(#la.lootTable, 3)
 		end)
-
 		it("handles LootAck", function()
 			local cr1 = la:GetCandidateResponse(1, AddOn.player:GetName())
 			local cr2 = la:GetCandidateResponse(2, AddOn.player:GetName())

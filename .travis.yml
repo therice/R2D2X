@@ -29,7 +29,7 @@ before_script:
   - sudo apt-get -y install jq
 
 script:
-  - curl -s https://raw.githubusercontent.com/BigWigsMods/packager/master/release.sh | bash  -s -- -g "1.13.5"
+  - curl -s https://raw.githubusercontent.com/BigWigsMods/packager/master/release.sh | bash  -s -- -g "2.5.2"
 
 after_success:
   - /home/travis/.luarocks/bin/luacov-coveralls -v -t $COVERALLS_TOKEN

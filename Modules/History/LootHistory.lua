@@ -110,7 +110,7 @@ function LootHistory:SubscribeToPermanentComms()
 end
 
 local cpairs = CDB.static.pairs
---- @return Models.History.TrafficStatistics
+--- @return Models.History.LootStatistics
 function LootHistory:GetStatistics()
 	Logging:Trace("GetStatistics()")
 	local check, ret = pcall(

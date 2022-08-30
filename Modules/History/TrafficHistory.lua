@@ -104,7 +104,7 @@ function TrafficHistory:SubscribeToPermanentComms()
 		[C.Commands.TrafficHistoryAdd] = function(data, sender)
 			Logging:Debug("TrafficHistoryAdd from %s", tostring(sender))
 			local entry = Traffic:reconstitute(unpack(data))
-			self:OnLootHistoryAdd(entry)
+			self:OnTrafficHistoryAdd(entry)
 		end
 	})
 end

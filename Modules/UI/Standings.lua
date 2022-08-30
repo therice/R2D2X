@@ -283,22 +283,6 @@ function Standings.FilterMenu(_, level)
         info.func = function() setfilter('minimums', 'ep') end
         info.checked = filters.minimums['ep']
         MSA_DropDownMenu_AddButton(info, level)
-
-        -- todo : add section for (de)select all
-        --[[
-	        info.text = "Deselect All"
-			info.notCheckable = true
-			info.keepShownOnClick = true
-			info.func = function()
-				for k in pairs(db.modules["RCLootHistory"].filters.class) do
-					db.modules["RCLootHistory"].filters.class[k] = false
-					MSA_DropDownMenu_SetSelectedName(filterMenu, addon.classIDToDisplayName[k], false)
-					useClassFilters = false
-					LootHistory:Update()
-				end
-			end
-			MSA_DropDownMenu_AddButton(info, level)
-        --]]
     end
 end
 

@@ -31,9 +31,7 @@ local function EncodeNote(ep, gp)
     return string.format("%d,%d", math.max(ep, 0), NormalizeGp(gp))
 end
 
-function Subject:initialize(
-        name, class, rank, rankIndex, ep, gp
-)
+function Subject:initialize(name, class, rank, rankIndex, ep, gp)
     self.name = name
     if Util.Objects.IsEmpty(class) then
         error("Must specify 'class' (either display name or upper-case name)")
